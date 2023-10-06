@@ -54,12 +54,9 @@ void populate_matrix(int rows, int cols, int* matrix)
 	A matrix C is created, filled with the appropriate values, and returned.
 	Preconditions: Matrix A and B exist.
 */
-int* matmul(int* A, int* B, int rows_A, int cols_A, int rows_B, int cols_B) 
+void matmul(int* C,  int* A, int* B, int rows_A, int cols_A, int rows_B, int cols_B)
 {
-	/*  define a new matrix with define_new)_matrix() to fill with 
-		the A multiplied by B The shape is rows_A by cols_B        */ 
-	int* C = define_new_matrix(rows_A, cols_B);
-
+	
 	// perform matmul alg: C_ij = n_Sigma_k=1 A_ik * B_kj
 
 	// intialize var to stor element at index i, j in matrix C  
@@ -68,7 +65,6 @@ int* matmul(int* A, int* B, int rows_A, int cols_A, int rows_B, int cols_B)
 	// iterate through the rows of Matrix A
 	for (int i=0; i < rows_A; i++)
 	{
-		printf("\n");
 		// iterate through the columns in B
 		for (int j = 0; j < cols_B; j++)
 		{
@@ -84,14 +80,9 @@ int* matmul(int* A, int* B, int rows_A, int cols_A, int rows_B, int cols_B)
 			
 			// place dot product of the ith row and jth col into C(i, j)
 			C[INDEX(i, j, cols_B)] = element_ij;
-
-			printf(" %d ", C[INDEX(i, j, cols_B)]);
-
 		}
-
 	}
 
-	return C;
 }
 
 /*

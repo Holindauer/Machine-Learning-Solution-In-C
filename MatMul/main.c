@@ -32,10 +32,19 @@ int main(void)
 
 	// ------------------------------ MatMul ----------------------------------
 
+	/*  define a new matrix with define_new)_matrix() to fill with
+		the A multiplied by B The shape is rows_A by cols_B. It must
+		be define in main to avoid a dangling pointer error if returned 
+		by matmul
+	*/
+	int* C = define_new_matrix(A_rows, B_cols);
 	
+
+	matmul(C, A, B, A_rows, A_cols, B_rows, B_cols);  // perform matrix multiplication
+
+
 	printf("\n\nC = AB = \n");
-	int* C = matmul(A, B, A_rows, A_cols, B_rows, B_cols);  // perform matrix multiplication
-	printf("\n\n");
+	display_matrix(C, A_rows, B_cols);             // display
 
 	return 0;
 }

@@ -20,6 +20,6 @@ int* define_new_matrix(int num_rows, int nnum_cols);
 
 void populate_matrix(int rows, int cols, int* matrix);
 
-int* matmul(int* A, int* B, int rows_A, int cols_A, int rows_B, int cols_B);
+void matmul(int* C,  int* A, int* B, int rows_A, int cols_A, int rows_B, int cols_B);
 
 void display_matrix(int* matrix, int rows, int cols);
