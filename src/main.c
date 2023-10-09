@@ -1,51 +1,46 @@
-#include "matmul.h"
+#include "libraries.h"
 
-/*
-	This program contains computes the matrix multiplication for a 
-	matrix of dummy integer values of two matricies of variable size 
-*/
-
-int main(void) 
-
+int main(void)
 {
+	// seed randoim with time
+	srand((unsigned int)time(NULL));
 
-	// ------------------------- create first matrix -------------------------
 
-	int A_rows = 5, A_cols = 7;						   // intialize rows and cols
+	// ------------------------ create multi layer perceptron ------------------------ 
+	/*
+		Below I am instantiating the weight matricies for a multi layer perceptron with 3 layers.
 
-	int* A = define_new_matrix(A_rows, A_cols);      // create matrix  A
-	
-	populate_matrix(A_rows, A_cols, A);			   // populate matrix with dummy values
-	
-	printf("\n\nA = \n");
-	display_matrix(A, A_rows, A_cols);	        // display
-
-	// ------------------------- create second matrix -------------------------
-
-	int B_rows = 7, B_cols = 10;				      // intialize rows and cols
-
-	int* B = define_new_matrix(B_rows, B_cols);     // create matrix  B
-
-	populate_matrix(B_rows, B_cols, B);			  // populate matrix with dummy values
-
-	printf("\n\nB = \n");
-	display_matrix(B, B_rows, B_cols);		   // display
-
-	// ------------------------------ MatMul ----------------------------------
-
-	/*  define a new matrix with define_new)_matrix() to fill with
-		the A multiplied by B The shape is rows_A by cols_B. It must
-		be define in main to avoid a dangling pointer error if returned 
-		by matmul
+		Weight matricies,have the shape [num_neurons, input_features]. By multiplying WX, where W is the 
+		weight matrix for a layer, and X is the input matrix wiht shape [input_features, 1], the product 
+		matrix will have the shape, [num_neurons, 1] and can be passed into the next layer just as X was 
+		passed in. 
+		
 	*/
-	int* C = define_new_matrix(A_rows, B_cols);
+	
+	//define num input features 
+	int input_features = 10;
+
+	// initialize num layer neurons
+	int layer_1_nodes = 10,
+		layer_2_nodes = 20,
+		layer_3_nodes = 30;
+
+	// weight matricies are defined using the define_new_matrix() function from matmul.h
+
+	float* W_1 = define_new_matrix(input_features, layer_1_nodes);   // layer 1 weight matrix
+	float* W_2 = define_new_matrix(layer_1_nodes, layer_2_nodes);    // layer 2 weight matrix
+	float* W_3 = define_new_matrix(layer_2_nodes, layer_3_nodes);    // layer 3 weight matrix
+
+	// Randomly initialize weights of matrix using he initialization
+	he_initialize(W_1, input_features, layer_1_nodes);
+	he_initialize(W_2, layer_1_nodes, layer_2_nodes);
+	he_initialize(W_3, layer_2_nodes, layer_3_nodes);
+
 	
 
-	matmul(C, A, B, A_rows, A_cols, B_rows, B_cols);  // perform matrix multiplication
 
 
-	printf("\n\nC = AB = \n");
-	display_matrix(C, A_rows, B_cols);             // display
+
 
 	return 0;
 }
