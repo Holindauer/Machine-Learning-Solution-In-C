@@ -16,7 +16,7 @@ double* define_new_matrix(int num_rows, int num_cols)
 
 		matrix contains pointers to ineger types
 	*/
-	double* matrix = (int*)malloc(num_rows * num_cols * sizeof(int));
+	double* matrix = (int*)malloc(num_rows * num_cols * sizeof(double));
 
 	if (matrix == NULL)  // if malloc fails, the first pointer will be NULL
 	{
@@ -26,8 +26,6 @@ double* define_new_matrix(int num_rows, int num_cols)
 	return matrix;
 
 }
-
-
 
 /*
 	This function computes the matrix multiplication of a matrix a and B.
@@ -69,7 +67,7 @@ void matmul(int* C, int* A, int* B, int rows_A, int cols_A, int rows_B, int cols
 	This function displays a matrix.
 	Precondition, matrix exists.
 */
-void display_matrix(int* matrix, int rows, int cols)
+void display_matrix(float* matrix, int rows, int cols)
 {
 	for (int i = 0; i < rows; i++)
 	{
@@ -78,7 +76,7 @@ void display_matrix(int* matrix, int rows, int cols)
 		for (int j = 0; j < cols; j++)
 		{
 			// print ith,jth cols of the matrix
-			printf(" %d ", matrix[INDEX(i, j, cols)]);
+			printf(" %lf ", matrix[INDEX(i, j, cols)]);
 		}
 	}
 
