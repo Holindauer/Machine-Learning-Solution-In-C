@@ -82,3 +82,4 @@ void display_matrix(float* matrix, int rows, int cols)
 
 
 }
+

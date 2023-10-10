@@ -28,20 +28,12 @@ int main(void)
 	// weight matricies are defined using the define_new_matrix() function from matmul.h
 
 	float* W_1 = define_new_matrix(input_features, layer_1_nodes);   // layer 1 weight matrix
-			
-	int W_1_rows = input_features,								     
-		W_1_cols = layer_1_nodes; 
+
 
 	float* W_2 = define_new_matrix(layer_1_nodes, layer_2_nodes);    // layer 2 weight matrix
 
-	int W_2_rows = layer_1_nodes,
-		W_2_cols = layer_2_nodes;
-
 
 	float* W_3 = define_new_matrix(layer_2_nodes, layer_3_nodes);    // layer 3 weight matrix
-
-	int W_3_rows = layer_2_nodes,
-		W_3_cols = layer_3_nodes;
 
 
 	// Randomly initialize weights of matrix using he initialization
@@ -76,43 +68,23 @@ int main(void)
 	*/
 
 
+	// initialize input
+	int X_rows = 10, X_cols = 1;
+	float* X = define_new_matrix(X_rows, X_cols);								// define input matrix
 
-	// to test the forward pass, I will need to create matricies 
-	// for the outputs of each layer as well as an input matrix
+	// run forward pass
+	int y_rows = 30, y_cols = 1;												// initialize output shape
+	float* y_hat = forward_pass(W_1, W_2, W_3,									// weight matricies
+								layer_1_nodes, layer_2_nodes, layer_3_nodes,    // num neurons per layer
+								X, X_rows, X_cols);								// input with shape
 
-	float* X = define_new_matrix(10, 1);								// input 
-	int X_rows = 10,
-		X_cols = 1;
-
-	float* layer_1_output = define_new_matrix(layer_1_nodes, 1);		// layer 1 output
-	float* layer_2_output = define_new_matrix(layer_2_nodes, 1);		// layer 2 output
-	float* layer_3_output = define_new_matrix(layer_3_nodes, 1);		// layer 3 output
-
-	
-
-
-	// forward pass: 
-	// 
-	// Here is reminder of the protype for the matmult function:
-	// void matmul(int* C, int* A, int* B, int rows_A, int cols_A, int rows_B, int cols_B);
-
-	matmul(layer_1_output, W_1, X, W_1_rows, W_1_cols, X_rows, X_cols);
-	matmul(layer_2_output, W_2, layer_1_output, W_2_rows, W_2_cols, layer_1_nodes, 1);
-	matmul(layer_3_output, W_3, layer_2_output, W_3_rows, W_3_cols, layer_2_nodes, 1);
+	// display output
+	display_matrix(y_hat, y_rows, y_cols);
 
 
-
-
-
-
-	// free neural network weights when done
-	free(W_1);
-	free(W_2);
-	free(W_3);
-	free(X);
-	free(layer_1_output);
-	free(layer_2_output);
-	free(layer_3_output);
+	// free memory after program completes
+	free(W_1), free(W_2), free(W_3); // neural network weights
+	free(X), free(y_hat);			 // input and output matrices
 
 	return 0;
 }
