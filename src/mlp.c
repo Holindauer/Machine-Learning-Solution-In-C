@@ -30,10 +30,10 @@ void he_initialize(float* matrix, int rows, int cols) {
             float u2 = random_float(0.0, 1.0);                      // a from uniform distribution
 
             float z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2); // use u1 and u2 to compute z0 from 
-            // the standard normal distribution
-// Assign the weight
+                                                                    // the standard normal distribution
+            // Assign the weight
             matrix[INDEX(i, j, cols)] = stddev * z0;                // multiply z0 by std to transform 
-            // z0 into the correct distribution
+                                                                    // z0 into the correct distribution
 
         }
     }
@@ -107,12 +107,10 @@ double* forward_pass(double* W_1, double* W_2, double* W_3,            // weight
     matmul(layer_3_output, W_3, layer_2_output, W_3_rows, W_3_cols, layer_2_nodes, 1);  // multiply layer 2 output by weight matrix
     ReLU(layer_3_output, layer_3_output_rows, layer_3_output_cols);                     // apply activation
 
-
-
-
     // free memory after function call,
     //free(layer_1_output), free(layer_2_output), free(layer_3_output);
 
     return layer_3_output;
 
 }
+

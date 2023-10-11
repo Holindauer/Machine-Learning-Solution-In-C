@@ -76,3 +76,28 @@ dataset load_mnist_digits(const char* filename, int num_digits)
             
     return mnist_dataset;
 }
+
+
+
+/*
+   This function returns a batch of batch_size from a dataset struct
+*/
+batch gather_batch(dataset data, int batch_size, int start_batch)
+{
+    batch new_batch;                    // initialzie new batch
+     
+    new_batch.batch_size = batch_size;  // set batch size
+
+
+    for (int i; i < batch_size; i++)
+    {
+        // place start of batch + i'th example into the batch
+        new_batch.examples[start_batch + i] = data.examples[start_batch + i];
+
+        // place start of batch + i'th label into the batch
+        new_batch.labels[start_batch + i] = data.labels[start_batch + i];
+
+    }
+
+    return new_batch;
+}

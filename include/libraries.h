@@ -14,7 +14,7 @@
 // created header files
 #include "matmul.h"
 #include "mlp.h"
-#include "read_data.h"
+#include "data.h"
 
 // included libraries
 #include <stdio.h>

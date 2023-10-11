@@ -11,7 +11,7 @@ int main(void)
 		Below I am instantiating the weight matricies for a multi layer perceptron with 3 layers.
 
 		Weight matricies,have the shape [num_neurons, input_features]. By multiplying WX, where W is the
-		weight matrix for a layer, and X is the input matrix wiht shape [input_features, 1], the product
+		weight matrix for a layer, and X is the input matrix with shape [input_features, 1], the product
 		matrix will have the shape, [num_neurons, 1] and can be passed into the next layer just as X was
 		passed in.
 
@@ -98,6 +98,16 @@ int main(void)
 
 
 
+	// ------------------------ create a batch of data ------------------------ 
+	
+	// set batch size 
+	int batch_size = 8;
+
+	// set start index of the batch
+	int start_of_batch = 0;
+
+	// create new batch
+	batch new_batch = gather_batch(mnist_dataset, batch_size, start_of_batch);
 
 
 
@@ -106,14 +116,16 @@ int main(void)
 
 
 
-
-	// free memory after program completes
+	// ------------------------ free memory after program completes ------------------------ 
 
 	free(W_1), free(W_2), free(W_3); // neural network weights
 	free(X), free(y_hat);			 // input and output matrices
 
 	free(mnist_dataset.examples);    // dataset
 	free(mnist_dataset.labels);
+
+	free(new_batch.examples);        // batch
+	free(new_batch.labels);
 
 	return 0;
 }
