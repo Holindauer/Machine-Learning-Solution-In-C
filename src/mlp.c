@@ -14,10 +14,10 @@ float random_float(float min, float max) {
     roughly the same.
 
     For context, weight matricies have the shape [num_neurons, input_features]
-    
+
     Weights are initialze from a normal distribution with a mean of 0 and a std
     of sqrt( 2 / input_features )
-*/ 
+*/
 void he_initialize(float* matrix, int rows, int cols) {
     float stddev = sqrt(2.0 / cols);                                // get standard deviation for He initialization
 
@@ -30,10 +30,10 @@ void he_initialize(float* matrix, int rows, int cols) {
             float u2 = random_float(0.0, 1.0);                      // a from uniform distribution
 
             float z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2); // use u1 and u2 to compute z0 from 
-                                                                    // the standard normal distribution
-            // Assign the weight
+            // the standard normal distribution
+// Assign the weight
             matrix[INDEX(i, j, cols)] = stddev * z0;                // multiply z0 by std to transform 
-                                                                    // z0 into the correct distribution
+            // z0 into the correct distribution
 
         }
     }
@@ -42,15 +42,15 @@ void he_initialize(float* matrix, int rows, int cols) {
 
 /*
     This function appleis the ReLU activation function to an input matrix
-    The Rectified Linear Unit is defined as f(x) = max(0, x). Which is the 
-    linear parent function above zero and a constant zero function less 
+    The Rectified Linear Unit is defined as f(x) = max(0, x). Which is the
+    linear parent function above zero and a constant zero function less
     than and equal to 0.
 */
 void ReLU(float* matrix, int rows, int cols)
 {
     for (int i = 0; i < rows; i++) {                // iterate through matrix elements
         for (int j = 0; j < cols; j++) {
-             
+
             if (matrix[INDEX(i, j, cols)] <= 0)     // check if 0 > x with regards to max(0,x)
             {
                 matrix[INDEX(i, j, cols)] = 0;      // set to 0 if so
@@ -62,17 +62,17 @@ void ReLU(float* matrix, int rows, int cols)
 }
 
 /*
-    This function defines the forward pass for a 3 layer mlp. 
-    Provided weight matrices, num neurons per layer, input and 
-    its associated shape. The function outputs a matrix pointer 
+    This function defines the forward pass for a 3 layer mlp.
+    Provided weight matrices, num neurons per layer, input and
+    its associated shape. The function outputs a matrix pointer
     array.
 */
-double* forward_pass(double* W_1, double* W_2, double* W_3,        // weight matricies
-    int layer_1_nodes, int layer_2_nodes, int layer_3_nodes,    // num neurons per layer
-    double* X, int X_rows, int X_cols)                         // input and input dimmensions
+double* forward_pass(double* W_1, double* W_2, double* W_3,            // weight matricies
+    int layer_1_nodes, int layer_2_nodes, int layer_3_nodes,           // num neurons per layer
+    double* X, int X_rows, int X_cols)                                 // input and input dimmensions
 {
 
-    int W_1_rows = X_rows,									    // set rows, cols							     
+    int W_1_rows = X_rows,									            // set rows, cols							     
         W_1_cols = layer_1_nodes;
 
     int W_2_rows = layer_1_nodes,									    // set rows, cols

@@ -16,7 +16,7 @@ double* define_new_matrix(int num_rows, int num_cols)
 
 		matrix contains pointers to ineger types
 	*/
-	double* matrix = (int*)malloc(num_rows * num_cols * sizeof(double));
+	double* matrix = (double*)malloc(num_rows * num_cols * sizeof(double));
 
 	if (matrix == NULL)  // if malloc fails, the first pointer will be NULL
 	{
@@ -24,7 +24,6 @@ double* define_new_matrix(int num_rows, int num_cols)
 	}
 
 	return matrix;
-
 }
 
 /*
@@ -82,4 +81,3 @@ void display_matrix(float* matrix, int rows, int cols)
 
 
 }
-
