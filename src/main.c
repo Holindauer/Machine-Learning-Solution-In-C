@@ -114,8 +114,6 @@ int main(void)
 
 
 
-
-
 	// ------------------------ free memory after program completes ------------------------ 
 
 	free(W_1), free(W_2), free(W_3); // neural network weights

@@ -114,3 +114,76 @@ double* forward_pass(double* W_1, double* W_2, double* W_3,            // weight
 
 }
 
+
+
+/*
+    This function computes the cross entropy loss for a batch during training. 
+    The batch struct contains both the example matrix, label array, and predictions
+    array within its members. 
+
+    cross entropy for a single datapoint is defined below as:
+    
+    L(y, y_hat) = - M_sigma_c=1 (y_c * log(y_hat_c) )
+
+    Where:  M is the number of classes
+
+            M_sigma_c=1 is the summation starting at 1 to the num classes
+    
+            y_c is a binary value indicating whether the target label and the 
+            c'th label for the current example are the same.
+
+            y_hat_c is the the model's predicted probability of whether the
+            current example belongs to class c
+
+    Thus, cross entropy for the entire batch is:
+
+    batch_loss = -(1/N) N_sigma_i=1 ( L(y, y_hat) )
+
+    Where N is the number of examples in the batch
+*/
+double cross_entropy_loss(batch train_batch, int num_classes)
+{
+    int batch_size = train_batch.batch_size;           // extract batch size from batch
+
+    double* labels = train_batch.labels;               // extract labels array from batch   
+
+    double** predictions = train_batch.predictions;     // extract predictions array from batch
+
+    double y_c = 0;                                    // initilize class/target relationship
+
+    double example_loss = 0;                           // initialize loss for a single example
+
+    double batch_loss = 0;                             // initialize loss for entire batch
+
+    // compute cross entropy loss for the entire batch
+    for (int N = 0; N < batch_size; N++)               // N is current example of batch
+    {
+
+        example_loss = 0;                              // reset loss for the current example
+
+        for (int c = 0; c < num_classes; c++)          // c are the potential classes a digit example could be
+        {
+            if (labels[N] == c)  // check if current class of consideration is the N'th examples label
+            {
+                y_c = 1;         // if so, assign y_c = 1    
+            }
+            else                 // otherwise
+            {
+                y_c = 0;         // set it to 0
+            }
+
+            // compute loss for a single example
+            example_loss += y_c * log(predictions[N][INDEX(c, 1, 1)]);
+        }
+
+        // add example loss to batch_loss rolling sum
+        batch_loss += example_loss; 
+    }
+
+    // average batch_loss across num examples
+    batch_loss /= (float)batch_size;
+
+
+    return batch_loss;
+
+}

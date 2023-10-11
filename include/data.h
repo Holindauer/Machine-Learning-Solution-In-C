@@ -14,9 +14,12 @@ typedef struct {
 // This struct is used to construct a batch of examples from the larger dataset that exists within the 
 // a dataset struct. A batch struct type will be used for storing both incoming batches to the model for
 // inferrence as well as predictions that will be fed into the loss function.
+// predictions contains all probabilities output by the model that an image belongs to each individual 
+// class
 typedef struct {
     double** examples;
     double* labels;
+    double** predictions;
     int batch_size;
 }batch;
 
