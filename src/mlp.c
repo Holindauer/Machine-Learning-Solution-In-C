@@ -1,10 +1,11 @@
 #include "libraries.h"
 
 
+//-------------------------------------------------------------------------------------------------------------------------<Weight Initialization>
 
 // Function to generate a random float between two given values
-float random_float(float min, float max) {
-    return (max - min) * ((float)rand() / RAND_MAX) + min;
+double random_double(double min, double max) {
+    return (max - min) * ((double)rand() / RAND_MAX) + min;
 }
 
 /*
@@ -18,18 +19,18 @@ float random_float(float min, float max) {
     Weights are initialze from a normal distribution with a mean of 0 and a std
     of sqrt( 2 / input_features )
 */
-void he_initialize(float* matrix, int rows, int cols) {
-    float stddev = sqrt(2.0 / cols);                                // get standard deviation for He initialization
+void he_initialize(double* matrix, int rows, int cols) {
+    double stddev = sqrt(2.0 / cols);                                // get standard deviation for He initialization
 
     for (int i = 0; i < rows; i++) {                                // loop through matrix elements
         for (int j = 0; j < cols; j++) {
 
             // Box-Muller transform to approximate random numbers 
 
-            float u1 = random_float(0.0, 1.0);                      // generate the numbers u1 and u2 
-            float u2 = random_float(0.0, 1.0);                      // a from uniform distribution
+            double u1 = random_double(0.0, 1.0);                      // generate the numbers u1 and u2 
+            double u2 = random_double(0.0, 1.0);                      // a from uniform distribution
 
-            float z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2); // use u1 and u2 to compute z0 from 
+            double z0 = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2); // use u1 and u2 to compute z0 from 
                                                                     // the standard normal distribution
             // Assign the weight
             matrix[INDEX(i, j, cols)] = stddev * z0;                // multiply z0 by std to transform 
@@ -39,6 +40,7 @@ void he_initialize(float* matrix, int rows, int cols) {
     }
 }
 
+//-------------------------------------------------------------------------------------------------------------------------<Activation Functions>
 
 /*
     This function appleis the ReLU activation function to an input matrix
@@ -46,7 +48,7 @@ void he_initialize(float* matrix, int rows, int cols) {
     linear parent function above zero and a constant zero function less
     than and equal to 0.
 */
-void ReLU(float* matrix, int rows, int cols)
+void ReLU(double* matrix, int rows, int cols)
 {
     for (int i = 0; i < rows; i++) {                // iterate through matrix elements
         for (int j = 0; j < cols; j++) {
@@ -60,6 +62,58 @@ void ReLU(float* matrix, int rows, int cols)
 
     }
 }
+
+
+/*
+    This function takes a matrix along with its dimmensions as input parameters
+    and applies the softmax activation funtion to it.
+
+    The softmax function is used to turn the raw outputs of a network for multi
+    class classification into probabilitiy values that add up to 1.
+
+    Thus, the matrix input to this function is a [num_classes, 1] matrix. Where,
+    in the context of mnist, num_class=10 and the each element of the matrix
+    corresponds to the logit value for each digit/index.
+
+
+    Softmax for the i'th logit value of a logit vector is: exp(y_i) / sigma_j ( exp(y_j) )
+
+    Where: y_i is the i'th classes logit and sigma_j ( exp(y_j) ) is the sum of all logits.
+*/
+void Softmax(double* matrix, int rows, int cols)
+{
+    // allocate memory to store logit values
+    double* logits = (double*)malloc(rows * sizeof(double));
+
+    // make a copy of the logits in logits array
+    for (int i = 0; i < rows; i++)
+    {
+        logits[i] = matrix[INDEX(i, 1, cols)];
+    }
+
+    // initialize rolling summation for softmax computation
+    double summation = 0;
+
+    // apply softmax to matrix using logits array
+    for (int i = 0; i < rows; i++)
+    {
+        // reset summation for exp of all logits
+        summation = 0;
+
+        for (int j = 0; j < rows; j++)
+        {
+            summation += exp(logits[i]);   // sum exp of all logits
+
+        }
+
+        // input softmax output into i'th logit
+        matrix[INDEX(i, 1, cols)] = exp(logits[i]) / summation;
+    }
+
+    // free logits memory after use
+    free(logits);
+}
+
 
 /*
     This function defines the forward pass for a 3 layer mlp.
@@ -82,15 +136,15 @@ double* forward_pass(double* W_1, double* W_2, double* W_3,            // weight
         W_3_cols = layer_3_nodes;
 
 
-    float* layer_1_output = define_new_matrix(layer_1_nodes, 1);		// layer 1 output
+    double* layer_1_output = define_new_matrix(layer_1_nodes, 1);		// layer 1 output
     int layer_1_output_rows = layer_1_nodes,							// set rows, cols
         layer_1_output_cols = 1;
 
-    float* layer_2_output = define_new_matrix(layer_2_nodes, 1);		// layer 2 output
+    double* layer_2_output = define_new_matrix(layer_2_nodes, 1);		// layer 2 output
     int layer_2_output_rows = layer_2_nodes,							// set rows, cols
         layer_2_output_cols = 1;
 
-    float* layer_3_output = define_new_matrix(layer_3_nodes, 1);		// layer 3 output
+    double *layer_3_output = define_new_matrix(layer_3_nodes, 1);		// layer 3 output
     int layer_3_output_rows = layer_3_nodes,							// set rows, cols
         layer_3_output_cols = 1;
 
@@ -105,7 +159,8 @@ double* forward_pass(double* W_1, double* W_2, double* W_3,            // weight
     ReLU(layer_2_output, layer_2_output_rows, layer_2_output_cols);					    // apply activation
 
     matmul(layer_3_output, W_3, layer_2_output, W_3_rows, W_3_cols, layer_2_nodes, 1);  // multiply layer 2 output by weight matrix
-    ReLU(layer_3_output, layer_3_output_rows, layer_3_output_cols);                     // apply activation
+    Softmax(layer_3_output, layer_3_output_rows, layer_3_output_cols);                  // apply softmax activation for turning
+                                                                                        // logits -----> probabilities
 
     // free memory after function call,
     //free(layer_1_output), free(layer_2_output), free(layer_3_output);
@@ -141,6 +196,9 @@ double* forward_pass(double* W_1, double* W_2, double* W_3,            // weight
 
     Where N is the number of examples in the batch
 */
+
+//-------------------------------------------------------------------------------------------------------------------------<Loss Functions>
+
 double cross_entropy_loss(batch train_batch, int num_classes)
 {
     int batch_size = train_batch.batch_size;           // extract batch size from batch
@@ -181,9 +239,10 @@ double cross_entropy_loss(batch train_batch, int num_classes)
     }
 
     // average batch_loss across num examples
-    batch_loss /= (float)batch_size;
+    batch_loss /= (double)batch_size;
 
 
     return batch_loss;
 
 }
+

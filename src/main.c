@@ -27,13 +27,13 @@ int main(void)
 
 	// weight matricies are defined using the define_new_matrix() function from matmul.h
 
-	float* W_1 = define_new_matrix(input_features, layer_1_nodes);   // layer 1 weight matrix
+	double* W_1 = define_new_matrix(input_features, layer_1_nodes);   // layer 1 weight matrix
 
 
-	float* W_2 = define_new_matrix(layer_1_nodes, layer_2_nodes);    // layer 2 weight matrix
+	double* W_2 = define_new_matrix(layer_1_nodes, layer_2_nodes);    // layer 2 weight matrix
 
 
-	float* W_3 = define_new_matrix(layer_2_nodes, layer_3_nodes);    // layer 3 weight matrix
+	double* W_3 = define_new_matrix(layer_2_nodes, layer_3_nodes);    // layer 3 weight matrix
 
 
 	// Randomly initialize weights of matrix using he initialization
@@ -70,11 +70,11 @@ int main(void)
 
 	// initialize input
 	int X_rows = 10, X_cols = 1;
-	float* X = define_new_matrix(X_rows, X_cols);		// define input matrix
+	double* X = define_new_matrix(X_rows, X_cols);		// define input matrix
 
 	// run forward pass
 	int y_rows = 30, y_cols = 1;						// initialize output shape
-	float* y_hat = forward_pass(W_1, W_2, W_3,			// weight matricies
+	double* y_hat = forward_pass(W_1, W_2, W_3,			// weight matricies
 		layer_1_nodes, layer_2_nodes, layer_3_nodes,    // num neurons per layer
 		X, X_rows, X_cols);								// input with shape
 

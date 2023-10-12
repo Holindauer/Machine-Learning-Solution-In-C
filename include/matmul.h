@@ -1,5 +1,6 @@
 #pragma once
 
+#include "libraries.h"
 
 /*  This macro is used to compute the index of a 2D matrix value that is stored
 	as an abstraction wtihin a 1D array given the i,j index and num cols

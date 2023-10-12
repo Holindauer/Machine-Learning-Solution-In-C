@@ -89,7 +89,7 @@ batch gather_batch(dataset data, int batch_size, int start_batch)
     new_batch.batch_size = batch_size;  // set batch size
 
 
-    for (int i; i < batch_size; i++)
+    for (int i=0; i < batch_size; i++)
     {
         // place start of batch + i'th example into the batch
         new_batch.examples[start_batch + i] = data.examples[start_batch + i];

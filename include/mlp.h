@@ -1,11 +1,13 @@
 #pragma once
 
+#include "libraries.h"
 
-float random_float(float min, float max);
 
-void he_initialize(float* matrix, int rows, int cols);
+double random_double(double min, double max);
 
-void ReLU(float* matrix, int rows, int cols);
+void he_initialize(double* matrix, int rows, int cols);
+
+void ReLU(double* matrix, int rows, int cols);
 
 /*
     This function defines the forward pass for a 3 layer mlp.
@@ -44,3 +46,5 @@ double* forward_pass(double* W_1, double* W_2, double* W_3,     // weight matric
     Where N is the number of examples in the batch
 */
 double cross_entropy_loss(batch train_batch, int num_classes);
+
+void Softmax(double* matrix, int rows, int cols);
