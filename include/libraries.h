@@ -1,6 +1,6 @@
 #pragma once
 
-// so scanf and printf will work
+
 #define _CRT_SECURE_NO_WARNINGS
 
 // define M_PI if not already defined
@@ -9,15 +9,17 @@
 #endif
 
 
+/* 
+	This macro is used to access the 1d index of a 2d
+	matrix (represented abstractly in a 1d array).
+*/
+#define INDEX(i, j, cols) ((i) * (cols) + (j))
 
-
-// created header files
-#include "matmul.h"
-#include "mlp.h"
-#include "data.h"
 
 // included libraries
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+
