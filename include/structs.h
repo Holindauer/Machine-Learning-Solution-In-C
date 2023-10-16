@@ -2,40 +2,33 @@
 
 #include "libraries.h"
 
-
 /*
-    This struct is used to hold the examples and labels for the dataset.
+	This struct will be used to house a single example of the mnist datset. 
+	double* image will hold a flattened mnist image. int label holds that 
+	image's label. 
 
-    examples is a type double array of arrays. The nested arrays within
-    .examples are the matricies indexable with the INDEX macro.
-
-    labels is an array containing the labels as type double
-*/ 
+	To hold the entire dataset for training, an array of example structs will
+	be created. 
+*/
 
 typedef struct {
-    double** examples;
-    double* labels;
-}dataset;
+	double* image;
+	int label;
+}example;
 
 
 /*
-    This struct is used to hold the weight matricies of a multi layer 
-    perceptron as a double array. Along with each matrix' shape stored 
-    as individual integers.
-
-    It is intended to be used initialize with the create_matrix() function
+	This struct is used to store the weight matricies of a neural network.
+	Indexing of the matricies should be done with the INDEX macro.
 */
 typedef struct {
+	//----------------------------------------------------Weight Matricies
 
-    double* W_1;             // layer 1 weight matrix
-    int W_1_rows, W_1_cols;  // layer 1 shape
+	double* W_1;   // layer 1 weight matrix
+	int W_1_rows, W_1_cols;     // layer 1 shape
 
 
-    double* W_2;             // layer 2 weight matrix
-    int W_2_rows, W_2_cols;  // layer 1 shape
-    
+	double* W_2;   // layer 2 weight matrix
+	int W_2_rows, W_2_cols;     // layer 1 shape
 
-    double* W_3;             // layer 3 weight matrix
-    int W_3_rows, W_3_cols;  // layer 1 shape
-
-}network_weights;
+}weights;

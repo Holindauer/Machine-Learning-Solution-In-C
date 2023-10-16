@@ -4,7 +4,7 @@
 
 
 /*
-	create_matrix() allocates memory for a matrix 
+	create_matrix() allocates memory for a matrix
 	of a given number of rows and columns. values of
 	the matrix are initialize to 0;
 */
@@ -12,16 +12,16 @@ double* create_matrix(int rows, int cols)
 {
 	// allocate memory for matrix
 
-	double* matrix = (double*)malloc(rows * cols * sizeof(double));  
+	double* matrix = (double*)malloc(rows * cols * sizeof(double));
 
 
 	if (matrix == NULL)  // error handling
 	{
-		exit(1);       
+		exit(1);
 	}
 
 	// Initialize memory to zero
-	memset(matrix, 0, rows * cols * sizeof(double));
+	memset(matrix, 1, rows * cols * sizeof(double));
 
 	return matrix;
 }
@@ -39,17 +39,15 @@ void display_matrix(double* matrix, int rows, int cols)
 		for (int j = 0; j < cols; j++)
 		{
 			// print ith,jth cols of the matrix
-			printf(" %lf ", matrix[INDEX(i, j, cols)]);
+			printf(" %.2f ", matrix[INDEX(i, j, cols)]);
 		}
 	}
-
-
 }
 
 
 /*
 	This function computes the matrix multiplication of a matrix A and B.
-	
+
 	As a preconditions, a matrix C of the correct shape of AB should already
 	be created and it's address passed into the function. Along with A, B, and
 	their associeated shapes

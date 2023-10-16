@@ -5,67 +5,85 @@
 
 int main(void)
 {
-	// seed random with time
-	srand((unsigned int)time(NULL));
 
-	// ------------------------ load in data ------------------------ 
+	//--------------------------------------------------------------------------Create Network
 
-	const char* filename = "mnist_test.csv";           // specifiy csv file name containing flattened mnist digits
+	// create instances of network weights
+	weights net;
 
-	int num_examples = 10;		                       // specify number of examples to pull from the dataset csv file
+	net.W_1 = malloc(W_1_ELEMENTS * sizeof(double));   // allocate heap memory for weight matrix 1
+	check_memory_allocation(net.W_1);
 
-	dataset data = load_data(filename, num_examples);  // load data into dataset struct
-
-
-
-
-	// ------------------------ initialize neural network ------------------------ 
+	// set shape of weight matrix 1
+	net.W_1_rows = LAYER_1_NEURONS;                    //     W_1    @  Input   = hidden
+	net.W_1_cols = INPUT_FEATURES;                     // [128, 784] @ [784, 1] = [128, 1]
 
 
-	network_weights net;         // declare an instance of network_weights struct
-
-	int input_features = 784;    // set input features
-
-	int layer_1_neurons = 128,   // set num neurons per layer
-		layer_2_neurons = 64,
-		layer_3_neurons = 10;    // <--- output shape
-
-
-	// Create Weight Matrixies
-
-	net.W_1 = create_matrix(input_features, layer_1_neurons);    // layer 1 weights
-	net.W_1_rows = input_features;
-	net.W_1_cols = layer_1_neurons;
-
-	net.W_2 = create_matrix(layer_1_neurons, layer_2_neurons);   // layer 2 weights
-	net.W_2_rows = layer_1_neurons;
-	net.W_2_cols = layer_2_neurons;
-
-	net.W_3 = create_matrix(layer_2_neurons, layer_3_neurons);   // layer 3 weights
-	net.W_3_rows = layer_2_neurons;
-	net.W_3_cols = layer_3_neurons;
+	net.W_2 = malloc(W_2_ELEMENTS * sizeof(double));   // allocate heap memory for weight matrix 2
+	check_memory_allocation(net.W_2);
+	
+	// set shape of weight matrix 2
+	net.W_2_rows = LAYER_2_NEURONS;                    //   W_2     @  hidden  = model_output
+	net.W_2_cols = LAYER_1_NEURONS;                    // [10, 128] @ [128, 1] = [10, 1]
 
 
-	// Randomly Initialize Weights with He Initialization 
-	he_initialize(net.W_1, net.W_1_rows, net.W_1_cols);    // layer 1
-	he_initialize(net.W_2, net.W_2_rows, net.W_2_cols);    // layer 2
-	he_initialize(net.W_3, net.W_3_rows, net.W_3_cols);    // layer 3
+	// initialize weights using he intitialization
+	he_initialize(net.W_1, net.W_1_rows, net.W_1_cols);
+	he_initialize(net.W_2, net.W_2_rows, net.W_2_cols);
+
+	//--------------------------------------------------------------------------Run Example Forward Pass
+
+	// intitialize model output
+	double model_output[10] = { 0 };
+
+	// initialize dummy example
+	double dummy_example[784];
+
+	for (int i = 0; i < 784; i++)
+	{
+		dummy_example[i] = random_double(0, 1);  // populate dummy example with values between 0 and 1
+	}
+
+	// run forward pass
+	forward(net, dummy_example, model_output);
+
+	// determine prediction from output vector
+	int prediction = predict(model_output);
+
+	// display probability vector output by model
+	display_matrix(model_output, 10, 1);
+	printf("\n\n Prediction: %d\n\n", prediction);  // and pred
 
 
-
-	// ------------------------ Test a Forward Pass ------------------------ 
-
-
-	double* model_output = forward_pass(net, data.examples[0]);
+	// free weight matricies when done
+	free(net.W_1);
+	free(net.W_2);
 
 
+	//--------------------------------------------------------------------------Load in Data
 
+	// set file name
+	const char* filename = "mnist_test.csv";
 
+	// create array of examples for dataset. with 100 examples
+	example dataset[100];
 
+	for (int i = 0; i < 100; i++)   // initialize all examples of the dataset
+	{
+		for (int j=0; j < 784; j++)
+		{
+			dataset[i].image = malloc(784 * sizeof(double));
+			check_memory_allocation(dataset[i].image);
+		}
+	}
 
-	// free memory after done 
-	free_data(&data, num_examples);
-	free_model_weights(&net);
+	load_data(filename, dataset, 100);
+
+	
+
+	
+	free_dataset(dataset, 100);
+	
 
 	return 0;
 }

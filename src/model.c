@@ -2,55 +2,51 @@
 #include "structs.h"
 #include "libraries.h"
 
-
-/*
-	This function performs a forward pass using
-	the weights within a network_weights struct
-*/
-double* forward_pass(network_weights net, double* input_example)
+void forward(weights net, double* example, double* model_output)
 {
-	// allocate memory for hidden layer outputs
-	double* hidden_1 = malloc(net.W_1_cols * sizeof(double));         // hidden layer 1 output
-	double* hidden_2 = malloc(net.W_2_cols * sizeof(double));         // hidden layer 2 output
-	double* output_vector = malloc(net.W_3_cols * sizeof(double));    // model output vector
+	// example dimmension for mnist
+	int X_rows = 784, X_cols = 1;
 
-	if (hidden_1 == NULL || hidden_2 == NULL || output_vector == NULL) // error handling 
-	{
-		free(hidden_1); 
-		free(hidden_2);
-		free(output_vector);
+	// create array to store hidden state
+	double hidden[128] = { 0 };
 
-		exit(1);
-	}
+	//----------------------------------------------------------------------------layer 1
+	
+	// multiply weight matrix 1 by examples to get hdiden state
+	matmul(hidden, net.W_1, example, net.W_1_rows, net.W_1_cols, X_rows, X_cols);
 
-	// This input shape is specific to the mnist dataset
-	int input_rows = 784, input_cols = 1;
+	// apply ReLU to hidden state
+	ReLU(hidden, 128, 1);
 
+	//----------------------------------------------------------------------------layer 2
 
-	// run forward pass: 
+	// multiply hidden state by weight matrix 2 to get model output
+	matmul(model_output, net.W_2, hidden, net.W_2_rows, net.W_2_cols, 128, 1);
 
-	matmul(hidden_1, net.W_1, input_example, net.W_1_rows, net.W_1_cols, input_rows, input_cols);   // multiply input by weight matrix
-	ReLU(hidden_1, net.W_1_rows, 1);	                                                               // apply activation
+	// apply softmax to model output
+	Softmax(model_output, 10);
 
-	matmul(hidden_2, net.W_2, hidden_1, net.W_2_rows, net.W_2_cols, net.W_1_cols, 1);              // multiply layer 1 output by weight matrix
-	ReLU(hidden_2, net.W_2_rows, 1);					                                               // apply activation
-
-	matmul(output_vector, net.W_3, net.W_2, net.W_3_rows, net.W_3_cols, net.W_2_cols, 1);         // multiply layer 2 output by weight matrix
-	Softmax(output_vector, net.W_3_cols, 1);                                                          // apply softmax activation for turning
-	                                                                                                   // logits -----> probabilities
-
-	return output_vector;
 }
 
 
-
-
 /*
-	This function frees the weight matricies of an mlp when done
+	This function recieves a vector of softmax applied probabilities,
+	to which it comptues the argmax in order to find the model prediction
+
+	it is assumed the length of the model_output is 10 for the task of mnist
 */
-void free_model_weights(network_weights* network)
+int predict(double* model_output)
 {
-	free(network->W_1);
-	free(network->W_2);
-	free(network->W_3);
+	int arg_max = 0;
+	double highest_probability = 0;
+
+	for (int i = 0; i < 10; i++)
+	{
+		if (model_output[i] > highest_probability)  // check for new max prob
+		{
+			highest_probability = model_output[i];  // if so, set new highest prob
+			arg_max = i;                            // and assign i'th index as new argmax
+		}
+	}
+	return arg_max;
 }
