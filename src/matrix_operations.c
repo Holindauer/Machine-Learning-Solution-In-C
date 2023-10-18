@@ -60,7 +60,7 @@ void matmul(double* C, double* A, double* B, int rows_A, int cols_A, int rows_B,
 	// perform matmul alg: C_ij = n_Sigma_k=1 A_ik * B_kj
 
 	// intialize var to stor element at index i, j in matrix C  
-	int element_ij = 0;
+	double element_ij = 0;
 
 	// iterate through the rows of Matrix A
 	for (int i = 0; i < rows_A; i++)

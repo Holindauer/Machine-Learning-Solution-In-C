@@ -35,6 +35,8 @@
 #define LAYER_2_NEURONS 10
 
 
+
+
 // included libraries
 #include <stdio.h>
 #include <math.h>

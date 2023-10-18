@@ -39,3 +39,15 @@ void load_data(const char* filename, example* dataset, int num_digits)
     fclose(file);
 }
 
+void initialize_dataset(example* dataset)
+{
+    for (int i = 0; i < 100; i++)   // initialize all images within the dataset 
+    {
+        for (int j = 0; j < 784; j++)
+        {
+            dataset[i].image = malloc(784 * sizeof(double));
+            check_memory_allocation(dataset[i].image);
+        }
+    }
+}
+

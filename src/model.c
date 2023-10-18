@@ -10,6 +10,7 @@ void forward(weights net, double* example, double* model_output)
 	// create array to store hidden state
 	double hidden[128] = { 0 };
 
+
 	//----------------------------------------------------------------------------layer 1
 	
 	// multiply weight matrix 1 by examples to get hdiden state
@@ -35,7 +36,7 @@ void forward(weights net, double* example, double* model_output)
 
 	it is assumed the length of the model_output is 10 for the task of mnist
 */
-int predict(double* model_output)
+double predict(double* model_output)
 {
 	int arg_max = 0;
 	double highest_probability = 0;

@@ -48,16 +48,7 @@ int main(void)
 	forward(net, dummy_example, model_output);
 
 	// determine prediction from output vector
-	int prediction = predict(model_output);
-
-	// display probability vector output by model
-	display_matrix(model_output, 10, 1);
-	printf("\n\n Prediction: %d\n\n", prediction);  // and pred
-
-
-	// free weight matricies when done
-	free(net.W_1);
-	free(net.W_2);
+	double prediction = predict(model_output);
 
 
 	//--------------------------------------------------------------------------Load in Data
@@ -67,21 +58,52 @@ int main(void)
 
 	// create array of examples for dataset. with 100 examples
 	example dataset[100];
+	initialize_dataset(dataset);
 
-	for (int i = 0; i < 100; i++)   // initialize all examples of the dataset
+	load_data(filename, dataset, 100);
+	
+
+	//--------------------------------------------------------------------------Run Batch and Compute Loss
+
+	/*
+		Currently, batching is done by adjusting the index we are pulling examples
+		from the dataset, by adjusting the index at each epoch (this will be more 
+		applicable when the training loop is developed). Model outputs for the 
+		batch are stored in the batch_outputs struct array.
+	*/
+
+	int batch_size = 8;
+
+	batch_outputs batch[8];
+
+	for (int i = 0; i < batch_size; i++)             // initialize batch output vectors
 	{
-		for (int j=0; j < 784; j++)
+		for (int j = 0; j < LAYER_2_NEURONS; j++)
 		{
-			dataset[i].image = malloc(784 * sizeof(double));
-			check_memory_allocation(dataset[i].image);
+			batch[i].output_vector[j] = 0;
 		}
 	}
 
-	load_data(filename, dataset, 100);
+	for (int i = 0; i < batch_size; i++)
+	{
+		batch[i].target = dataset[i].label;   // set label for current example within batch struct
 
-	
+		forward(net, dataset[i].image, batch[i].output_vector);    // run forward pass on batch
+	}
 
+
+	double loss = cross_entropy_loss(batch, batch_size);
+
+	printf("\n\nLoss: %lf\n\n", loss);
+
+
+
+	//--------------------------------------------------------------------------Free Memory When Done
+	// free weight matricies when done
+	free(net.W_1);
+	free(net.W_2);
 	
+	// free dataset when done
 	free_dataset(dataset, 100);
 	
 

@@ -35,7 +35,7 @@ void forward(weights net, double* example, double* model_output);
 /*
     Computes the argmax of the model model output probability vector
 */
-int predict(double* model_output);
+double predict(double* model_output);
 
 //--------------------------------------------------------------------------------------memory.c
 void check_memory_allocation(double* arr);
@@ -44,3 +44,9 @@ void free_dataset(example* dataset, int num_examples);
 
 //--------------------------------------------------------------------------------------load_data.c
 void load_data(const char* filename, example* dataset, int num_digits);
+
+void initialize_dataset(example* dataset);
+
+
+//--------------------------------------------------------------------------------------loss_functions.c
+double cross_entropy_loss(batch_outputs* outputs, int batch_size);

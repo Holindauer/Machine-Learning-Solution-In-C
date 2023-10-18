@@ -32,3 +32,18 @@ typedef struct {
 	int W_2_rows, W_2_cols;     // layer 1 shape
 
 }weights;
+
+
+/*
+	This struct is used to create an array of arrays that will
+	hold the model outputs of a single batch.
+*/
+typedef struct {
+
+	double output_vector[LAYER_2_NEURONS];  // holds an output vector for a single example
+	                                        // layer 2 neurons is the output size
+
+	double target;                          // true target for a single predicted example
+
+
+}batch_outputs;
