@@ -6,11 +6,14 @@
 int main(void)
 {
 
-	//--------------------------------------------------------------------------Create Network
+	//---------------------------------------------------------------------------------------------------------------------Create Network
 
 	// create instances of network weights
 	weights net;
 
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Layer 1
+	
 	net.W_1 = malloc(W_1_ELEMENTS * sizeof(double));   // allocate heap memory for weight matrix 1
 	check_memory_allocation(net.W_1);
 
@@ -18,6 +21,13 @@ int main(void)
 	net.W_1_rows = LAYER_1_NEURONS;                    //     W_1    @  Input   = hidden
 	net.W_1_cols = INPUT_FEATURES;                     // [128, 784] @ [784, 1] = [128, 1]
 
+	net.b_1 = malloc(128 * sizeof(double));            // bias matrix has same shape as hidden 
+	check_memory_allocation(net.b_1);
+
+	net.b_1_rows = 128, net.b_1_cols = 1;
+
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Layer 2
 
 	net.W_2 = malloc(W_2_ELEMENTS * sizeof(double));   // allocate heap memory for weight matrix 2
 	check_memory_allocation(net.W_2);
@@ -26,12 +36,20 @@ int main(void)
 	net.W_2_rows = LAYER_2_NEURONS;                    //   W_2     @  hidden  = model_output
 	net.W_2_cols = LAYER_1_NEURONS;                    // [10, 128] @ [128, 1] = [10, 1]
 
+	net.b_2 = malloc(10 * sizeof(double));
+	check_memory_allocation(net.b_2);
 
-	// initialize weights using he intitialization
-	he_initialize(net.W_1, net.W_1_rows, net.W_1_cols);
+	net.b_2_rows = 10, net.b_2_cols = 1;               // bias matrix has same shape as hidden 
+
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - initialize weights and biases using he intitialization
+
+	he_initialize(net.W_1, net.W_1_rows, net.W_1_cols);     // weights
 	he_initialize(net.W_2, net.W_2_rows, net.W_2_cols);
+	he_initialize(net.b_1, net.b_1_rows, net.b_1_cols);     // biases
+	he_initialize(net.b_2, net.b_2_rows, net.b_2_cols);
 
-	//--------------------------------------------------------------------------Run Example Forward Pass
+	//---------------------------------------------------------------------------------------------------------------------Run Example Forward Pass
 
 	// intitialize model output
 	double model_output[10] = { 0 };
@@ -51,7 +69,7 @@ int main(void)
 	double prediction = predict(model_output);
 
 
-	//--------------------------------------------------------------------------Load in Data
+	//---------------------------------------------------------------------------------------------------------------------Load in Data
 
 	// set file name
 	const char* filename = "mnist_test.csv";
@@ -63,7 +81,7 @@ int main(void)
 	load_data(filename, dataset, 100);
 	
 
-	//--------------------------------------------------------------------------Run Batch and Compute Loss
+	//---------------------------------------------------------------------------------------------------------------------Run Batch and Compute Loss
 
 	/*
 		Currently, batching is done by adjusting the index we are pulling examples
@@ -98,10 +116,12 @@ int main(void)
 
 
 
-	//--------------------------------------------------------------------------Free Memory When Done
+	//---------------------------------------------------------------------------------------------------------------------Free Memory When Done
 	// free weight matricies when done
 	free(net.W_1);
 	free(net.W_2);
+	free(net.b_1);
+	free(net.b_2);
 	
 	// free dataset when done
 	free_dataset(dataset, 100);

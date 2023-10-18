@@ -16,6 +16,9 @@ void forward(weights net, double* example, double* model_output)
 	// multiply weight matrix 1 by examples to get hdiden state
 	matmul(hidden, net.W_1, example, net.W_1_rows, net.W_1_cols, X_rows, X_cols);
 
+	// add bias
+	add_bias(hidden, net.b_1, net.b_1_rows, net.b_1_cols);
+
 	// apply ReLU to hidden state
 	ReLU(hidden, 128, 1);
 
@@ -24,10 +27,15 @@ void forward(weights net, double* example, double* model_output)
 	// multiply hidden state by weight matrix 2 to get model output
 	matmul(model_output, net.W_2, hidden, net.W_2_rows, net.W_2_cols, 128, 1);
 
+	// add biase
+	add_bias(model_output, net.b_2, net.b_2_rows, net.b_2_cols);
+
 	// apply softmax to model output
 	Softmax(model_output, 10);
 
 }
+
+
 
 
 /*

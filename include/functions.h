@@ -15,6 +15,16 @@ void display_matrix(double* matrix, int rows, int cols);
 
 void matmul(double* C, double* A, double* B, int rows_A, int cols_A, int rows_B, int cols_B);
 
+/*
+	This function performs an elementwise matrix addition with two matricies, A and B.
+	Where B stands for Bias. This function is used within the forward() fucntion within
+	model.c.
+
+	The like elements of matrix B are added directly into matrix A.
+
+*/
+void add_bias(double* A, double* B, int rows, int cols);
+
 //--------------------------------------------------------------------------------------activation_functions.c
 
 

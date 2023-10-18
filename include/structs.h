@@ -24,12 +24,21 @@ typedef struct {
 typedef struct {
 	//----------------------------------------------------Weight Matricies
 
-	double* W_1;   // layer 1 weight matrix
-	int W_1_rows, W_1_cols;     // layer 1 shape
+	double* W_1;             // layer 1 weight matrix
+	int W_1_rows, W_1_cols;  
+
+	double* b_1;              // layer 1 bias matrix
+	int b_1_rows, b_1_cols;  
 
 
-	double* W_2;   // layer 2 weight matrix
-	int W_2_rows, W_2_cols;     // layer 1 shape
+	double* W_2;             // layer 2 weight matrix
+	int W_2_rows, W_2_cols;     
+
+	double* b_2;             // layer 2 bias matrix
+	int b_2_rows, b_2_cols;
+
+
+
 
 }weights;
 
