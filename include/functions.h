@@ -60,3 +60,7 @@ void initialize_dataset(example* dataset);
 
 //--------------------------------------------------------------------------------------loss_functions.c
 double cross_entropy_loss(batch_outputs* outputs, int batch_size);
+
+//--------------------------------------------------------------------------------------backprop.c
+
+void ReLU_derivative(double* pre_activations, double* computed_derivatives, int num_elements);

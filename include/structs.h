@@ -25,21 +25,21 @@ typedef struct {
 	//----------------------------------------------------Weight Matricies
 
 	double* W_1;             // layer 1 weight matrix
+	double* W_1_grad;        // gradient of W_1
 	int W_1_rows, W_1_cols;  
 
 	double* b_1;              // layer 1 bias matrix
+	double* b_1_grad;         // gradient of b_1
 	int b_1_rows, b_1_cols;  
 
 
 	double* W_2;             // layer 2 weight matrix
+	double* W_2_grad;        // gradient of W_2
 	int W_2_rows, W_2_cols;     
 
 	double* b_2;             // layer 2 bias matrix
+	double* b_2_grad;        // gradient of b_2
 	int b_2_rows, b_2_cols;
-
-
-
-
 }weights;
 
 
@@ -56,3 +56,14 @@ typedef struct {
 
 
 }batch_outputs;
+
+
+/*
+	This struct is used to hold the hidden state of the forward pass .
+
+	It is intended to be made into an array and used within the backpropagation 
+	algorithm within backprop.c
+*/
+typedef struct {
+	double hidden[LAYER_1_NEURONS];
+}batch_hiddens;

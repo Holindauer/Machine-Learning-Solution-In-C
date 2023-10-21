@@ -2,6 +2,20 @@
 #include "structs.h"
 #include "libraries.h"
 
+/*
+	Game Plan for Implementing Backpropagation into the model:
+	--------------------------------------------------------------------------------
+
+	for epoch in range epochs:
+		
+		for batch in range(num_batches):   <----- this will need to be adjusted for the specific C implementation
+
+			run batch
+
+
+
+*/
+
 
 int main(void)
 {
@@ -49,25 +63,6 @@ int main(void)
 	he_initialize(net.b_1, net.b_1_rows, net.b_1_cols);     // biases
 	he_initialize(net.b_2, net.b_2_rows, net.b_2_cols);
 
-	//---------------------------------------------------------------------------------------------------------------------Run Example Forward Pass
-
-	// intitialize model output
-	double model_output[10] = { 0 };
-
-	// initialize dummy example
-	double dummy_example[784];
-
-	for (int i = 0; i < 784; i++)
-	{
-		dummy_example[i] = random_double(0, 1);  // populate dummy example with values between 0 and 1
-	}
-
-	// run forward pass
-	forward(net, dummy_example, model_output);
-
-	// determine prediction from output vector
-	double prediction = predict(model_output);
-
 
 	//---------------------------------------------------------------------------------------------------------------------Load in Data
 
@@ -90,9 +85,10 @@ int main(void)
 		batch are stored in the batch_outputs struct array.
 	*/
 
-	int batch_size = 8;
-
+	
 	batch_outputs batch[8];
+
+	int batch_size = 8;
 
 	for (int i = 0; i < batch_size; i++)             // initialize batch output vectors
 	{
@@ -113,6 +109,12 @@ int main(void)
 	double loss = cross_entropy_loss(batch, batch_size);
 
 	printf("\n\nLoss: %lf\n\n", loss);
+
+
+
+
+
+
 
 
 

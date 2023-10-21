@@ -25,7 +25,9 @@ multi layer perceptron with one hidden state.
 
     hidden is of shape [128, 1]
 
-The reason for choosing this specific model architecture is because I know it will work for minst. Training this exact architecture in torch returns a model that is capable of high 90% accuracy. Thus, reducing my task here to just figuring ut how to implement it into C. 
+The reason for choosing this specific model architecture is because I know it will work for minst. 
+Training this exact architecture in torch returns a model that is capable of high 90% accuracy. Thus, 
+reducing my task here to just figuring ut how to implement it into C. 
 
 ### Current Status:
     Currently, the program is able to read in labels and mnist pixel intensities flattened into the 
@@ -35,13 +37,21 @@ The reason for choosing this specific model architecture is because I know it wi
     and biases initialized with he intitialization. 
 
 ### Next Steps:
-    Refine the software design of how the program computes the forward pass for a batch of examples. Currently, this is done in main, but I plan to move this, potentially, into its own function so to clean up main().
+    Refine the software design of how the program computes the forward pass for a batch of examples. 
+    Currently, this is done in main, but I plan to move this, potentially, into its own function so 
+    to clean up main().
 
-    Implmenent backpropagation into the forward pass of a batch. There are a number of different ways I could do this that stem from different schools of thought that prioritize either memory conspumption, runtime/efficiency, simplicity of implementation, etc. 
+    Implmenent backpropagation into the forward pass of a batch. There are a number of different ways 
+    I could do this that stem from different schools of thought that prioritize either memory conspumption, 
+    runtime/efficiency, simplicity of implementation, etc. 
     
-    Because I am doing this project as more of a learning exploration of neural networks and C, as well as because this is a very isolated environment where there is only one model being trained on a very specific task, my implementation of backpropagation will not be highly modular. Which is true not just how I intend to implement backpropagation in this project, but for the model as well. 
+    Because I am doing this project as more of a learning exploration of neural networks and C, as well as 
+    because this is a very isolated environment where there is only one model being trained on a very specific 
+    task, my implementation of backpropagation will not be highly modular. Which is true not just how I 
+    intend to implement backpropagation in this project, but for the model as well. 
 
-    To compute the gradients I will use this definition of the chain rule for functions with vector inputs and a single scalar output:
+    To compute the gradients I will use this definition of the chain rule for functions with vector inputs 
+    and a single scalar output:
 
     dz/dx_i = Sigma_j (  (dz/dy_j)(dy_j/dx_i)  )
 
@@ -57,4 +67,7 @@ The reason for choosing this specific model architecture is because I know it wi
     dy_j/dx_i is the partial derivative of the j'th inner function wrt the i'th parameter of the model
 
 
-    To compute those partial derivatives, precomputed derivatives will be used in the computation of each of those ancestor parameters. This will likely be the least modular part of the program Thus the implementation of backpropogation in this use case will be highly specific to the network architecture I have chosen to train. 
+    To compute those partial derivatives, precomputed derivatives will be used in the computation of each 
+    of those ancestor parameters. This will likely be the least modular part of the program Thus the
+     implementation of backpropogation in this use case will be highly specific to the network architecture 
+     I have chosen to train. 
