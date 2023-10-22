@@ -5,8 +5,8 @@ The goal of this repository is to create a Neural Network in the C programming l
 To gain a greater understanding of underlying computer hardware and reinforce my understanding 
 of backpropagation and what neural networks are from a linear algebra perspective. 
 
-I am new to writing C, so I imagine this will be a fairly intensive process to figure out how 
-to go about this, so expect rapid CI/CD within this repository.
+I am very new to writing C, so I imagine this will be a fairly intensive process to figure out how 
+to do this, so expect rapid CI/CD within this repository.
 
 ### Network Specs:
 The specific network I am attempting to train is a an mnist classifier. Specifically, a simple 
@@ -35,39 +35,48 @@ reducing my task here to just figuring ut how to implement it into C.
 
     The program also contains functionality to run a forward pass on this loaded-in-data using weights
     and biases initialized with he intitialization. 
-
-### Next Steps:
-    Refine the software design of how the program computes the forward pass for a batch of examples. 
-    Currently, this is done in main, but I plan to move this, potentially, into its own function so 
-    to clean up main().
-
-    Implmenent backpropagation into the forward pass of a batch. There are a number of different ways 
-    I could do this that stem from different schools of thought that prioritize either memory conspumption, 
-    runtime/efficiency, simplicity of implementation, etc. 
     
-    Because I am doing this project as more of a learning exploration of neural networks and C, as well as 
-    because this is a very isolated environment where there is only one model being trained on a very specific 
-    task, my implementation of backpropagation will not be highly modular. Which is true not just how I 
-    intend to implement backpropagation in this project, but for the model as well. 
+### A Note on the Derivation of Gradients for the Backprop Computation:
+    ----------------------------------------------------------------------------------------
+	Softmax Activation: Given a vector of raw scores z of size k, where k is the number of classes:
+	Softmax(z_i) = exp(z_i) / k_Sigma_j=1[ exp(z_j) ]    for i = {1, ..., K}
+	----------------------------------------------------------------------------------------
+	Cross Entropy Loss Function:
 
-    To compute the gradients I will use this definition of the chain rule for functions with vector inputs 
-    and a single scalar output:
+	L(y, p) = - k_Sigma_i=1[y_i * log(p_i)]
 
-    dz/dx_i = Sigma_j (  (dz/dy_j)(dy_j/dx_i)  )
+	Where y_i is 1 if the true class is i and 0 otherwise, and p_i is the predicted probability for class i.
+	----------------------------------------------------------------------------------------
+	Gradient of the loss w.r.t. the Softmax outputs:
 
+	dL/dp_i = -y_i / p_i
+	----------------------------------------------------------------------------------------
+	Gradient of the Softmax Outputs w.r.t. the Logits z_i for a particular class i is: 
 
-    Where:
+	dSoftmax(z_i)/dz_i = Softmax(z_i) * (delta_ij - Softmax(z_i))
 
-    dz/dx_i is the partial derivative of the cost function with respect to the i'th parameter of the network.
+	Where deltaij is the Kronecker delta, whihc is 1 when i=j and 0 otherwise
+	----------------------------------------------------------------------------------------
+	Gradient of the Loss w.r.t. Logits (using the defintion of the chain rule for functions w/ vector inputs):
 
-    Sigma_j() refers to a summation of the j inner functions of the composite function y = g(x)  z = f(g(x)) = f(y)
+	dL/dz_i = k_Sigma_j=1 [(dL/dp_j) * (dp_j/dz_i)]
 
-    dz/dy_j is the partial derivative of the cost wrt the j'th inner function
+	Which, if we substitude the two above expressions in simplifies to:
 
-    dy_j/dx_i is the partial derivative of the j'th inner function wrt the i'th parameter of the model
+	dL/dz_i = p_i / y_i
+	----------------------------------------------------------------------------------------
+	Gradient Computation of the weights and biases of the last layer:
 
+	dL/dWij = (dL/dz_i) * (dz_i/dW_ij) 
+            = (p_i - y_i) * h_j
 
-    To compute those partial derivatives, precomputed derivatives will be used in the computation of each 
-    of those ancestor parameters. This will likely be the least modular part of the program Thus the
-     implementation of backpropogation in this use case will be highly specific to the network architecture 
-     I have chosen to train. 
+	dL/dbi = p_i - y_i
+
+    Where W is the last weight matrix, b the biases, and h is the last hidden state.
+
+    
+### Next Steps:
+    Currently, I am working to build backpropagation into the program. The implementation I am
+    using will be very specific to the model i am training and likely will require substatial 
+    modification in order to be used with a different model.
+
