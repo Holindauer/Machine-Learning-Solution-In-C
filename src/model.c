@@ -2,6 +2,7 @@
 #include "structs.h"
 #include "libraries.h"
 
+/* This function allocates mem for and initializes all elements within the weights struct */
 void init_model(weights* net)
 {
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Layer 1
@@ -61,45 +62,29 @@ void init_model(weights* net)
 	net->b_2_rows = LAYER_2_NEURONS, net->b_2_cols = 1;
 }
 
-void forward(weights net, double* example, double* model_output)
+/* This function computes the forward pass of the model */
+void forward(weights net, double* example, double* model_output, int batch_element)
 {
-	// example dimmension for mnist
-	int X_rows = 784, X_cols = 1;
-
-	// create array to store hidden state
-	double hidden[128] = { 0 };
-
-
 	//----------------------------------------------------------------------------layer 1
 	
-	// multiply weight matrix 1 by examples to get hdiden state
-	matmul(hidden, net.W_1, example, net.W_1_rows, net.W_1_cols, X_rows, X_cols);
+	// Pre activations
+	matmul(net.hidden[batch_element], net.W_1, example, net.W_1_rows, net.W_1_cols, 784, 1);
+	add_bias(net.hidden[batch_element], net.b_1, net.b_1_rows, net.b_1_cols);
 
-	// add bias
-	add_bias(hidden, net.b_1, net.b_1_rows, net.b_1_cols);
-
-	// apply ReLU to hidden state
-	ReLU(hidden, 128, 1);
+	// apply ReLU Activation 
+	ReLU(net.hidden[batch_element], 128, 1);
 
 	//----------------------------------------------------------------------------layer 2
 
-	// multiply hidden state by weight matrix 2 to get model output
-	matmul(model_output, net.W_2, hidden, net.W_2_rows, net.W_2_cols, 128, 1);
-
-	// add biase
+	// Pre activations
+	matmul(model_output, net.W_2, net.hidden[batch_element], net.W_2_rows, net.W_2_cols, 128, 1);
 	add_bias(model_output, net.b_2, net.b_2_rows, net.b_2_cols);
 
-	// apply softmax to model output
+	// apply Softmax activation
 	Softmax(model_output, 10);
-
 }
 
-/*
-	This function recieves a vector of softmax applied probabilities,
-	to which it comptues the argmax in order to find the model prediction
-
-	it is assumed the length of the model_output is 10 for the task of mnist
-*/
+/* Thif function perfroms argmax() on the probability evctor output of the model -- returns double */
 double predict(double* model_output)
 {
 	int arg_max = 0;

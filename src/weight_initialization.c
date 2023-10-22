@@ -5,18 +5,16 @@
 
 //-------------------------------------------------------------------------------------------------------------------------<Weight Initialization>
 
-// Function to generate a random float between two given values
+/* computes a random double within range parametrized by min and max */
 double random_double(double min, double max) {
     return (max - min) * ((double)rand() / RAND_MAX) + min;
 }
 
-/*
-    
-*/
+/* This function is used to initialized the model paramteters using he initialization */
 void he_initialize(double* weight_matrix, int rows, int cols) {
     double stddev = sqrt(2.0 / cols);                                // get standard deviation for He initialization
 
-    for (int i = 0; i < rows; i++) {                                 // loop through matrix elements
+    for (int i = 0; i < rows; i++) {                                 // iterate through matrix elements
         for (int j = 0; j < cols; j++) {
 
             // Box-Muller transform to approximate random numbers 
@@ -28,8 +26,7 @@ void he_initialize(double* weight_matrix, int rows, int cols) {
                                                                       // the standard normal distribution
             // Assign the weight
             weight_matrix[INDEX(i, j, cols)] = stddev * z0;           // multiply z0 by std to transform 
-                                                                      // z0 into the correct distribution
-
+                                                                      // z0 into the correct distributio
         }
     }
 }

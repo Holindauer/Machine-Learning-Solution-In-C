@@ -27,6 +27,8 @@ int main(void)
 
 	// create array of example structs 
 	example dataset[100];
+	int num_examples = 100;
+
 	initialize_dataset(dataset);
 
 	load_data(filename, dataset, 100);
@@ -39,13 +41,14 @@ int main(void)
 
 	init_batches(batch, net.batch_size);
 
+	int batch_element = 0; // this will need to be incremented at each epoch step once the training loop is developed
 
 	// run forward pass across batch
 	for (int i = 0; i < net.batch_size; i++)
 	{
 		batch[i].target = dataset[i].label;                      // set target
 
-		forward(net, dataset[i].image, batch[i].output_vector);  // run forward pass on  single example
+		forward(net, dataset[i].image, batch[i].output_vector, batch_element);  // run forward pass on  single example
 	}
 
 	// backprop (under development)

@@ -2,46 +2,40 @@
 #include "functions.h"
 #include "structs.h"
 
-void load_data(const char* filename, example* dataset, int num_digits)
-{
+/* This function loads in flattened mnist digits from a csv */
+void load_data(const char* filename, example* dataset, int num_digits){
     //--------------------------------------------------------------------------------------------------------------------Open File
-    FILE* file = fopen(filename, "r");                                  // open file input stream
-    if (file == NULL)
-    {
-        fprintf(stderr, "Could not open file %s\n", filename);          // error handling
-        exit(1);
-    }
+    FILE* file = fopen(filename, "r");                             
+    if (file == NULL){
+        fprintf(stderr, "Could not open file %s\n", filename);       
+        exit(1);}
 
     //--------------------------------------------------------------------------------------------------------------------Read in Data
 
-    int label = 0;               // initialize an int to store labels
-    double pixel_intensity = 0;  // initialize a double to hold each individual pixel intensity
+    int label = 0;             
+    double pixel_intensity = 0; 
 
-    // loop through the specified number of digits to extract from the dataset
-    for (int example = 0; example < num_digits; example++)             
+    for (int example = 0; example < num_digits; example++)   // loop through the specified number of digits to extract from the dataset  
     {
+        fscanf(file, "%d,", &label);
+        dataset[example].label = label;
 
-        fscanf(file, "%d,", &label);       // scan in label of the current example
-        dataset[example].label = label;    // place label into the example'th label of the dataset
-
-        for (int pixel = 0; pixel < 784; pixel++)            // iterate through the pixel values of each digit within the csv
+        for (int pixel = 0; pixel < 784; pixel++)
         {
             // If it's not the first pixel in the row, expect a comma before the value.
-            if (pixel > 0)
-            {
-                fscanf(file, ",");
-            }
+            if (pixel > 0) { fscanf(file, ","); }
+
             fscanf(file, "%lf", &pixel_intensity);
             dataset[example].image[pixel] = pixel_intensity;
         }
     }
-
     fclose(file);
 }
 
-void initialize_dataset(example* dataset)
+/* inititalizes each array in example in array of example stracts */
+void initialize_dataset(example* dataset, int num_examples)
 {
-    for (int i = 0; i < 100; i++)   // initialize all images within the dataset 
+    for (int i = 0; i < num_examples; i++)  
     {
         for (int j = 0; j < 784; j++)
         {
