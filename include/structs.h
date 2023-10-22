@@ -24,21 +24,25 @@ typedef struct {
 typedef struct {
 	//----------------------------------------------------Weight Matricies
 
-	double* W_1;             // layer 1 weight matrix
-	double* W_1_grad;        // gradient of W_1
+	double* W_1;             // layer 1 weights
+	double* W_1_grad;        // grad w.r.t W_1
 	int W_1_rows, W_1_cols;  
 
-	double* b_1;              // layer 1 bias matrix
-	double* b_1_grad;         // gradient of b_1
+	double* b_1;             // layer 1 bias 
+	double* b_1_grad;        // grad w.r.t. b_1
 	int b_1_rows, b_1_cols;  
 
 
-	double* W_2;             // layer 2 weight matrix
-	double* W_2_grad;        // gradient of W_2
+	double** hidden;         // array of hidden state arrays
+	int batch_size;          // batch_sizze num arrays in hidden 
+
+
+	double* W_2;             // layer 2 weights
+	double* W_2_grad;        // grad w.r.t. W_2
 	int W_2_rows, W_2_cols;     
 
-	double* b_2;             // layer 2 bias matrix
-	double* b_2_grad;        // gradient of b_2
+	double* b_2;             // layer 2 bias 
+	double* b_2_grad;        // gradient w.r.t. b_2
 	int b_2_rows, b_2_cols;
 }weights;
 
@@ -49,7 +53,7 @@ typedef struct {
 */
 typedef struct {
 
-	double output_vector[LAYER_2_NEURONS];  // holds an output vector for a single example
+	double* output_vector;  // holds an output vector for a single example
 	                                        // layer 2 neurons is the output size
 
 	double target;                          // true target for a single predicted example
@@ -57,13 +61,3 @@ typedef struct {
 
 }batch_outputs;
 
-
-/*
-	This struct is used to hold the hidden state of the forward pass .
-
-	It is intended to be made into an array and used within the backpropagation 
-	algorithm within backprop.c
-*/
-typedef struct {
-	double hidden[LAYER_1_NEURONS];
-}batch_hiddens;

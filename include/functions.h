@@ -35,6 +35,8 @@ void Softmax(double* vector, int length);
 
 //--------------------------------------------------------------------------------------model.c
 
+void init_model(weights* net);
+
 /*
     Runs a forward pass using network weights, a single example, 
     and places result into model_output array.
@@ -52,6 +54,15 @@ void check_memory_allocation(double* arr);
 
 void free_dataset(example* dataset, int num_examples);
 
+void arr_init_zero(double* arr, int num_elements);
+
+void init_batches(batch_outputs* batch, int batch_size);
+
+/* This function initializes each hidden state array within the network */
+void init_hidden(weights* net);
+
+void free_network(weights* net);
+
 //--------------------------------------------------------------------------------------load_data.c
 void load_data(const char* filename, example* dataset, int num_digits);
 
@@ -64,3 +75,5 @@ double cross_entropy_loss(batch_outputs* outputs, int batch_size);
 //--------------------------------------------------------------------------------------backprop.c
 
 void ReLU_derivative(double* pre_activations, double* computed_derivatives, int num_elements);
+
+void backprop_W_2(weights* net, batch_outputs* batch);
