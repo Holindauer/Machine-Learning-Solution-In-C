@@ -25,6 +25,21 @@ void matmul(double* C, double* A, double* B, int rows_A, int cols_A, int rows_B,
 /* Adds bias to a matrix w/ elementwise addition -- used within forward() pass */
 void add_bias(double* A, double* B, int rows, int cols);
 
+/*
+This function computes the transpose of a matrix i.e. swaps rows, cols
+
+		A = [ 1, 2, 3]
+			[ 4, 5, 6]
+
+		A_T = [1, 4]
+			  [2, 5]
+			  [3. 6]
+
+	Array A_T must have the same elements as Array A and should be indexed
+	using the roversed rows, cols of A
+*/
+void transpose(double* A_T, double* A, int A_rows, int A_cols);
+
 //--------------------------------------------------------------------------------------activation_functions.c
 
 /* This function computes ReLU() elementwise on a flattened matrix array */

@@ -2,6 +2,11 @@
 #include "structs.h"
 #include "libraries.h"
 
+
+// NOTE: Fix backpropW_2 and backpropb_2 to use outer product instead of elementise multiplication.
+
+
+
 /*
 	 This function computes the derivative of ReLU for a given input to the ReLU() func
 
@@ -23,9 +28,7 @@ void ReLU_derivative(double* pre_activations, double* computed_derivatives, int 
 	weight matrix of the last layer of the model. 
 
 	dL/dWij = (dL/dz_i) * (dz_i/dW_ij)         <--- To understand the derivation of this
-	        = (p_i - y_i) * h_j                     look at the note above the function W_2
-				                                    and b_2 grad comp functions in backprop.c
-				   
+	        = (p_i - y_i) * h_j                     look at the ReadMe
 
 	The function takes the follwing arguments:
 
@@ -58,9 +61,7 @@ void backprop_W_2(weights* net, batch_outputs* batch)
 	weight bias vector of the last layer of the model.
 
 	dL/dbi = p_i - y_i      <--- To understand the derivation of this
-		                         look at the note above the function W_2
-								 and b_2 grad comp functions in backprop.c
-
+		                         look at the ReadMe
 
 	The function takes the follwing arguments:
 
