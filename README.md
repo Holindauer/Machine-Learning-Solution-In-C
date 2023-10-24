@@ -13,7 +13,7 @@ to do this, so expect rapid CI/CD within this repository.
 For the Network Defined as:
 
 	hidden = ReLU(W_1*input + b_1)
-	output = Softmax(W_2*hidden + b_1)
+	output = Softmax(W_2*hidden + b_2)
 
 	Where W_1, W_2, b_1, b_2 are weight and bias vectors.
 

@@ -29,7 +29,7 @@ int main(void)
 	example dataset[100];
 	int num_examples = 100;
 
-	initialize_dataset(dataset);
+	initialize_dataset(dataset, 100);
 
 	load_data(filename, dataset, 100);
 	

@@ -40,6 +40,25 @@ This function computes the transpose of a matrix i.e. swaps rows, cols
 */
 void transpose(double* A_T, double* A, int A_rows, int A_cols);
 
+/*
+	This function computes the outer product of two vectors,
+
+	it takes as inpute two vectors to computes the outer product of,
+	their lengths, and an outer_product array to store the resultant
+	matrix
+
+	The outer product is defined as:
+
+	C = a [outer product ] b
+	C_ij = a_i * b_j
+
+	Where: C is an mxn matrix
+		   a is an m dimmensional vector
+		   b is an n dimmesnional vector
+*/
+void outer_product(double* a, double* b, double* C, int a_len, int b_len);
+
+
 //--------------------------------------------------------------------------------------activation_functions.c
 
 /* This function computes ReLU() elementwise on a flattened matrix array */
@@ -133,8 +152,7 @@ void ReLU_derivative(double* pre_activations, double* computed_derivatives, int 
 	weight matrix of the last layer of the model.
 
 	dL/dWij = (dL/dz_i) * (dz_i/dW_ij)         <--- To understand the derivation of this
-			= (p_i - y_i) * h_j                     look at the note above the function W_2
-													and b_2 grad comp functions in backprop.c
+			= (p_i - y_i) [outer product] h_j       look at the readme
 
 
 	The function takes the follwing arguments:
@@ -154,8 +172,7 @@ void backprop_W_2(weights* net, batch_outputs* batch);
 	weight bias vector of the last layer of the model.
 
 	dL/dbi = p_i - y_i      <--- To understand the derivation of this
-								 look at the note above the function W_2
-								 and b_2 grad comp functions in backprop.c
+								 look at the readme
 
 
 	The function takes the follwing arguments:
