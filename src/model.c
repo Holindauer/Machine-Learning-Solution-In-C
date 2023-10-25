@@ -3,7 +3,7 @@
 #include "libraries.h"
 
 /* This function allocates mem for and initializes all elements within the weights struct */
-void init_model(weights* net)
+void init_model(network* net)
 {
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Layer 1
 
@@ -63,16 +63,18 @@ void init_model(weights* net)
 }
 
 /* This function computes the forward pass of the model */
-void forward(weights net, double* example, double* model_output, int batch_element)
+void forward(network net, double* example, double* model_output, int batch_element)
 {
 	//----------------------------------------------------------------------------layer 1
 	
 	// Pre activations
 	matmul(net.hidden[batch_element], net.W_1, example, net.W_1_rows, net.W_1_cols, 784, 1);
-	add_bias(net.hidden[batch_element], net.b_1, net.b_1_rows, net.b_1_cols);
 
-	// apply ReLU Activation 
-	ReLU(net.hidden[batch_element], 128, 1);
+	add_bias(net.pre_activations_1[batch_element], net.b_1, net.b_1_rows, net.b_1_cols);  // compute and store pre activations for layer 1
+	 
+	//compute post activationsby appling ReLU to  apply ReLU Activation 
+	add_bias(net.hidden[batch_element], net.b_1, net.b_1_rows, net.b_1_cols);  // compute pre activations <----- this design decision can be improved upon
+	ReLU(net.hidden[batch_element], 128, 1);                                   // then apply ReLU()
 
 	//----------------------------------------------------------------------------layer 2
 

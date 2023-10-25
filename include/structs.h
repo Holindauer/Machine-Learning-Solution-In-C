@@ -18,7 +18,11 @@ typedef struct {
 
 
 /*
-	This struct is used to store the weight matricies of a neural network.
+	This struct is used to store the weight matricies as of a neural network.
+
+	Along with matricies for one hidden state and the gradient of the cost 
+	w.r.t. each weight matrix of the network.
+
 	Indexing of the matricies should be done with the INDEX macro.
 */
 typedef struct {
@@ -32,7 +36,7 @@ typedef struct {
 	double* b_1_grad;        // grad w.r.t. b_1
 	int b_1_rows, b_1_cols;  
 
-
+	double** pre_activations_1;
 	double** hidden;         // array of hidden state arrays
 	int batch_size;          // batch_sizze num arrays in hidden 
 
@@ -44,7 +48,7 @@ typedef struct {
 	double* b_2;             // layer 2 bias 
 	double* b_2_grad;        // gradient w.r.t. b_2
 	int b_2_rows, b_2_cols;
-}weights;
+}network;
 
 
 /*
@@ -53,11 +57,13 @@ typedef struct {
 */
 typedef struct {
 
+	double* input_vector;
+
 	double* output_vector;  // holds an output vector for a single example
 	                                        // layer 2 neurons is the output size
 
 	double target;                          // true target for a single predicted example
 
 
-}batch_outputs;
+}outputs;
 

@@ -71,10 +71,10 @@ void Softmax(double* vector, int length);
 //--------------------------------------------------------------------------------------model.c
 
 /* This function allocates mem for and initializes all elements within the weights struct */
-void init_model(weights* net);
+void init_model(network* net);
 
 /* This function computes the forward pass of the model */
-void forward(weights net, double* example, double* model_output, int batch_element);
+void forward(network net, double* example, double* model_output, int batch_element);
 
 /* Thif function perfroms argmax() on the probability evctor output of the model -- returns double */
 double predict(double* model_output);
@@ -91,13 +91,13 @@ void free_dataset(example* dataset, int num_examples);
 void arr_init_zero(double* arr, int num_elements);
 
 /* This fucntion intitalizes each nested array within a batch_outputs array */
-void init_batches(batch_outputs* batch, int batch_size);
+void init_batches(outputs* batch, int batch_size);
 
 /* This function initializes each hidden state array within the network */
-void init_hidden(weights* net);
+void init_hidden(network* net);
 
 /* This function frees the weights of the weights struct */
-void free_network(weights* net);
+void free_network(network* net);
 
 //--------------------------------------------------------------------------------------load_data.c
 
@@ -134,55 +134,89 @@ void initialize_dataset(example* dataset, int num_examples);
 
 	Where N is the number of examples in the batch
 */
-double cross_entropy_loss(batch_outputs* outputs, int batch_size);
+double cross_entropy_loss(outputs* outputs, int batch_size);
 
 //--------------------------------------------------------------------------------------backprop.c
 
 /*
-	 This function computes the derivative of ReLU for a given input to the ReLU() func
+	This the master function that function fascilliates backpropagation for
+	the gradient of the loss with respect to the parameters of the network.
+	It is specific to the following architecture:
 
-	 ReLU() = f(x) = max(0, x)
+		hidden = ReLU(W_1 * input + b_1)
+		output = Softmax(W_2 * hidden + b_2)
 
-	 f'(x) = 0    when x <= 0   ---  f'(x) = 1    when x > 0
+	With the follwoing shapes:
+
+		input; [784, 1]
+
+		W_1: [128, 784]
+		b_1: [128, 1]
+
+		hidden: [128, 1]
+
+		W_2: [10, 128]
+		b_2: [10, 1]
+
+
+	The function works by computing the gradient of the cross entropy with
+	respect to each parameter of the model for each example of a batch. Thse
+	gradients are accumulated and then averaged across the batch.
+
 */
-void ReLU_derivative(double* pre_activations, double* computed_derivatives, int num_elements);
+void backprop(network* net, outputs* batch);
 
 /*
-	This function accumulates the gradient of the cost with respect to each weight for the
-	weight matrix of the last layer of the model.
+	This function computes the gradient of the loss w.r.t. the weight matrix
+	of the output later, this is the first function to be called in the backprop()
+	master function.
 
-	dL/dWij = (dL/dz_i) * (dz_i/dW_ij)         <--- To understand the derivation of this
-			= (p_i - y_i) [outer product] h_j       look at the readme
+	backprop_W_2() retruns the gradient of lsos w.r.t. the pre activations of the
+	hidden layer, z_2. dL/dz_2 is need for the the subsequent function calls in the
+	backprop() master function. dL_dz_2 is also the equivalent to the grad of J()
+	w.r.t. b_2
 
+	The following mathematical computations are performed in this function:
 
-	The function takes the follwing arguments:
+		dL/dz_i = p_i - y_i
 
-		- weights* net is a pointer to the weights struct of model
+		dL/dWij = (dL/dz_i) * (dz_i/dW_ij)
+				= (p_i - y_i) [outer propduct] h_j
 
-		- batch_outputs* batch is an array of batch_output structs whose members contains the
-							   following data for each example predicted on within a batch:
+		Written equivalently as:
 
-			 - the output vector of of the model, containing the likelihood each class is the target
-			 - as well as the label for each example within the array
+		dL/dW_2 = dL/dz_2 [outer product] hidden
+		dL/db_2 = dL/dz_2
+
+	to understand the derivation of these formulas, check the ReadME
 */
-void backprop_W_2(weights* net, batch_outputs* batch);
+double* accumulate_W_2_grad(network* net, outputs* batch, int batch_element);
 
 /*
-	This function accumulates the gradient of the cost with respect to each weight for the
-	weight bias vector of the last layer of the model.
+	This function accumulates the gradient of the cost J() w.r.t.
+	the bias vector the the output layer. This grad has already
+	been computed within backprop_W_2(), so all that must happed
+	is to accumulated into net.b_2_grad.
 
-	dL/dbi = p_i - y_i      <--- To understand the derivation of this
-								 look at the readme
-
-
-	The function takes the follwing arguments:
-
-		- weights* net is a pointer to the weights struct of model
-
-		- batch_outputs* batch is an array of batch_output structs whose members contains the
-							   following data for each example predicted on within a batch:
-
-			 - the output vector of of the model, containing the likelihood each class is the target
-			 - as well as the label for each example within the array
+	dL/db_2 = dL/dz_2 <--- whihc must be passed in as an arg
 */
-void backprop_b_2(weights* net, batch_outputs* batch);
+void accumulate_b_2_grad(network* net, double* dL_dz_2);
+
+/*
+	This function propagates the gradient of the cost w.r.t. the weight matrix
+	of the hiddne layer for a single example wihtin a batch. It takes as input
+	dL/dz_2, which was computed in accumulate_W_2_grad.
+
+	The func outputs dL_dz_1 which is used within accumulate_b_1_grad
+
+*/
+double* accumulate_W_1_grad(network* net, outputs* batch, double* dL_dz_2, int batch_element);
+
+/*
+	This function accumulates the gradient w.r.t. the bias parameters of the
+	input layer. The grad has already been precomputed in accumulate_W_1_grad,
+
+		dL_db_i = dL_dz_1
+*/
+void accumulate_b_1_grad(network* net, outputs* batch, double* dL_dz_1, int batch_element);
+

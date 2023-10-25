@@ -28,7 +28,7 @@
 
     Where N is the number of examples in the batch
 */
-double cross_entropy_loss(batch_outputs* outputs, int batch_size)
+double cross_entropy_loss(outputs* outputs, int batch_size)
 {
     double y_c = 0, batch_loss = 0, prediction = 0;     
 

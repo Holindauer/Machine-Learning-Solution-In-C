@@ -24,8 +24,22 @@ void arr_init_zero(double* arr, int num_elements)
 }
 
 /* This function initializes each hidden state array within the network */
-void init_hidden(weights* net)
+void init_hidden(network* net)
 {
+	//----------------------------------------------------------------------------------------pre activations
+	// allocate mem for outer array
+	net->pre_activations_1 = (double**)malloc(net->batch_size * sizeof(double*));
+	check_memory_allocation(net->pre_activations_1);
+
+	// initialize each batch's nested hidden array 
+	for (int b = 0; b < net->batch_size; b++)
+	{
+		net->pre_activations_1[b] = malloc(LAYER_1_NEURONS * sizeof(double));
+		check_memory_allocation(net->pre_activations_1[b]);
+		arr_init_zero(net->pre_activations_1[b], LAYER_1_NEURONS);   // look into whether -> in this case is passing not a pointer into the func
+	}
+
+	//----------------------------------------------------------------------------------------post activations
 	// allocate mem for outer array
 	net->hidden = (double**)malloc(net->batch_size * sizeof(double*));
 	check_memory_allocation(net->hidden);
@@ -33,14 +47,14 @@ void init_hidden(weights* net)
 	// initialize each batch's nested hidden array 
 	for (int b = 0; b < net->batch_size; b++)
 	{
-		net->hidden[b] = (double*)malloc(LAYER_1_NEURONS * sizeof(double));
+		net->hidden[b] = malloc(LAYER_1_NEURONS * sizeof(double));
 		check_memory_allocation(net->hidden[b]);
 		arr_init_zero(net->hidden[b], LAYER_1_NEURONS);   // look into whether -> in this case is passing not a pointer into the func
 	}
 }
 
 /* This fucntion intitalizes each nested array within a batch_outputs array */
-void init_batches(batch_outputs* batch, int batch_size)
+void init_batches(outputs* batch, int batch_size)
 {
 	// initialize batches
 	for (int i = 0; i < batch_size; i++)
@@ -63,7 +77,7 @@ void free_dataset(example* dataset, int num_examples)
 }
 
 /* This function frees the weights of the weights struct */
-void free_network(weights* net)
+void free_network(network* net)
 {
 	free(net->W_1);  
 	free(net->W_2);
