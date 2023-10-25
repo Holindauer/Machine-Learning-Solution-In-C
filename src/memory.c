@@ -56,7 +56,15 @@ void init_hidden(network* net)
 /* This fucntion intitalizes each nested array within a batch_outputs array */
 void init_batches(outputs* batch, int batch_size)
 {
-	// initialize batches
+	// initialize input vectors
+	for (int i = 0; i < batch_size; i++)
+	{
+		batch[i].input_vector = malloc(INPUT_FEATURES * sizeof(double));
+		check_memory_allocation(batch[i].input_vector);
+		arr_init_zero(batch[i].input_vector, INPUT_FEATURES);
+	}
+
+	// initialize output vectors
 	for (int i = 0; i < batch_size; i++)
 	{
 		batch[i].output_vector = malloc(LAYER_2_NEURONS * sizeof(double));

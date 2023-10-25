@@ -41,18 +41,19 @@ int main(void)
 
 	init_batches(batch, net.batch_size);
 
-	int batch_element = 0; // this will need to be incremented at each epoch step once the training loop is developed
 
 	// run forward pass across batch
-	for (int i = 0; i < net.batch_size; i++)
+	for (int b = 0; b < net.batch_size; b++)
 	{
-		batch[i].target = dataset[i].label;    // set target
+		batch[b].target = dataset[b].label;    // set target
 
-		for (int j = 0; j < 784; j++) {        // set input vector for current example
-			batch[i].input_vector[j] = dataset[i].image[j];
+		// copy input vector for current example into outputs struct
+		for (int i = 0; i < 784; i++) {
+			batch[b].input_vector[i] = dataset[b].image[i];  // <---- memory error here
 		}
+		
 
-		forward(net, dataset[i].image, batch[i].output_vector, batch_element);  // run forward pass on  single example
+		forward(net, dataset[b].image, batch[b].output_vector, b);  // run forward pass on  single example
 	}
 
 	// backward pass

@@ -298,14 +298,14 @@ double* accumulate_W_1_grad(network* net, outputs* batch, double* dL_dz_2, int b
 		Step 5.) compute dL/dW_1 = dL/dz_1 [outer product] input
 	*/
 
-	double* dL_dW_1 = malloc(784 * 1 * sizeof(double));  // allocate mem for dL_dW_1
+	double* dL_dW_1 = malloc(784 * 128 * sizeof(double));  // allocate mem for dL_dW_1
 	if (dL_dW_1 == NULL) { exit(1); }
 
 	for (int i = 0; i < 784; i++) {
 		dL_dW_1[i] = 0;
 	}
 
-	outer_product(dL_dz_1, batch[batch_element].input_vector, dL_dW_1, 128, 784);  // op shape --> [128, 784]
+	outer_product(dL_dz_1, batch[batch_element].input_vector, dL_dW_1, 128, 784);  // <------- Memory Error Being Thrown Here
 	
 
 	/*
