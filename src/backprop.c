@@ -66,8 +66,6 @@ void backprop(network* net, outputs* batch)
 	for (int i = 0; i < LAYER_1_NEURONS; i++) { net->b_1_grad[i] /= (double)net->batch_size; } // b_1
 }
 
-
-
 /*
 	This function computes the gradient of the loss w.r.t. the weight matrix 
 	of the output later, this is the first function to be called in the backprop()
@@ -194,8 +192,6 @@ void accumulate_b_2_grad(network* net, double* dL_dz_2)
 */
 double* accumulate_W_1_grad(network* net, outputs* batch, double* dL_dz_2, int batch_element)
 {
-
-
 	/*  
 		Step 1.)  compute W_2_Transpose
 
@@ -326,7 +322,6 @@ double* accumulate_W_1_grad(network* net, outputs* batch, double* dL_dz_2, int b
 	return dL_dz_1;
 }
 
-
 /*
 	This function accumulates the gradient w.r.t. the bias parameters of the 
 	input layer. The grad has already been precomputed in accumulate_W_1_grad,
@@ -340,12 +335,3 @@ void accumulate_b_1_grad(network* net, outputs* batch, double* dL_dz_1, int batc
 		net->b_1_grad[i] += dL_dz_1[i];  // accumulate precomputed grad into network struct
 	}
 }
-
-
-
-
-
-
-
-
-
