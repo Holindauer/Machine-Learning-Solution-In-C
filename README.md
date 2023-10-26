@@ -132,15 +132,6 @@ reducing my task here to just figuring ut how to implement it into C.
 
 
 ### Current Status:
-    Currently, the program is able to read in labels and mnist pixel intensities flattened into the 
-    rows of a csv file. 
-
-    The program also contains functionality to run a forward pass on this loaded-in-data using weights
-    and biases initialized with he intitialization. 
-
-
-### Next Steps:
-    Currently, I am working to build backpropagation into the program. The implementation I am
-    using will be very specific to the model i am training and likely will require substatial 
-    modification in order to be used with a different model.
-
+    Currently, the program has the capacity to initialize a neural network, load in mnist data,
+    run forward passes on mnist data and make predicitons. As well, a training loop is writen in
+    main with backpropagation and gradient descent implemented.
