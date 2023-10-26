@@ -43,9 +43,13 @@ int main(void)
 	//---------------------------------------------------------------------------------------------------------------------Train Model
 	
 	// init training variables
-	int epochs = 1000 / 8,  batch_start_idx = 0;
+	int epochs = 100,
+		batches_per_epoch = 1000 / 8,  // <--- dataset size / batch size
+		batch_start_idx = 0;
 
 	double loss = 0, learning_rate = 0.001;
+
+	double train_TP_preds = 0, train_temp_pred = 0;  // <--- used for training acuracy computation
 
 	outputs batch[8];    // <--- contains output vector arrray and target
 
@@ -55,35 +59,38 @@ int main(void)
 	// Training Loop
 	for (int epoch = 0; epoch < epochs; epoch++) 
 	{
-
-		// Compute forward pass for each batch
-		for (int b = 0; b < net.batch_size; b++)
+		for (int batch_i = 0; batch_i < batches_per_epoch; batch_i++)
 		{
-			// set target for example
-			batch[b].target = train_dataset[b].label;    
+			// Compute forward pass for each element in the batch
+			for (int b = 0; b < net.batch_size; b++)
+			{
+				// update idx to pull example from dataset w/
+				int idx = batch_start_idx + b; 
 
-			// copy input vector for current example into outputs struct
-			for (int i = 0; i < 784; i++) {
-				batch[b].input_vector[i] = train_dataset[b].image[i];  
+				// set target for example
+				batch[b].target = train_dataset[b].label;
+
+				// copy input vector for current example into outputs struct
+				for (int i = 0; i < 784; i++) {
+					batch[b].input_vector[i] = train_dataset[b].image[i];
+				}
+
+				// run forward pass on  single example
+				forward(net, train_dataset[b].image, batch[b].output_vector, b);
+
+				// Train accuracy computation
+				train_temp_pred = predict(batch[b].output_vector);  // <---- returns argmax of probs
+
 			}
 
-			// run forward pass on  single example
-			forward(net, train_dataset[b].image, batch[b].output_vector, b);  
-		}
+			// updates parameters at the end of each batch
+			backprop(&net, batch);                  // backpropagate gradient
+			gradient_descent(&net, learning_rate);  // update weights
+		} 
 
-		// backward pass
-		backprop(&net, batch);
-
-		// update weights
-		gradient_descent(&net, learning_rate);
-
-		
+		// compute loss for the epoch and print
 		loss = cross_entropy_loss(batch, net.batch_size);
-
 		printf("\n\n Epoch %d ------ Loss: %lf", (epoch+1), loss);
-
-		// update start index of the batch
-		batch_start_idx += net.batch_size;
 	}
 
 	//---------------------------------------------------------------------------------------------------------------------Free Memory When Done
