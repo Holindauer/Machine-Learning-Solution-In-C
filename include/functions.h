@@ -220,3 +220,19 @@ double* accumulate_W_1_grad(network* net, outputs* batch, double* dL_dz_2, int b
 */
 void accumulate_b_1_grad(network* net, outputs* batch, double* dL_dz_1, int batch_element);
 
+//--------------------------------------------------------------------------------------SGD.c
+
+/*
+	This function performs the gradient descent learning rule after
+	the gradients of a batch have been computed.
+
+	The gradients and weights are all held inside of the network struct,
+	which is passed in as an argument. The other parameter needed is the
+	learning rate, which is to be set before the training loop begins
+	within main().
+
+	The gradient descent learning rule is defined as:
+
+	the update for a parameter theta_i = theta_i - ( learning_rate * dL/theta_i)
+*/
+void gradient_descent(network* net, double learning_rate);

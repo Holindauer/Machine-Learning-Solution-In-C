@@ -41,13 +41,13 @@ int main(void)
 	
 
 	//---------------------------------------------------------------------------------------------------------------------Train Model
-	// 
+	
 	// init training variables
 	int epochs = 1000 / 8,  batch_start_idx = 0;
 
-	double loss = 0;
+	double loss = 0, learning_rate = 0.001;
 
-	outputs batch[8];              // batch_output struct contains output vector arrray and target
+	outputs batch[8];    // <--- contains output vector arrray and target
 
 	init_batches(batch, net.batch_size);
 	
@@ -74,10 +74,15 @@ int main(void)
 		// backward pass
 		backprop(&net, batch);
 
+		// update weights
+		gradient_descent(&net, learning_rate);
+
+		
 		loss = cross_entropy_loss(batch, net.batch_size);
 
 		printf("\n\n Epoch %d ------ Loss: %lf", (epoch+1), loss);
 
+		// update start index of the batch
 		batch_start_idx += net.batch_size;
 	}
 
