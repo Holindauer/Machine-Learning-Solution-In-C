@@ -17,5 +17,14 @@ void test_matmul(void) {
 
 	MatMul(mul, matrix, matrix, 3, 3, 3);
 	Display_Matrix(mul, 3, 3);
+}
+
+void test_argmax(void) {
+
+	double arr[7] = { 0, 1, 2, 3, 4, 99, 0 };
+
+	int argmax = argmax_vector(arr, 7);
+
+	printf("\n\nArgmax = %d", argmax);
 
 }
