@@ -1,47 +1,45 @@
-#include "libraries.h"
 #include "functions.h"
+#include "libraries.h"
 #include "structs.h"
 
-/* This function loads in flattened mnist digits from a csv */
-void load_data(const char* filename, example* dataset, int num_digits){
-    //--------------------------------------------------------------------------------------------------------------------Open File
-    FILE* file = fopen(filename, "r");                             
-    if (file == NULL){
-        fprintf(stderr, "Could not open file %s\n", filename);       
-        exit(1);}
+// used to iitialize the dataset struct 
+void init_dataset(Data* dataset) {
+	for (int example = 0; example < NUM_EXAMPLES; example++) {
 
-    //--------------------------------------------------------------------------------------------------------------------Read in Data
-
-    int label = 0;             
-    double pixel_intensity = 0; 
-
-    for (int example = 0; example < num_digits; example++)   // loop through the specified number of digits to extract from the dataset  
-    {
-        fscanf(file, "%d,", &label);
-        dataset[example].label = label;
-
-        for (int pixel = 0; pixel < 784; pixel++)
-        {
-            // If it's not the first pixel in the row, expect a comma before the value.
-            if (pixel > 0) { fscanf(file, ","); }
-
-            fscanf(file, "%lf", &pixel_intensity);
-            dataset[example].image[pixel] = pixel_intensity;
-        }
-    }
-    fclose(file);
+		for (int feature = 0; feature < NUM_FEATURES; feature++) { // init features
+			dataset->features[example][feature] = 69;
+		}
+		for (int class = 0; class < NUM_CLASSES; class++) { // init targets
+			dataset->targets[example][class] = 69;
+		}
+	}
 }
 
-/* inititalizes each array in example in array of example stracts */
-void initialize_dataset(example* dataset, int num_examples)
-{
-    for (int i = 0; i < num_examples; i++)  
-    {
-        for (int j = 0; j < 784; j++)
-        {
-            dataset[i].image = malloc(784 * sizeof(double));
-            check_memory_allocation(dataset[i].image);
-        }
-    }
+// prints dataset 
+void print_dataset(Data dataset) {
+	for (int example = 0; example < NUM_EXAMPLES; example++) {
+
+		printf("\nExample: %d Features: ", example);
+		for (int feature = 0; feature < NUM_FEATURES; feature++) { // init features
+			printf("%.2f ", dataset.features[example][feature]);
+		}
+		printf("Target: ");
+		for (int class = 0; class < NUM_CLASSES; class++) { // init targets
+			printf("%.2f ", dataset.targets[example][class]);
+		}
+	}
+
 }
 
+// loads in iris data from csv
+void load_data(Data* dataset, FILE* stream) {
+
+	for (int example = 0; example < NUM_EXAMPLES; example++) {
+		for (int feature = 0; feature < NUM_FEATURES; feature++) { 
+			fscanf(stream, "%lf,", &dataset->features[example][feature]); // read features 
+		}
+		for (int class = 0; class < NUM_CLASSES; class++) { 
+			fscanf(stream, "%lf,", &dataset->targets[example][class]); // read targets
+		}
+	}
+}

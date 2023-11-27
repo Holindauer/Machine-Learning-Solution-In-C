@@ -1,104 +1,92 @@
-#include "functions.h"
-#include "structs.h"
 #include "libraries.h"
+#include "structs.h"
+#include "functions.h"
 
-/* This function allocates mem for and initializes all elements within the weights struct */
-void init_model(network* net)
-{
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Layer 1
+void init_model(Model* model) {
 
-	// Layer 1 Weights
-	net->W_1 = malloc(W_1_ELEMENTS * sizeof(double));
-	check_memory_allocation(net->W_1);
+	// set shapes 
+	model->W_1_rows = LAYER_1_NEURONS;
+	model->W_1_cols = NUM_FEATURES;
+	model->W_2_rows = LAYER_2_NEURONS;
+	model->W_2_cols = LAYER_1_NEURONS;
 
-	// grads of cost w.r.t. W_1
-	net->W_1_grad = malloc(W_1_ELEMENTS * sizeof(double));
-	check_memory_allocation(net->W_1_grad);
-	arr_init_zero(net->W_1_grad, W_1_ELEMENTS);
+	model->b_1_cols = LAYER_1_NEURONS;
+	model->b_2_cols = LAYER_2_NEURONS;
 
-	net->W_1_rows = LAYER_1_NEURONS;                          //     W_1    @  Input   = hidden
-	net->W_1_cols = INPUT_FEATURES;                           // [128, 784] @ [784, 1] = [128, 1]
-
-
-	// Layer 1 Bias Vector
-	net->b_1 = malloc(LAYER_1_NEURONS * sizeof(double));
-	check_memory_allocation(net->b_1);
-
-	// Grads of Cost w.r.t. b_1
-	net->b_1_grad = malloc(LAYER_1_NEURONS * sizeof(double));
-	check_memory_allocation(net->b_1_grad);
-	arr_init_zero(net->b_1_grad, LAYER_1_NEURONS);
-
-	net->b_1_rows = LAYER_1_NEURONS, net->b_1_cols = 1;
-
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - hidden state
-
-	init_hidden(net);
-
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - Layer 2
-
-	// Layer 2 weight Matrix
-	net->W_2 = malloc(W_2_ELEMENTS * sizeof(double));
-	check_memory_allocation(net->W_2);
-
-	// Grads of cost w.r.t . W_2 
-	net->W_2_grad = malloc(W_2_ELEMENTS * sizeof(double));
-	check_memory_allocation(net->W_2_grad);
-	arr_init_zero(net->W_2_grad, W_2_ELEMENTS);
-
-	// set shape of weight matrix 2
-	net->W_2_rows = LAYER_2_NEURONS;       //   W_2     @  hidden  = model_output
-	net->W_2_cols = LAYER_1_NEURONS;       // [10, 128] @ [128, 1] = [10, 1]
-
-	// Layer 2 Bias Vector
-	net->b_2 = malloc(LAYER_2_NEURONS * sizeof(double));
-	check_memory_allocation(net->b_2);
-
-	// Grads of cost w.r.t. b_2
-	net->b_2_grad = malloc(LAYER_2_NEURONS * sizeof(double));
-	check_memory_allocation(net->b_2_grad);
-	arr_init_zero(net->b_2_grad, LAYER_2_NEURONS);
-
-	net->b_2_rows = LAYER_2_NEURONS, net->b_2_cols = 1;
-}
-
-/* This function computes the forward pass of the model */
-void forward(network net, double* example, double* model_output, int batch_element)
-{
-	//----------------------------------------------------------------------------layer 1
-	
-	// Pre activations
-	matmul(net.hidden[batch_element], net.W_1, example, net.W_1_rows, net.W_1_cols, 784, 1);
-
-	add_bias(net.pre_activations_1[batch_element], net.b_1, net.b_1_rows, net.b_1_cols);  // compute and store pre activations for layer 1
-	 
-	//compute post activationsby appling ReLU to  apply ReLU Activation 
-	add_bias(net.hidden[batch_element], net.b_1, net.b_1_rows, net.b_1_cols);  // compute pre activations <----- this design decision can be improved upon
-	ReLU(net.hidden[batch_element], 128, 1);                                   // then apply ReLU()
-
-	//----------------------------------------------------------------------------layer 2
-
-	// Pre activations
-	matmul(model_output, net.W_2, net.hidden[batch_element], net.W_2_rows, net.W_2_cols, 128, 1);
-	add_bias(model_output, net.b_2, net.b_2_rows, net.b_2_cols);
-
-	// apply Softmax activation
-	Softmax(model_output, 10);
-}
-
-/* Thif function perfroms argmax() on the probability evctor output of the model -- returns double */
-double predict(double* model_output)
-{
-	int arg_max = 0;
-	double highest_probability = 0;
-
-	for (int i = 0; i < 10; i++)
-	{
-		if (model_output[i] > highest_probability)  // check for new max prob
-		{
-			highest_probability = model_output[i];  // if so, set new highest prob
-			arg_max = i;                            // and assign i'th index as new argmax
+	// init layer 1 weights, baises, and gradients
+	for (int row = 0; row < LAYER_1_NEURONS; row++) {
+		model->b_1[row] = rand_double();
+		model->b_1_Grad[row] = 69;
+		for (int col = 0; col < NUM_FEATURES; col++) { 
+			model->W_1[INDEX(row, col, model->W_1_cols)] = rand_double();
+			model->W_1_Grad[INDEX(row, col, model->W_1_cols)] = 69;
 		}
 	}
-	return arg_max;
+	// init layer 2 weights, biases, and gradients
+	for (int row = 0; row < LAYER_2_NEURONS; row++) { 
+		model->b_2[row] = rand_double();
+		model->b_2_Grad[row] = 69;
+		for (int col = 0; col < LAYER_1_NEURONS; col++) {
+			model->W_2[INDEX(row, col, model->W_2_cols)] = rand_double();
+			model->W_2_Grad[INDEX(row, col, model->W_2_cols)] = 69;
+		}
+	}
+
+	// init network states throughout the forward pass
+	for (int example = 0; example < NUM_EXAMPLES; example++) {
+		// init input states
+		for (int i = 0; i < NUM_FEATURES; i++) {
+			model->input[example][i] = 69;
+		}
+		// init hidden states
+		for (int i = 0; i < LAYER_1_NEURONS; i++) {
+			model->hidden[example][i] = 69;
+			model->hidden_Grad[i] = 69;
+		}
+		// init logit/output states
+		for (int i = 0; i < LAYER_2_NEURONS; i++){
+			model->logits[example][i] = 69;
+			model->logits_Grad[i] = 69;
+			model->output[example][i] = 69;
+			model->output_Grad[i] = 69;
+
+		}
+		// init predictions
+		model->prediction[example] = 69;
+	}	
 }
+
+
+// This is the model's forward pass function
+double forward(Model* model, double example[NUM_FEATURES], int example_num) {
+
+	// save input state
+	for (int i = 0; i < NUM_FEATURES; i++) {
+		model->input[example_num][i] = example[i];
+	}
+
+	// layer 1
+	MatMul(model->hidden[example_num], model->W_1, example, model->W_1_rows, model->W_1_cols, NUM_FEATURES); // weights * input
+	Elementwise_Addition(model->hidden[example_num], model->b_1, LAYER_1_NEURONS, 1);						// add bias
+	Elementwise_ReLU(model->hidden[example_num], LAYER_1_NEURONS, 1);			                         	// ReLU activation
+	
+	// layer 2
+	MatMul(model->output[example_num], model->W_2, model->hidden[example_num], model->W_2_rows, model->W_2_cols, LAYER_1_NEURONS); // weights * input
+	Elementwise_Addition(model->output[example_num], model->b_2, LAYER_2_NEURONS, 1);                                 // add bias
+	Elementwise_Softmax(model->output[example_num], LAYER_2_NEURONS);                                                 // Softmax activation
+
+	// take argmax of logits for prediction
+	double max = 0, max_idx = 0;
+	for (int i = 0; i < NUM_CLASSES; i++) {
+		if (model->output[example_num][i] > max) {
+			max = model->output[example_num][i];
+			max_idx = i;
+		}
+	}
+		
+	return max_idx;
+
+}
+
+
+

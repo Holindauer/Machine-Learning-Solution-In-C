@@ -1,69 +1,79 @@
 #pragma once
 
-#include "libraries.h"
+#include "libraries.h" 
 
-/*
-	This struct will be used to house a single example of the mnist datset. 
-	double* image will hold a flattened mnist image. int label holds that 
-	image's label. 
 
-	To hold the entire dataset for training, an array of example structs will
-	be created. 
-*/
+// Macro for computing strided 1D index of 2D array
+#define INDEX(row, col, num_cols) ((row) * (num_cols) + (col))
+
+
+// This struct is used to hold the model weights, states, and gradients through the 
+// forward and backward pass.
+typedef struct {
+	// Matricies stored in memory contiguously -- use INDEX macro to access elements
+
+	// Weights and Biases--- shape of weight matricies are determined by neurons x input
+	double W_1[LAYER_1_NEURONS * NUM_FEATURES];
+	double W_2[LAYER_2_NEURONS * LAYER_1_NEURONS];
+	double b_1[LAYER_1_NEURONS];
+	double b_2[LAYER_2_NEURONS];
+
+
+	// Gradients -- in order for backpropagation. All gradients listed below  
+	// are of the loss with respect to the vector/matrix in the variable name.
+
+	// NOTE: these gradients are temp gradients that will only hold the gradient of 
+	// the loss for a single input. The accumulation of gradients over the entire 
+	// training set is done within the Gradient struct.
+
+	double output_Grad[LAYER_2_NEURONS];
+	double logits_Grad[LAYER_2_NEURONS]; 
+	double W_2_Grad[LAYER_2_NEURONS * LAYER_1_NEURONS];
+	double b_2_Grad[LAYER_2_NEURONS];
+
+	double hidden_Grad[LAYER_1_NEURONS];
+	double W_1_Grad[LAYER_1_NEURONS * NUM_FEATURES];
+	double b_1_Grad[LAYER_1_NEURONS];
+	
+
+	// Network States -- needed for backprop
+	double input[NUM_EXAMPLES][NUM_FEATURES];
+	double hidden[NUM_EXAMPLES][LAYER_1_NEURONS];  
+	double logits[NUM_EXAMPLES][LAYER_2_NEURONS];  // <-- pre softmax
+	double output[NUM_EXAMPLES][LAYER_2_NEURONS];  // <-- post softmax
+	double prediction[NUM_EXAMPLES];               // <-- post argmax
+
+	// Matrix Shapes
+	int W_1_rows, W_1_cols;
+	int W_2_rows, W_2_cols; 
+	int b_1_cols;
+	int b_2_cols;
+
+}Model;
+
 
 typedef struct {
-	double* image;
-	int label;
-}example;
+
+	// Matricies stored in memory contiguously -- use INDEX macro to access elements
+	double W_2_Grad[LAYER_2_NEURONS * LAYER_1_NEURONS];
+	double b_2_Grad[LAYER_2_NEURONS];
+	double W_1_Grad[LAYER_1_NEURONS * NUM_FEATURES];
+	double b_1_Grad[LAYER_1_NEURONS];
+
+	// Matrix Shapes
+	int W_1_rows, W_1_cols;
+	int W_2_rows, W_2_cols;
+	int b_1_cols;
+	int b_2_cols;
+
+}Gradient;
 
 
-/*
-	This struct is used to store the weight matricies as of a neural network.
 
-	Along with matricies for one hidden state and the gradient of the cost 
-	w.r.t. each weight matrix of the network.
-
-	Indexing of the matricies should be done with the INDEX macro.
-*/
-typedef struct {
-	//----------------------------------------------------Weight Matricies
-
-	double* W_1;             // layer 1 weights
-	double* W_1_grad;        // grad w.r.t W_1
-	int W_1_rows, W_1_cols;  
-
-	double* b_1;             // layer 1 bias 
-	double* b_1_grad;        // grad w.r.t. b_1
-	int b_1_rows, b_1_cols;  
-
-	double** pre_activations_1;
-	double** hidden;         // array of hidden state arrays
-	int batch_size;          // batch_sizze num arrays in hidden 
-
-
-	double* W_2;             // layer 2 weights
-	double* W_2_grad;        // grad w.r.t. W_2
-	int W_2_rows, W_2_cols;     
-
-	double* b_2;             // layer 2 bias 
-	double* b_2_grad;        // gradient w.r.t. b_2
-	int b_2_rows, b_2_cols;
-}network;
-
-
-/*
-	This struct is used to create an array of arrays that will
-	hold the model outputs of a single batch.
-*/
 typedef struct {
 
-	double* input_vector;
+	// features
+	double features[150][4]; // iris: 150 examples, 4 features each
+	double targets[150][3];     // 3 classes, 1 hot encoded
 
-	double* output_vector;  // holds an output vector for a single example
-	                                        // layer 2 neurons is the output size
-
-	double target;                          // true target for a single predicted example
-
-
-}outputs;
-
+}Data;
