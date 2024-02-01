@@ -1,0 +1,16 @@
+# Compiled binary executables
+bin/
+
+# Object files
+*.o
+
+# Temporary files often created by editors
+*~
+*.swp
+
+# Folder used by popular VS Code extensions
+.vscode/
+
+# Other files and folders to ignore
+.DS_Store
+build/
