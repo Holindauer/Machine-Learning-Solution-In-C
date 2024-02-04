@@ -1,0 +1,4 @@
+
+
+#define NO_ANCESTORS 0
+#define MAX_GRAPH_SIZE 1000
