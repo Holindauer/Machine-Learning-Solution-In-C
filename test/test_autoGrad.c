@@ -1,7 +1,6 @@
-#include "libraries.h"
-#include "../src/autoGrad.c"
-#include "../include/macros.h"
+#include "../include/structs.h"
 
+// test_autoGrad.c
 
 /**
  * @test test_newValue tests the newValue function by creating a new value node and checking that it was initialized correctly
@@ -179,16 +178,11 @@ void test_reluDiff(void){
 }
 
 
-
-
-
 /**
- * @test test_backpropagation() tests the backpropagation function by performing some basic operations and 
+ * @test test_Backprop() tests the backpropagation (Backward()) function by performing some basic operations and 
  * checking that the gradients are calculated correctly.
  * @dev this test case is based on the sanity check test case in karpathy's micrograd tests
-*/
 
-/**
 Karpathy's test case:
 
 	def test_sanity_check():
@@ -215,13 +209,15 @@ Karpathy's test case:
 		# backward pass went well
 		assert xmg.grad == xpt.grad.item() # should be 46.0
 */
-void test_Backprop(void){
-
+void test_Backprop(void){   
 
     // create some ancestor nodes
     Value* x = newValue(-4, NULL, NO_ANCESTORS, "x");
     Value* z = Add(
-        Mul(newValue(2, NULL, NO_ANCESTORS, "2"), x), Add(newValue(2, NULL, NO_ANCESTORS, "2"), x)
+        Mul(
+            newValue(2, NULL, NO_ANCESTORS, "2"), x), 
+            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x
+            )
         );
     Value* q = Add(ReLU(z), Mul(z, x));
     Value* h = ReLU(Mul(z, z));
@@ -240,4 +236,23 @@ void test_Backprop(void){
     freeValue(q);
     freeValue(h);
     freeValue(y);
+}
+
+
+// run the tests
+int main(void){
+
+    printf("\nRunning Autograd tests...\n");
+
+    // autoGrad tests
+    test_newValue();
+    test_valueOperations();
+    test_AddDiff();
+    test_MulDiff();
+    test_reluDiff();
+    test_Backprop(); 
+
+    printf("All Autograd Tests Passed!\n");
+
+    return 0;
 }

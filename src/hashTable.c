@@ -1,33 +1,12 @@
 #include "libraries.h"
 #include "macros.h"
-
+#include "structs.h"
 
 /**
  * @notice hashTable.c c implements a hashTable data structure that is used within the autoGrad.c file 
  * during the reverseToplogicalSort function. This is necessary to avoid infinite loops in the graph traversal.
  * @dev The hash table is used specifically,to map Nodes to a unique integer value
 */
-
-
-/**
- * @notice VisitedNode is a struct that represents a node in the hash table
- * @param key The value of the node
- * @param next A pointer to the next node in the list
-*/
-typedef struct VisitedNode {
-    Value* key;
-    struct VisitedNode* next;
-} VisitedNode;
-
-/**
- * @notice HashTable is a struct that represents a hash table
- * @param buckets An array of pointers to VisitedNode structs
- * @param size The size of the hash table
-*/
-typedef struct {
-    VisitedNode** buckets;
-    int size;
-} HashTable;
 
 
 /**

@@ -1,7 +1,9 @@
 #include "libraries.h"
 #include "macros.h"
-#include "autoGrad.h"
-#include "hashTable.c"
+#include "structs.h"
+
+
+// autoGrad.c
 
 /**
  * @notice autoGrad.c is where the functionality for reverse mode automatic differentiation is implemented.
@@ -17,19 +19,6 @@
  * graph is traversed in reverse to calculate the gradients.
  * 
 */
-
-// Prototypes
-void addBackward(Value* v);
-Value* Add(Value* a, Value* b);
-void mulBackward(Value* v);
-Value* Mul(Value* a, Value* b);
-void reluBackward(Value* v);
-Value* ReLU(Value* a);
-void dfs(Value* v, HashTable* visited, Value*** stack, int* index);
-void reverseArray(Value** arr, int start, int end);
-void reverseTopologicalSort(Value* start, Value*** sorted, int* count);
-void Backward(Value* v);
-
 
 
 /**
