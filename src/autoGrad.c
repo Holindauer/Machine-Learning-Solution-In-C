@@ -64,7 +64,11 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
             v->ancestors[i] = _ancestors[i];
         }
     }
-        // allocate memory for the operation string and copy into value struct
+
+    // set Backward function pointer to NULL
+    v->Backward = NULL;
+
+    // allocate memory for the operation string and copy into value struct
     v->opStr = (char*)malloc(strlen(_opStr) + 1); 
     assert(v->opStr != NULL);
     strcpy(v->opStr, _opStr); 
@@ -210,17 +214,29 @@ Value* ReLU(Value* a) {
 }
 
 
+/**
+ * @notice dfs() is a helper function used to perform a depth-first search on the graph of Value structs.
+ * @dev dfs() is called within the reverseTopologicalSort() function to recursively visit all nodes in the graph and push 
+ * them onto a stack in reverse order.
+ * @dev The function uses a hash table to store visited nodes and avoid infinite loops in the graph traversal.
+ * @ a depth first search ensures that no node is input to the stack before all of its ancestors have been input.
+*/
+void dfs(Value* v, HashTable* visitedTable, Value*** stack, int* index) {
 
-void dfs(Value* v, HashTable* visited, Value*** stack, int* index) {
-    if (isVisited(visited, v)) {
+    // If the node has already been visited, return
+    if (isVisited(visitedTable, v)) {
         return;
-    }
-    insertVisited(visited, v);
+    } 
 
+    // otherwise mark the node as visited in the hash table
+    insertVisited(visitedTable, v);
+
+    // Recursive call to visit all ancestors of the current node
     for (int i = 0; v->ancestors != NULL && v->ancestors[i] != NULL; i++) {
-        dfs(v->ancestors[i], visited, stack, index);
+        dfs(v->ancestors[i], visitedTable, stack, index);
     }
 
+    // Push the current node onto the stack
     (*stack)[(*index)++] = v;
 }
 
@@ -244,40 +260,29 @@ void reverseArray(Value** arr, int start, int end) {
  * @dev reverseTopologicalSort() is called within the Backward() function to sort a Value's computational graph in topological order
  * @dev The function uses a depth-first search to visit all nodes in the graph and push them onto a stack in reverse order.
  * This ensures that the nodes are sorted in topological order and that no node is visited before its ancestors.
- * 
- * 
+ * @param start is the starting Value node of the graph
+ * @param sorted is a pointer to an array of Value pointers that will store the topological sort order of the graph ancestors.
+ * @param count is a pointer to an integer that will store the number of nodes sorted.
 */
 void reverseTopologicalSort(Value* start, Value*** sorted, int* count) {
-
-    printf("Running reverseTopologicalSort()\n");
 
     assert(*sorted == NULL);
 
     // use a hash table to store visited nodes
-    HashTable* visited = createHashTable(MAX_GRAPH_SIZE); // Choose an appropriate size
-
-    printf("Visited array initialized\n");
-    
+    HashTable* visited = createHashTable(MAX_GRAPH_SIZE); 
     assert(visited != NULL);
-
 
     // Allocate memory for a stack to store the topological sort order of graph ancestors.
     *sorted = (Value**)malloc(MAX_GRAPH_SIZE * sizeof(Value*)); 
     assert(*sorted != NULL);
 
-    printf("sorted Stack allocated\n");
-
-    int index = 0;
-
     // Perform depth-first search to visit all nodes and push them onto the stack.
+    int index = 0;
     dfs(start, visited, sorted, &index);
-
-    printf("DFS complete\n");
 
     // Reverse the sorted array to get correct topological ordering.
     reverseArray(*sorted, 0, index - 1);
     *count = index; // Update count to reflect number of nodes sorted.
-
 
     freeHashTable(visited);
 }
@@ -295,21 +300,25 @@ void reverseTopologicalSort(Value* start, Value*** sorted, int* count) {
 */
 void Backward(Value* v) {
 
+    // Ensure the starting node is not NULL
     assert(v != NULL);
-
-    printf("Running Backward()\n");
     
     // declare a pointer for an array of Value pointers
     Value** sorted = NULL;
     int count = 0;
 
+    // Perform a topological sort on the graph of Value structs. This will in place sort
+    // fill sorted array with the topological sort order of the graph ancestors.
     reverseTopologicalSort(v, &sorted, &count);
 
     // Set gradient of the starting node to 1.
     v->grad = 1.0;
 
+    // @bug for some reason the below loop is not working and throwing a seg fault
+
     // Process nodes in topologically sorted order.
     for (int i = 0; i < count; i++) {
+        
         if (sorted[i]->Backward != NULL) { // Ensure backward function exists
             sorted[i]->Backward(sorted[i]);
         }

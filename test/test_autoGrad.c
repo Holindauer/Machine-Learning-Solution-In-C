@@ -232,8 +232,8 @@ void test_Backprop(void){
 
     Backward(y);
 
-    // // check that the gradients are correct
-    // assert(x->grad == 46);
+    // check that the gradients are correct
+    assert(x->grad == 46);
 
     freeValue(x);
     freeValue(z);

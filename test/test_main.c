@@ -13,7 +13,7 @@ int main(void) {
   test_AddDiff();
   test_MulDiff();
   test_reluDiff();
-  // test_Backprop(); currently not working
+  test_Backprop(); //currently not working
 
   // hashTable tests
   test_createHashTable();
