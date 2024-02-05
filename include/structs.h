@@ -72,3 +72,8 @@ unsigned int hashValuePtr(void* ptr, int size);
 void insertVisited(HashTable* table, Value* value);
 bool isVisited(HashTable* table, Value* value);
 void freeHashTable(HashTable* table);
+
+// Load Data Related Prototypes
+void loadData(Value* features[][IRIS_FEATURES], Value* targets[][IRIS_CLASSES]);
+void freeDataFeatures(Value* dataArr[][IRIS_FEATURES], int numRows);
+void freeDataTargets(Value* dataArr[][IRIS_CLASSES], int numRows);
