@@ -7,7 +7,7 @@ BIN_DIR=bin
 # Create bin directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-all: main test_autoGrad test_hashTable test_loadData 
+all: main test_autoGrad test_hashTable test_loadData  test_mlp
 
 main: $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/main $(SRC_DIR)/main.c
@@ -21,6 +21,9 @@ test_hashTable: $(TEST_DIR)/test_hashTable.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/a
 
 test_loadData: $(TEST_DIR)/test_loadData.c $(SRC_DIR)/loadData.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_loadData $(TEST_DIR)/test_loadData.c $(SRC_DIR)/loadData.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c
+
+test_mlp: $(TEST_DIR)/test_mlp.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_mlp $(TEST_DIR)/test_mlp.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c
 
 clean:
 	rm -f $(BIN_DIR)/*

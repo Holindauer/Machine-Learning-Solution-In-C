@@ -4,6 +4,7 @@
 
 // structs.h
 
+//------------------------------------------------------------------------------------------------------------------ Value Struct
 
 /**
  * @notice pBackwardFunc is a pointer to a function that computes the derivative of the operation 
@@ -12,7 +13,6 @@
 */
 typedef struct _value Value; // <--- forward declaration for self-reference in pBackwardFunc
 typedef void (*pBackwardFunc)(Value*);
-
 
 /**
  * @notice Value is the central struct in the autoGrad.c implementation. It represents a single value in the
@@ -30,6 +30,8 @@ typedef struct _value {
     Value **ancestors;       
     char* opStr;                 
 } Value;
+
+//------------------------------------------------------------------------------------------------------------------ Hash Table Struct
 
 /**
  * @notice VisitedNode is a struct that represents a node in the hash table
@@ -51,8 +53,44 @@ typedef struct {
     int size;
 } HashTable;
 
+//------------------------------------------------------------------------------------------------------------------ Neural Network Struct
 
-// Value Related Prototypes
+/**
+ * @notice Layer is a struct that represents a single layer in a multilayer perceptron.
+ * @param inputSize The layer's input vector size (alsoe the number of neurons in the previous layer)
+ * @param outputSize The layer's output vector size (also the number of neurons in the current layer)
+ * @param weights A matrix of weights connecting the previous layer to the current layer. Weights are 
+ * stored as a contiguous array of Value structs in row-major order. len == (inputSize x outputSize)
+ * @param biases A vector of biases for the current layer. Biases are stored as a contiguous array of
+ * Value structs. len == outputSize
+ * @param next A pointer to the next layer in the network
+ * @param prev A pointer to the previous layer in the network
+*/
+typedef struct _layer {
+    int inputSize;
+    int outputSize;
+    Value** weights;
+    Value** biases;
+    struct _layer* next;
+    struct _layer* prev;
+} Layer;
+
+/**
+ * @notice mlp is a struct that represents a multi-layer perceptron. It houses the start and end of the
+ * network as well as the number of layers in the network.
+ * @param inputLayer A pointer to the first layer in the network
+ * @param outputLayer A pointer to the last layer in the network
+ * @param numLayers The number of layers in the network
+*/
+typedef struct {
+    Layer* inputLayer;
+    Layer* outputLayer;
+    int numLayers;
+} MLP;
+
+//------------------------------------------------------------------------------------------------------------------ Function Prototypes
+
+// Auto Grad Related Prototypes
 Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _opStr[]);
 void addBackward(Value* v);
 Value* Add(Value* a, Value* b);
@@ -77,3 +115,11 @@ void freeHashTable(HashTable* table);
 void loadData(Value* features[][IRIS_FEATURES], Value* targets[][IRIS_CLASSES]);
 void freeDataFeatures(Value* dataArr[][IRIS_FEATURES], int numRows);
 void freeDataTargets(Value* dataArr[][IRIS_CLASSES], int numRows);
+
+// Neural Network Related Prototypes
+Value** initWeights(int inputSize, int outputSize);
+Value** initBiases(int outputSize);
+void freeWeights(Value** weights, int inputSize, int outputSize);
+void freeBiases(Value** biases, int outputSize);
+MLP* createMLP(int inputSize, int layerSizes[], int numLayers);
+void freeMLP(MLP* mlp);

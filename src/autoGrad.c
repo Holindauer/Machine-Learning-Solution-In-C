@@ -38,7 +38,7 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
 
     // set value to the given value and gradient to 0
     v->value = _value;
-    v->grad = 0;
+    v->grad = 0.0;
 
     // if no ancestors are given, set the ancestors pointer to NULL
     if (_ancestorArrLen == NO_ANCESTORS && _ancestors == NULL) {
