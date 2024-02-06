@@ -39,9 +39,61 @@ void test_MultiplyWeights(){
     Backward(sum);
 }   
 
+/**
+ * @notice test_AddBias() tests adding the bias to the output vector of a layer after MultiplyWeights() has been called
+ * @dev AddBias() works for a single input vector, not a batch of input vectors.
+ * @dev AddBias() uses the autoGrad.c infrastructure to track the forward pass for backpropagation
+*/
+void test_AddBias(void){
+
+    // init a vector of 3 values
+    Value** input = initOutputVector(3);
+    input[0]->value = 1;
+    input[1]->value = 2;
+    input[2]->value = 3;
+
+    // create layer
+    Layer* layer = malloc(sizeof(Layer));
+    layer->inputSize = 3;
+    layer->outputSize = 3;
+    layer->outputVector = initOutputVector(3);
+
+    // I'm going to reset all weights to 1 for testing purposes
+    for(int i = 0; i < 3; i++){
+        layer->outputVector[i]->value = 1;
+    }
+
+    // Add bias
+    AddBias(layer, input);
+
+    assert(layer->outputVector[0]->value == 2);
+    assert(layer->outputVector[1]->value == 3);
+    assert(layer->outputVector[2]->value == 4);
+
+
+    // Small backprop test
+    // We'll sum together the output vector and backpropagate the sum to the input
+    // @note: this is  not an extensive test for backprop. More so just to check that the function runs
+    Value* sum = Add(layer->outputVector[2], Add(layer->outputVector[0], layer->outputVector[1]));
+    Backward(sum);
+
+    // free memory
+    for (int i = 0; i < 3; i++){
+        free(input[i]);
+        free(layer->outputVector[i]);
+    }
+    free(input);
+    free(layer->outputVector);
+}
+
 int main(void){
 
+    printf("\nRunning tests for forward.c\n");
+
     test_MultiplyWeights();
+    test_AddBias();
+
+    printf("MultiplyWeights() passed\n");
 
     return 0;
 }

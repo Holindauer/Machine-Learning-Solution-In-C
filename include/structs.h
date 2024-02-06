@@ -128,3 +128,4 @@ Value** initOutputVector(int outputSize);
 
 // Forward Pass Related Prototypes
 void MultiplyWeights(Layer* layer, Value** input);
+void AddBias(Layer* layer, Value** input);

@@ -29,3 +29,19 @@ void MultiplyWeights(Layer* layer, Value** input){
         }
     }
 }
+
+
+/**
+ * @notice AddBias() adds the bias to the output vector of a layer after MultiplyWeights() has been called
+ * @dev AddBias() works for a single input vector, not a batch of input vectors.
+ * @dev AddBias() uses the autoGrad.c infrastructure to track the forward pass for backpropagation
+*/
+void AddBias(Layer* layer, Value** input){
+
+    // iterate over each output neuron
+    for (int i = 0; i < layer->outputSize; i++){
+
+        // elementwise Add() the bias to the output vector
+        layer->outputVector[i] = Add(layer->outputVector[i], input[i]);
+    }
+}
