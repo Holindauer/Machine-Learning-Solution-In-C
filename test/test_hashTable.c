@@ -100,14 +100,14 @@ void test_isVisited(void){
 // run the tests
 int main(void){
 
-    printf("\nRunning Hash Table Tests...\n");
+    printf("Running Hash Table Tests...\n");
 
     // hashTable tests
     test_createHashTable();
     test_insertVisited_and_chaining();
     test_isVisited();
 
-    printf("All Hash Table tests passed!\n");
+    printf("All Hash Table tests passed!\n\n");
 
     return 0;
 }

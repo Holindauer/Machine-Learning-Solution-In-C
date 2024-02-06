@@ -291,7 +291,10 @@ void Backward(Value* v) {
 
     // Ensure the starting node is not NULL
     assert(v != NULL);
-    
+
+    printf("v->value: %f\n", v->value);
+    printf("v->grad: %f\n", v->grad);
+
     // declare a pointer for an array of Value pointers
     Value** sorted = NULL;
     int count = 0;
@@ -303,7 +306,7 @@ void Backward(Value* v) {
     // Set gradient of the starting node to 1.
     v->grad = 1.0;
 
-    // @bug for some reason the below loop is not working and throwing a seg fault
+    printf("v->greed: %f\n", v->grad);
 
     // Process nodes in topologically sorted order.
     for (int i = 0; i < count; i++) {

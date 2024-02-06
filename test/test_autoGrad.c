@@ -242,7 +242,7 @@ void test_Backprop(void){
 // run the tests
 int main(void){
 
-    printf("\nRunning Autograd tests...\n");
+    printf("Running Autograd tests...\n");
 
     // autoGrad tests
     test_newValue();
@@ -252,7 +252,7 @@ int main(void){
     test_reluDiff();
     test_Backprop(); 
 
-    printf("All Autograd Tests Passed!\n");
+    printf("All Autograd Tests Passed!\n\n");
 
     return 0;
 }

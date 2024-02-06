@@ -13,7 +13,7 @@ fi
 echo "Running tests..."
 
 # Define your test binaries here
-tests=("test_autoGrad" "test_hashTable" "test_loadData" "test_mlp")
+tests=("test_autoGrad" "test_hashTable" "test_loadData" "test_mlp" "test_forward")
 
 # Directory where binaries are located
 BIN_DIR="bin"

@@ -25,11 +25,11 @@ void test_loadData(void){
 
 
 int main(void){
-    printf("\nRunning test_loadData...\n");
+    printf("Running test_loadData...\n");
 
     test_loadData();
     
-    printf("test_loadData passed!\n");
+    printf("test_loadData passed!\n\n");
     
     return 0;
 }

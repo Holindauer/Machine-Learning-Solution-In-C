@@ -71,6 +71,7 @@ typedef struct _layer {
     int outputSize;
     Value** weights;
     Value** biases;
+    Value** outputVector;
     struct _layer* next;
     struct _layer* prev;
 } Layer;
@@ -123,3 +124,7 @@ void freeWeights(Value** weights, int inputSize, int outputSize);
 void freeBiases(Value** biases, int outputSize);
 MLP* createMLP(int inputSize, int layerSizes[], int numLayers);
 void freeMLP(MLP* mlp);
+Value** initOutputVector(int outputSize);
+
+// Forward Pass Related Prototypes
+void MultiplyWeights(Layer* layer, Value** input);

@@ -49,6 +49,22 @@ Value** initBiases(int outputSize){
 }
 
 /**
+ * @notice initOutputVector() is a helper function for the forward pass of the network. It initializes the output
+ * vector for a given layer with Value structs that have a value of 0 and no ancestors.
+*/
+Value** initOutputVector(int outputSize){
+
+    Value** output = (Value**)malloc(outputSize * sizeof(Value*));
+    assert(output != NULL);
+
+    for(int i = 0; i < outputSize; i++){
+        output[i] = newValue(0, NULL, NO_ANCESTORS, "initOutputVector");
+    }
+
+    return output;
+}
+
+/**
  * @notice createMLP() is a constructor function that creates a multi-layer perceptron with the specified
  * layer sizes. The weights and biases are initialized with random values between -1 and 1. 
  * @dev The MLP struct is used to store the Layer structs in a doubly linked list. The head and tail pointers
@@ -74,8 +90,11 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
     // initialize weights and biases for input layer
     inputLayer->weights = initWeights(inputSize, layerSizes[0]);
     inputLayer->biases = initBiases(layerSizes[0]);
+    inputLayer->outputVector = initOutputVector(layerSizes[0]);
+
     assert(inputLayer->weights != NULL);
     assert(inputLayer->biases != NULL);
+    assert(inputLayer->outputVector != NULL);
 
     // set links for the input layer of mlp
     mlp->inputLayer = inputLayer;
@@ -96,8 +115,10 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
         // initialize weights and biases for current layer
         currentLayer->weights = initWeights(layerSizes[i-1], layerSizes[i]);
         currentLayer->biases = initBiases(layerSizes[i]);
+        currentLayer->outputVector = initOutputVector(layerSizes[i]);
         assert(currentLayer->weights != NULL);
         assert(currentLayer->biases != NULL);
+        assert(currentLayer->outputVector != NULL);
 
         // set next pointer for input layer
         inputLayer->next = currentLayer;
@@ -151,6 +172,7 @@ void freeMLP(MLP* mlp){
         nextLayer = currentLayer->next;
         freeWeights(currentLayer->weights, currentLayer->inputSize, currentLayer->outputSize);
         freeBiases(currentLayer->biases, currentLayer->outputSize);
+        freeBiases(currentLayer->outputVector, currentLayer->outputSize);
         free(currentLayer);
         currentLayer = nextLayer;
     }
