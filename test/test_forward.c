@@ -37,7 +37,13 @@ void test_MultiplyWeights(){
     // @note: this is  not an extensive test for backprop. More so just to check that the function runs
     Value* sum = Add(layer->outputVector[2], Add(layer->outputVector[0], layer->outputVector[1]));
     Backward(sum);
+
+    // free memory
+    releaseGraph(&sum);
+
+    printf("MultiplyWeights() passed\n");
 }   
+
 
 /**
  * @notice test_AddBias() tests adding the bias to the output vector of a layer after MultiplyWeights() has been called
@@ -78,12 +84,34 @@ void test_AddBias(void){
     Backward(sum);
 
     // free memory
-    for (int i = 0; i < 3; i++){
-        free(input[i]);
-        free(layer->outputVector[i]);
+    releaseGraph(&sum);
+
+    printf("AddBias() passed\n");
+}
+
+/**
+ * @test test_copyInput() tests the copying an array of ptrs to Value structs 
+ * (w/ the contents of those structs) by the copyInput() function from forward.c
+*/
+void test_copyInput(){
+
+    int inputSize = 3;
+    Value** input = (Value**)malloc(inputSize * sizeof(Value*));
+    for(int i = 0; i < inputSize; i++){
+        input[i] = newValue(i, NULL, NO_ANCESTORS, "test_copyInput");
     }
+
+    Value** inputCopy = copyInput(input, inputSize);
+
+    for(int i = 0; i < inputSize; i++){
+        assert(inputCopy[i]->value == i);
+        assert(inputCopy[i]->grad == 0);
+    }
+
     free(input);
-    free(layer->outputVector);
+    free(inputCopy);
+
+    printf("copyInput() passed\n");
 }
 
 int main(void){
@@ -92,8 +120,9 @@ int main(void){
 
     test_MultiplyWeights();
     test_AddBias();
+    test_copyInput();
 
-    printf("MultiplyWeights() passed\n");
+    printf("All forward tests passed\n");
 
     return 0;
 }

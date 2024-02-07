@@ -45,3 +45,32 @@ void AddBias(Layer* layer, Value** input){
         layer->outputVector[i] = Add(layer->outputVector[i], input[i]);
     }
 }
+
+
+/**
+ * @notice copyInput() is a helper function used to copy the input vector at the start of the forward pass so that
+ * when we deallocate the forward pass graph, we do not inadvertently deallocate the training data at the base of it. 
+*/
+Value** copyInput(Value** input, int inputSize){
+    Value** inputCopy = (Value**)malloc(inputSize * sizeof(Value*));
+    for(int i = 0; i < inputSize; i++){
+        inputCopy[i] = newValue(input[i]->value, NULL, NO_ANCESTORS, "copyInput");
+    }
+    return inputCopy;
+}
+
+/**
+//  * @notice Forward() is used to perform the forward pass of an mlp. 
+//  * 
+// */
+// void Forward(MLP* mlp, Value** input){
+
+//     // copy input vector so that when we deallocate the forward pass graph, we don't deallocate the training data
+//     Value** inputCopy = (Value**)malloc(mlp->inputLayer->inputSize * sizeof(Value*));
+//     for(int i = 0; i < mlp->inputLayer->inputSize; i++){
+//         inputCopy[i] = newValue(input[i]->value, NULL, NO_ANCESTORS, "Forward");
+//     }
+
+
+
+// }

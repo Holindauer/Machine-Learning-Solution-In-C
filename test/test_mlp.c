@@ -100,6 +100,8 @@ void test_mlpInit(){
 }
 
 
+
+
 int main(void){
 
     printf("Testing mlp funcs...\n");
@@ -107,7 +109,7 @@ int main(void){
     test_initWeights();
     test_initBiases();
     test_mlpInit();
-
+    
     printf("All tests passed!\n\n");
 
     return 0;
