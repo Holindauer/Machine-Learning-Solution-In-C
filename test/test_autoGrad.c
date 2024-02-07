@@ -238,6 +238,36 @@ void test_Backprop(void){
     freeValue(y);
 }
 
+/**
+ * @notice test_releaseGraph tests the releaseGraph function by creating a graph and then releasing it
+ * 
+*/
+void test_releaseGraph(void){
+
+
+    // create some ancestor nodes
+    Value* x = newValue(-4, NULL, NO_ANCESTORS, "x");
+    Value* z = Add(
+        Mul(
+            newValue(2, NULL, NO_ANCESTORS, "2"), x), 
+            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x
+            )
+        );
+    Value* q = Add(ReLU(z), Mul(z, x));
+    Value* h = ReLU(Mul(z, z));
+    Value* y = Add(Add(h, q), Mul(q, x));
+
+
+    assert(y->value == -20);
+
+    Backward(y);
+
+    // release the graph
+    releaseGraph(&y);
+
+    assert(y == NULL);
+}
+
 
 // run the tests
 int main(void){
@@ -251,6 +281,7 @@ int main(void){
     test_MulDiff();
     test_reluDiff();
     test_Backprop(); 
+    test_releaseGraph();
 
     printf("All Autograd Tests Passed!\n\n");
 

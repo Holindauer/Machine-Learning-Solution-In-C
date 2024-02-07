@@ -36,9 +36,11 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     Value* v = (Value*)malloc(sizeof(Value));
     assert(v != NULL);
 
-    // set value to the given value and gradient to 0
+    // set Value values
     v->value = _value;
     v->grad = 0.0;
+    v->refCount = 1; // Starting its own reference count for graph deallocation purposes
+    v->ancestorArrLen = _ancestorArrLen;
 
     // if no ancestors are given, set the ancestors pointer to NULL
     if (_ancestorArrLen == NO_ANCESTORS && _ancestors == NULL) {
@@ -51,6 +53,7 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
         // Copy ancestor nodes into the value struct.
         for (int i = 0; i < _ancestorArrLen; i++) {
             v->ancestors[i] = _ancestors[i];
+            _ancestors[i]->refCount++; // Incrementing the ancestor's reference count to reflect that it's being used as an ancestor
         }
     }
 
@@ -64,6 +67,47 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
 
     return v;
 }
+
+
+/**
+ * @notice releaseGraph() is used to deallocate memory for the entire computation graph stored implicitly in a Value struct's ancestors
+ * @dev releaseGraph() works by taking advantage of the refCount field in each Value struct, which was incremented each time that Value
+ * was set as an ancestor for another Value. By recusivly traversing backward into the graph while decremeingting the refCount of each
+ * Value we find, we can find the initial location of each Value struct. Once the refCount of a Value struct reaches zero, we know that
+ * it is safe to deallocate its memory.
+ * @param v A pointer to a pointer to a Value struct to have it's computational graph freed
+*/
+void releaseGraph(Value** v) {
+    if (v != NULL && *v != NULL) {
+
+        // mark that we've visited this node
+        (*v)->refCount--;
+
+        // if the refCount is zero, we can deallocate the memory
+        if ((*v)->refCount <= 0) {
+
+            // deallocate operation string
+            if ((*v)->opStr != NULL) {
+                free((*v)->opStr);
+                (*v)->opStr = NULL; // set to NULL after freeing
+            }
+            // deallocate each ancestor by recursively calling releaseGraph
+            if ((*v)->ancestors != NULL) {
+                for (int i = 0; i < (*v)->ancestorArrLen; i++) {
+                    if ((*v)->ancestors[i] != NULL) {
+                        releaseGraph(&((*v)->ancestors[i])); // Recursive call 
+                    }
+                }
+                // free ancestors array and set to NULL
+                free((*v)->ancestors);
+                (*v)->ancestors = NULL;
+            }
+            free(*v);
+            *v = NULL; // Now correctly nullifying the original pointer
+        }
+    }
+}
+
 
 
 /**
@@ -116,6 +160,10 @@ Value* Add(Value* a, Value* b) {
     // Create a new Value for the sum
     Value* sumValue = newValue(a->value + b->value, (Value*[]){a, b}, 2, "add");
 
+    // increment ancestor reference counts
+    a->refCount++;
+    b->refCount++;
+
     // Set the backward function pointer to addBackward
     sumValue->Backward = addBackward;
 
@@ -149,6 +197,10 @@ Value* Mul(Value* a, Value* b) {
 
     // Create a new Value for the product
     Value* productValue = newValue(a->value * b->value, (Value*[]){a, b}, 2, "mul");
+
+    // increment ancestor reference counts
+    a->refCount++;
+    b->refCount++;
 
     // Set the backward function pointer to mulBackward
     productValue->Backward = mulBackward;
@@ -195,6 +247,9 @@ Value* ReLU(Value* a) {
     // Create a new Value for the ReLU activation
     double reluResult = a->value > 0 ? a->value : 0; // f(x) = max(0, x)
     Value* reluValue = newValue(reluResult, (Value*[]){a}, 1, "relu");
+
+    // increment ancestor reference counts
+    a->refCount++;
 
     // Set the backward function pointer to reluBackward
     reluValue->Backward = reluBackward;
@@ -314,3 +369,5 @@ void Backward(Value* v) {
     // Clean up
     free(sorted);
 }
+
+

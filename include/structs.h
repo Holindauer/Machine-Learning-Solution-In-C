@@ -22,13 +22,17 @@ typedef void (*pBackwardFunc)(Value*);
  * @param Backward ptr to a d/dx function for the operation that produced the value
  * @param ancestors arr of ancestor nodes (dynamically allocated)
  * @param op Str of operation that produced the value (debugging)
+ * @param ancestorArrLen length of the ancestors array
+ * @param refCount tracks the number of times a Value is used as an ancestor
 */
 typedef struct _value {
     double value;             
     double grad;              
     pBackwardFunc Backward; 
     Value **ancestors;       
-    char* opStr;                 
+    char* opStr; 
+    int ancestorArrLen;                
+    int refCount;
 } Value;
 
 //------------------------------------------------------------------------------------------------------------------ Hash Table Struct
@@ -104,6 +108,7 @@ void reverseArray(Value** arr, int start, int end);
 void reverseTopologicalSort(Value* start, Value*** sorted, int* count);
 void Backward(Value* v);
 void freeValue(Value* v);
+void releaseGraph(Value** v);
 
 // Hash Table Related Prototypes
 HashTable* createHashTable(int size);
