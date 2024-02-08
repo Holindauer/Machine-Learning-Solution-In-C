@@ -136,3 +136,6 @@ void MultiplyWeights(Layer* layer, Value** input);
 void AddBias(Layer* layer, Value** input);
 Value** copyInput(Value** input, int inputSize);
 void Forward(MLP* mlp, Value** input);
+
+// SGD related prototypes
+void learningRule(MLP* mlp, int lr);

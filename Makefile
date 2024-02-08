@@ -3,14 +3,19 @@ CFLAGS=-I include
 SRC_DIR=src
 TEST_DIR=test
 BIN_DIR=bin
+EXAMPLE_DIR=example
+EXAMPLETARGET=$(BIN_DIR)/example
+EXAMPLESRC=$(EXAMPLE_DIR)/example.c
+LIBSOURCES=$(wildcard $(SRC_DIR)/*.c)
 
 # Create bin directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-all: main test_autoGrad test_hashTable test_loadData  test_mlp test_forward test_sgd
+all: test_autoGrad test_hashTable test_loadData  test_mlp test_forward test_sgd example
 
-main: $(SRC_DIR)/main.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/main $(SRC_DIR)/main.c
+# Example target
+example: $(LIBSOURCES) $(EXAMPLESRC)
+	$(CC) $(CFLAGS) $^ -o $(EXAMPLETARGET)
 
 # Test targets (separate executables for each test)
 test_autoGrad: $(TEST_DIR)/test_autoGrad.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c
