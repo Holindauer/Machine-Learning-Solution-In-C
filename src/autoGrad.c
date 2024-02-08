@@ -75,10 +75,23 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
  * was set as an ancestor for another Value. By recusivly traversing backward into the graph while decremeingting the refCount of each
  * Value we find, we can find the initial location of each Value struct. Once the refCount of a Value struct reaches zero, we know that
  * it is safe to deallocate its memory.
+ * @dev releaseGraph() also will not release the memory Value of structs that are created by the initWeights() and initBiases() functions
+ * because this would destroy the mlp's weights and biases.
  * @param v A pointer to a pointer to a Value struct to have it's computational graph freed
 */
 void releaseGraph(Value** v) {
-    if (v != NULL && *v != NULL) {
+
+    if ( // don't release the memory of the weights and biases
+        strcmp((*v)->opStr, "initWeights") == 0 || 
+        strcmp((*v)->opStr, "initBiases") == 0 || 
+        strcmp((*v)->opStr, "initOutputVector") == 0) {
+        return;
+    }
+
+    if (
+        v != NULL && 
+        *v != NULL 
+        ) {
 
         // mark that we've visited this node
         (*v)->refCount--;

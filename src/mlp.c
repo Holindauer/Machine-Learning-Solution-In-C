@@ -165,17 +165,29 @@ void freeBiases(Value** biases, int outputSize){
 */
 void freeMLP(MLP* mlp){
 
-    Layer* currentLayer = mlp->inputLayer;
-    Layer* nextLayer;
+    Layer* layer =mlp->inputLayer;
+    Layer* nextLayer = layer; 
 
-    while(currentLayer != NULL){
-        nextLayer = currentLayer->next;
-        freeWeights(currentLayer->weights, currentLayer->inputSize, currentLayer->outputSize);
-        freeBiases(currentLayer->biases, currentLayer->outputSize);
-        freeBiases(currentLayer->outputVector, currentLayer->outputSize);
-        free(currentLayer);
-        currentLayer = nextLayer;
-    }
+    for (int i = 0; i < mlp->numLayers; i++){
 
-    free(mlp);
+        // move to the next layer
+        layer = nextLayer;
+
+        // free the weights, biases, and output vector
+        for(int j = 0; j < layer->inputSize * layer->outputSize; j++){
+            freeValue(layer->weights[j]);
+        }
+        for(int j = 0; j < layer->outputSize; j++){
+            freeValue(layer->biases[j]);
+        }
+        free(layer->weights);
+        free(layer->biases);
+        free(layer->outputVector);
+        
+        // set next layer then free current layer
+        nextLayer = layer->next;
+        free(layer);
+   }
+
+   free(mlp);
 }

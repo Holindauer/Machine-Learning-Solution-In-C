@@ -136,9 +136,11 @@ void test_Forward(){
 
     // run a backward pass
     Backward(mlp->outputLayer->outputVector[0]);
-   
-    //Value* sum = Add(mlp->outputLayer->outputVector[0], mlp->outputLayer->outputVector[1]);
+
     releaseGraph(&mlp->outputLayer->outputVector[0]);
+
+
+    freeMLP(mlp);
 
     printf("Forward() passed\n");
 }
