@@ -60,17 +60,27 @@ Value** copyInput(Value** input, int inputSize){
 }
 
 /**
-//  * @notice Forward() is used to perform the forward pass of an mlp. 
-//  * 
-// */
-// void Forward(MLP* mlp, Value** input){
+ * @notice Forward() is used to perform the forward pass of an mlp. 
+ * @dev The final output of the network is stored in the outputVector memebr of the 
+ * outputLayer member of the mlp struct
+*/
+void Forward(MLP* mlp, Value** input){
 
-//     // copy input vector so that when we deallocate the forward pass graph, we don't deallocate the training data
-//     Value** inputCopy = (Value**)malloc(mlp->inputLayer->inputSize * sizeof(Value*));
-//     for(int i = 0; i < mlp->inputLayer->inputSize; i++){
-//         inputCopy[i] = newValue(input[i]->value, NULL, NO_ANCESTORS, "Forward");
-//     }
+    // copy input vector to avoid deallocation of training data when calling releaseGraph()
+    Value** inputCopy = copyInput(input, mlp->inputLayer->inputSize);
 
+    // retrieve the input layer
+    Layer* layer = mlp->inputLayer;
 
+    // pass input to the inputlayer
+    MultiplyWeights(layer, inputCopy);
+    AddBias(layer, inputCopy);
 
-// }
+    // for subsequent layers iterate over the rest of the layers, 
+    // passing the output of the previous layer to the next layer
+    for (int i = 1; i < mlp->numLayers; i++){
+        layer = layer->next;
+        MultiplyWeights(layer, layer->prev->outputVector);
+        AddBias(layer, layer->prev->outputVector);
+    }
+}

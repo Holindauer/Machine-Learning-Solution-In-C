@@ -114,6 +114,36 @@ void test_copyInput(){
     printf("copyInput() passed\n");
 }
 
+/**
+ * @notice test_Forward() tests that the forward pass of the network does not crash
+*/
+void test_Forward(){
+
+    // create a new mlp
+    int inputSize = 4;
+    int layerSizes[] = {4, 3, 1};
+    int numLayers = 3;
+    MLP* mlp = createMLP(inputSize, layerSizes, numLayers);
+
+    // create a new input vector
+    Value** input = (Value**)malloc(inputSize * sizeof(Value*));
+    for(int i = 0; i < inputSize; i++){
+        input[i] = newValue(i, NULL, NO_ANCESTORS, "test_Forward");
+    }
+
+    // run the forward pass
+    Forward(mlp, input);    
+
+    // run a backward pass
+    Backward(mlp->outputLayer->outputVector[0]);
+   
+    //Value* sum = Add(mlp->outputLayer->outputVector[0], mlp->outputLayer->outputVector[1]);
+    releaseGraph(&mlp->outputLayer->outputVector[0]);
+
+    printf("Forward() passed\n");
+}
+
+
 int main(void){
 
     printf("\nRunning tests for forward.c\n");
@@ -121,6 +151,7 @@ int main(void){
     test_MultiplyWeights();
     test_AddBias();
     test_copyInput();
+    test_Forward();
 
     printf("All forward tests passed\n");
 
