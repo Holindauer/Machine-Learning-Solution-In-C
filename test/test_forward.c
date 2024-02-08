@@ -139,7 +139,6 @@ void test_Forward(){
 
     releaseGraph(&mlp->outputLayer->outputVector[0]);
 
-
     freeMLP(mlp);
 
     printf("Forward() passed\n");

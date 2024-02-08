@@ -7,7 +7,7 @@ BIN_DIR=bin
 # Create bin directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-all: main test_autoGrad test_hashTable test_loadData  test_mlp test_forward
+all: main test_autoGrad test_hashTable test_loadData  test_mlp test_forward test_sgd
 
 main: $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/main $(SRC_DIR)/main.c
@@ -27,6 +27,9 @@ test_mlp: $(TEST_DIR)/test_mlp.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DI
 
 test_forward: $(TEST_DIR)/test_forward.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_forward $(TEST_DIR)/test_forward.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c
+
+test_sgd: $(TEST_DIR)/test_sgd.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c $(SRC_DIR)/sgd.c
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_sgd $(TEST_DIR)/test_sgd.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c $(SRC_DIR)/sgd.c
 
 clean:
 	rm -f $(BIN_DIR)/*
