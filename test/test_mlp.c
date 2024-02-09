@@ -99,6 +99,60 @@ void test_mlpInit(){
     freeMLP(mlp);
 }
 
+/**
+ * @test test_zeroGrad() tests that the zeroGrad() function from mlp.c correctly zeros the gradients of the weights and biases
+ * @dev the test is set up by running a backward pass following a dummy forward pass, and then checking that the gradients are 
+ * zeroed. 
+ * 
+*/
+void test_zeroGrad(void){
+
+    // init mlp
+    int inputSize = 4;
+    int layerSizes[] = {16, 8, 1};
+    int numLayers = 3;
+    MLP* mlp = createMLP(inputSize, layerSizes, numLayers);
+
+    // init dummy input
+    Value** input = (Value**) malloc(inputSize * sizeof(Value*));
+    for (int i = 0; i < inputSize; i++){
+        input[i] = newValue(i + 8, NULL, NO_ANCESTORS, "input");
+    }
+
+    // forward and backward pass
+    Forward(mlp, input);
+    Backward(mlp->outputLayer->outputVector[0]);
+
+    for (int i = 0; i < 4*16; i++){
+        printf("weight %d: %f\n", i, mlp->inputLayer->weights[i]->grad);
+    }
+
+    // zero gradients
+    zeroGrad(mlp);
+
+    // isolate first layer
+    Layer* layer = mlp->inputLayer;
+
+    // check that all layer's weight and bias gradients are zero
+    for (int i = 0; i < mlp->numLayers; i++){
+        for(int j = 0; j < layer->inputSize * layer->outputSize; j++){
+            assert(layer->weights[j]->grad == 0);
+        }
+        for(int j = 0; j < layer->outputSize; j++){
+            assert(layer->biases[j]->grad == 0);
+        }
+        layer = layer->next;
+    }
+
+    // Cleanup
+    releaseGraph(&mlp->outputLayer->outputVector[0]);
+    for(int i = 0; i< mlp->numLayers; i++){
+        freeValue(input[i]);
+    }
+    free(input);
+    freeMLP(mlp);
+}
+
 
 
 
@@ -109,7 +163,8 @@ int main(void){
     test_initWeights();
     test_initBiases();
     test_mlpInit();
-    
+    test_zeroGrad();
+
     printf("All tests passed!\n\n");
 
     return 0;

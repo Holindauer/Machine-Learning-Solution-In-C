@@ -113,7 +113,7 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
         currentLayer->prev = inputLayer;
 
         // initialize weights and biases for current layer
-        currentLayer->weights = initWeights(layerSizes[i-1], layerSizes[i]);
+        currentLayer->weights = initWeights(layerSizes[i-1], layerSizes[i]); 
         currentLayer->biases = initBiases(layerSizes[i]);
         currentLayer->outputVector = initOutputVector(layerSizes[i]);
         assert(currentLayer->weights != NULL);
@@ -136,6 +136,34 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
 
     return mlp;
 }
+
+
+/**
+ * @notice zeroGrad() is used in relation to the backward pass of the network. It resets the gradient of all weights
+ * and biases to 0.
+ * @dev this is for to reset gradient information before a new batch is passed through the network, so that gradient
+ * descent is not recieving outdated information about prior weights and biases
+ * 
+*/
+void zeroGrad(MLP* mlp){
+
+    Layer* layer = mlp->inputLayer;
+
+    for (int i = 0; i < mlp->numLayers; i++){
+
+        // zero the gradients for the weights and biases
+        for(int j = 0; j < layer->inputSize * layer->outputSize; j++){
+            layer->weights[j]->grad = 0;
+        }
+        for(int j = 0; j < layer->outputSize; j++){
+            layer->biases[j]->grad = 0;
+        }
+
+        // move to the next layer
+        layer = layer->next;
+    }
+}
+
 
 /**
  * @notice freeWeights() is a helper function for the createMLP() destructor. It frees the memory allocated
