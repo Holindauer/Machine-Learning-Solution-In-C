@@ -68,13 +68,14 @@ void Forward(MLP* mlp, Value** input){
 
     // copy input vector to avoid deallocation of training data when calling releaseGraph()
     Value** inputCopy = copyInput(input, mlp->inputLayer->inputSize);
+    assert(inputCopy != NULL);
 
     // retrieve the input layer
     Layer* layer = mlp->inputLayer;
 
     // pass input to the inputlayer
     MultiplyWeights(layer, inputCopy);
-    AddBias(layer, inputCopy);
+    AddBias(layer, layer->outputVector);
 
     // for subsequent layers iterate over the rest of the layers, 
     // passing the output of the previous layer to the next layer
