@@ -24,6 +24,8 @@ typedef void (*pBackwardFunc)(Value*);
  * @param op Str of operation that produced the value (debugging)
  * @param ancestorArrLen length of the ancestors array
  * @param refCount tracks the number of times a Value is used as an ancestor
+ * @param isMLP flag to indicate if the value is a part of an MLP and thus should not be 
+ * deallocated when the graph is released
 */
 typedef struct _value {
     double value;             
@@ -33,6 +35,7 @@ typedef struct _value {
     char* opStr; 
     int ancestorArrLen;                
     int refCount;
+    int isMLP;
 } Value;
 
 //------------------------------------------------------------------------------------------------------------------ Hash Table Struct
@@ -139,4 +142,4 @@ Value** copyInput(Value** input, int inputSize);
 void Forward(MLP* mlp, Value** input);
 
 // SGD related prototypes
-void learningRule(MLP* mlp, int lr);
+void Step(MLP* mlp, int lr);

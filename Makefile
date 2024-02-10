@@ -4,37 +4,38 @@ SRC_DIR=src
 TEST_DIR=test
 BIN_DIR=bin
 EXAMPLE_DIR=example
-EXAMPLETARGET=$(BIN_DIR)/example
-EXAMPLESRC=$(EXAMPLE_DIR)/example.c
-LIBSOURCES=$(wildcard $(SRC_DIR)/*.c)
+EXAMPLE_TARGET=$(BIN_DIR)/example
+EXAMPLE_SRC=$(EXAMPLE_DIR)/example.c
+LIB_SOURCES=$(wildcard $(SRC_DIR)/*.c)
 
 # Create bin directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-all: test_autoGrad test_hashTable test_loadData  test_mlp test_forward test_sgd example
+all: example test_autoGrad test_hashTable test_loadData test_mlp test_forward test_sgd
 
 # Example target
-example: $(LIBSOURCES) $(EXAMPLESRC)
-	$(CC) $(CFLAGS) $^ -o $(EXAMPLETARGET)
+example: $(EXAMPLE_SRC) $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(EXAMPLE_TARGET)
 
-# Test targets (separate executables for each test)
-test_autoGrad: $(TEST_DIR)/test_autoGrad.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_autoGrad $(TEST_DIR)/test_autoGrad.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c
+# Test targets
+test_autoGrad: $(TEST_DIR)/test_autoGrad.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
-test_hashTable: $(TEST_DIR)/test_hashTable.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/autoGrad.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_hashTable $(TEST_DIR)/test_hashTable.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/autoGrad.c
+test_hashTable: $(TEST_DIR)/test_hashTable.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
-test_loadData: $(TEST_DIR)/test_loadData.c $(SRC_DIR)/loadData.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_loadData $(TEST_DIR)/test_loadData.c $(SRC_DIR)/loadData.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c
+test_loadData: $(TEST_DIR)/test_loadData.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
-test_mlp: $(TEST_DIR)/test_mlp.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_mlp $(TEST_DIR)/test_mlp.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c
+test_mlp: $(TEST_DIR)/test_mlp.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
-test_forward: $(TEST_DIR)/test_forward.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_forward $(TEST_DIR)/test_forward.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c
+test_forward: $(TEST_DIR)/test_forward.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
-test_sgd: $(TEST_DIR)/test_sgd.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c $(SRC_DIR)/sgd.c
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/test_sgd $(TEST_DIR)/test_sgd.c $(SRC_DIR)/mlp.c $(SRC_DIR)/autoGrad.c $(SRC_DIR)/hashTable.c $(SRC_DIR)/loadData.c $(SRC_DIR)/forward.c $(SRC_DIR)/sgd.c
+test_sgd: $(TEST_DIR)/test_sgd.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
 clean:
 	rm -f $(BIN_DIR)/*
+

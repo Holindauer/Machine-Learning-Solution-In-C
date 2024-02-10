@@ -2,6 +2,7 @@
 #include "macros.h"
 
 #define EPOCHS 15
+#define LR 0.001
 
 int main(void){
 
@@ -21,20 +22,65 @@ int main(void){
     // create the multi-layer perceptron
     MLP* mlp = createMLP(inputSize, layerSizes, numLayers); 
 
-    // set up input vector
-    Value** input = (Value**) malloc(IRIS_FEATURES * sizeof(Value*));
+    // Set up an input vector
+    Value** input;
+    input = (Value**) malloc(IRIS_FEATURES * sizeof(Value*));
     for (int i = 0; i < IRIS_FEATURES; i++){
         input[i] = newValue(features[0][i]->value, NULL, NO_ANCESTORS, "input");
     }
 
+    zeroGrad(mlp);
+
+    // run forward pass
     Forward(mlp, input);
 
-    printf("Output: %f\n", mlp->outputLayer->outputVector[0]->value);
-
+    // backpropagate gradient
     Backward(mlp->outputLayer->outputVector[0]);
 
+    // for (int i =0; i<mlp->inputLayer->)
 
-    
+
+
+    // for (int epoch = 0; epoch < EPOCHS; epoch++){
+
+    //     printf("Epoch: %d\n", epoch+1);
+
+    //     input = (Value**) malloc(IRIS_FEATURES * sizeof(Value*));
+    //     for (int i = 0; i < IRIS_FEATURES; i++){
+    //         input[i] = newValue(features[0][i]->value, NULL, NO_ANCESTORS, "input");
+    //     }
+
+    //     // // run forward pass
+    //     Forward(mlp, input);
+
+    //     // backpropagate gradient
+    //     Backward(mlp->outputLayer->outputVector[0]);
+
+    //     // appply gradient descent
+    //     Step(mlp, LR);
+
+    //     // zero gradient
+    //     zeroGrad(mlp);
+
+
+    //     assert(mlp->outputLayer->outputVector[0] != NULL);
+
+
+    //     // release computation graph once gradient has been accumulated
+    //     releaseGraph(&mlp->outputLayer->outputVector[0]);
+
+    //     assert(mlp->outputLayer->outputVector[0] != NULL);
+
+    //     // mlp->outputLayer->outputVector[0] = newValue(0, NULL, NO_ANCESTORS, "initOutputVector"); // <--- this is a quick and dirty fix to fix releaseGraph() deallocating the outputVector of the mlp
+    //     // // It fixes the prblem with not being able to run the forward  ass int he second epoch. But causes backward now to work
+
+    //     // free the input vector
+    //     for(int i = 0; i < inputSize; i++){
+    //         freeValue(input[i]);
+    //     }
+    //     free(input);
+    // }
+
     // free memory when done
     freeDataFeatures(features, IRIS_ROWS);
     freeDataTargets(targets, IRIS_ROWS);

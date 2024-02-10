@@ -24,7 +24,9 @@ Value** initWeights(int inputSize, int outputSize){
         // create random value between -1 and 1
         float randomFloat = (float)rand() / (RAND_MAX + 1u) * 2.0f - 1.0f;
         weights[i] = newValue(randomFloat, NULL, NO_ANCESTORS, "initWeights");
-
+        
+        // set isMLP flag to 1 so that the weights are not deallocated by releaseGraph()
+        weights[i]->isMLP = 1;
     }
 
     return weights;
@@ -43,6 +45,9 @@ Value** initBiases(int outputSize){
         // create random value between -1 and 1
         float randomFloat = (float)rand() / (RAND_MAX + 1u) * 2.0f - 1.0f;
         biases[i] = newValue(randomFloat, NULL, 0, "initBiases");
+
+        // set isMLP flag to 1 so that the biases are not deallocated by releaseGraph()
+        biases[i]->isMLP = 1;
     }
 
     return biases;
@@ -59,6 +64,11 @@ Value** initOutputVector(int outputSize){
 
     for(int i = 0; i < outputSize; i++){
         output[i] = newValue(0, NULL, NO_ANCESTORS, "initOutputVector");
+
+        // set isMLP flag to 1 so that the output vector is not deallocated by releaseGraph
+        // This will be overwritten in the forward pass (and rewritten, due to the nature of Value operations)
+        // but will still be set here for edge cases
+        output[i]->isMLP = 1;
     }
 
     return output;
@@ -92,6 +102,7 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
     inputLayer->biases = initBiases(layerSizes[0]);
     inputLayer->outputVector = initOutputVector(layerSizes[0]);
 
+    // check that memory was allocated
     assert(inputLayer->weights != NULL);
     assert(inputLayer->biases != NULL);
     assert(inputLayer->outputVector != NULL);
@@ -116,6 +127,8 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
         currentLayer->weights = initWeights(layerSizes[i-1], layerSizes[i]); 
         currentLayer->biases = initBiases(layerSizes[i]);
         currentLayer->outputVector = initOutputVector(layerSizes[i]);
+
+        // check that memory was allocated
         assert(currentLayer->weights != NULL);
         assert(currentLayer->biases != NULL);
         assert(currentLayer->outputVector != NULL);

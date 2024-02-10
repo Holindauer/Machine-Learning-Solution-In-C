@@ -10,16 +10,13 @@
 
 
 
-
-
-
 /**
- * @notice learningRule() is a helper function for the Step() function. It computes the gradient descent learning 
+ * @notice Step() is a helper function for the Step() function. It computes the gradient descent learning 
  * rule for the Step function to update the weights and biases of the mlp.
  * @param mlp The multi-layer perceptron to update
  * @param lr The learning rate for the update
 */
-void learningRule(MLP* mlp, int lr){
+void Step(MLP* mlp, int lr){
 
     assert(mlp != NULL);
 
@@ -43,12 +40,6 @@ void learningRule(MLP* mlp, int lr){
         // move to the next layer
         layer = layer->next;
     }
-}
-
-void Step(MLP* mlp){
-
-
-
 }
 
 

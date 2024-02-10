@@ -41,7 +41,8 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     v->grad = 0.0;
     v->refCount = 1; // Starting its own reference count for graph deallocation purposes
     v->ancestorArrLen = _ancestorArrLen;
-
+    v->isMLP = 0; // by default a value is not part of an MLP
+ 
     // if no ancestors are given, set the ancestors pointer to NULL
     if (_ancestorArrLen == NO_ANCESTORS && _ancestors == NULL) {
         v->ancestors = NULL;
@@ -69,57 +70,59 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
 }
 
 
-/**
- * @notice releaseGraph() is used to deallocate memory for the entire computation graph stored implicitly in a Value struct's ancestors
- * @dev releaseGraph() works by taking advantage of the refCount field in each Value struct, which was incremented each time that Value
- * was set as an ancestor for another Value. By recusivly traversing backward into the graph while decremeingting the refCount of each
- * Value we find, we can find the initial location of each Value struct. Once the refCount of a Value struct reaches zero, we know that
- * it is safe to deallocate its memory.
- * @dev releaseGraph() also will not release the memory Value of structs that are created by the initWeights() and initBiases() functions
- * because this would destroy the mlp's weights and biases.
- * @param v A pointer to a pointer to a Value struct to have it's computational graph freed
-*/
-void releaseGraph(Value** v) {
+// Forward declaration of the recursive handler to make it available for releaseGraph
+void releaseGraphRecursive(Value** v);
 
-    if ( // don't release the memory of the weights and biases
-        strcmp((*v)->opStr, "initWeights") == 0 || 
-        strcmp((*v)->opStr, "initBiases") == 0 || 
-        strcmp((*v)->opStr, "initOutputVector") == 0) {
-        return;
+// Landing bay function
+void releaseGraph(Value** v) {
+    if (v == NULL || *v == NULL) {
+        return; // Early exit if the input is NULL
     }
 
-    if (
-        v != NULL && 
-        *v != NULL 
-        ) {
+    // Call the recursive handler
+    releaseGraphRecursive(v); 
+}
 
-        // mark that we've visited this node
-        (*v)->refCount--;
+// Recursive handler
+void releaseGraphRecursive(Value** v) {
 
-        // if the refCount is zero, we can deallocate the memory
-        if ((*v)->refCount <= 0) {
+    // Base case for recursion
+    if (*v == NULL) {
+        return; 
+    }
 
-            // deallocate operation string
-            if ((*v)->opStr != NULL) {
-                free((*v)->opStr);
-                (*v)->opStr = NULL; // set to NULL after freeing
-            }
-            // deallocate each ancestor by recursively calling releaseGraph
-            if ((*v)->ancestors != NULL) {
-                for (int i = 0; i < (*v)->ancestorArrLen; i++) {
-                    if ((*v)->ancestors[i] != NULL) {
-                        releaseGraph(&((*v)->ancestors[i])); // Recursive call 
-                    }
+    // Decrement the refCount and only proceed if it's zero
+    if (--(*v)->refCount == 0) {
+        if ((*v)->ancestors != NULL) {
+
+            // Recursively release the graph of each ancestor
+            for (int i = 0; i < (*v)->ancestorArrLen; i++) {
+                if ((*v)->ancestors[i] != NULL) {
+                    releaseGraphRecursive(&((*v)->ancestors[i]));
                 }
-                // free ancestors array and set to NULL
+            }
+
+            // only deallocate non mlp structures
+            if ((*v)->isMLP == 0) {
                 free((*v)->ancestors);
                 (*v)->ancestors = NULL;
             }
+        }
+
+        // Deallocation of the Value struct itself
+        if ((*v)->opStr == 0) {
+            // deallocate the operation string
+            if ((*v)->opStr != NULL) {
+                free((*v)->opStr);
+                (*v)->opStr = NULL;
+            }
+            // deallocate the value struct
             free(*v);
-            *v = NULL; // Now correctly nullifying the original pointer
+            *v = NULL;
         }
     }
 }
+
 
 
 
@@ -177,6 +180,9 @@ Value* Add(Value* a, Value* b) {
     a->refCount++;
     b->refCount++;
 
+    // by default, an added value is not part of an MLP
+    sumValue->isMLP = 0;
+
     // Set the backward function pointer to addBackward
     sumValue->Backward = addBackward;
 
@@ -214,6 +220,9 @@ Value* Mul(Value* a, Value* b) {
     // increment ancestor reference counts
     a->refCount++;
     b->refCount++;
+
+    // by default, a multiplied value is not part of an MLP
+    productValue->isMLP = 0;
 
     // Set the backward function pointer to mulBackward
     productValue->Backward = mulBackward;
@@ -264,6 +273,9 @@ Value* ReLU(Value* a) {
     // increment ancestor reference counts
     a->refCount++;
 
+    // by default, a ReLU value is not part of an MLP
+    reluValue->isMLP = 0;
+
     // Set the backward function pointer to reluBackward
     reluValue->Backward = reluBackward;
 
@@ -278,7 +290,7 @@ Value* ReLU(Value* a) {
  * @dev The function uses a hash table to store visited nodes and avoid infinite loops in the graph traversal.
  * @ a depth first search ensures that no node is input to the stack before all of its ancestors have been input.
 */
-void dfs(Value* v, HashTable* visitedTable, Value*** stack, int* index) {
+void dfs(Value* v, HashTable* visitedTable, Value*** stack, int* index) {  
 
     // If the node has already been visited, return
     if (isVisited(visitedTable, v)) {

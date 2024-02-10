@@ -123,10 +123,6 @@ void test_zeroGrad(void){
     Forward(mlp, input);
     Backward(mlp->outputLayer->outputVector[0]);
 
-    for (int i = 0; i < 4*16; i++){
-        printf("weight %d: %f\n", i, mlp->inputLayer->weights[i]->grad);
-    }
-
     // zero gradients
     zeroGrad(mlp);
 

@@ -31,7 +31,7 @@ void test_learningRule(void){
     }
 
     // applying the learning rule w/ lr=1 should zero out the weights and biases
-    learningRule(mlp, 1);
+    Step(mlp, 1);
 
     // retrieve the input layer again
     layer = mlp->inputLayer;
