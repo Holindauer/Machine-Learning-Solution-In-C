@@ -339,31 +339,102 @@ void test_releaseGraph(void){
     // create the multi-layer perceptron
     MLP* mlp = createMLP(inputSize, layerSizes, numLayers); 
 
+    // Check that isMLP flag is set to 1 for the mlp
+    Layer* layer = mlp->inputLayer;
+    for(int i = 0; i < numLayers; i++){
+
+        // check that outputVectors and biases are set to isMLP == 1
+        for (int j = 0; j < layer->outputSize; j++){
+            assert(layer->biases[j]->isMLP == 1);
+            assert(layer->outputVector[j]->isMLP == 1);
+        }
+
+        // check that weights are set to isMLP == 1
+        for (int j = 0; j < layer->inputSize * layer->outputSize; j++){
+            assert(layer->weights[j]->isMLP == 1);
+        }   
+
+        layer = layer->next;
+    }
+
     // Set up an input vector
     Value** input;
     input = (Value**) malloc(inputSize * sizeof(Value*));
     for (int i = 0; i < inputSize; i++){
         input[i] = newValue(i + 8, NULL, NO_ANCESTORS, "input");
+
+        // ensure correct val was set and that isMLP flag is set to 0
         assert(input[i]->value == i + 8);
+        assert(input[i]->isMLP == 0);
     }
 
 
     // run forward pass
     Forward(mlp, input);
 
-    // backpropagate gradient
+    // Check that isMLP flag is still set to 1 for the mlp following the forward pass
+    layer = mlp->inputLayer;
+    for(int i = 0; i < numLayers; i++){
+
+        // check that outputVectors and biases are set to isMLP == 1
+        for (int j = 0; j < layer->outputSize; j++){
+            assert(layer->biases[j]->isMLP == 1);
+            assert(layer->outputVector[j]->isMLP == 1);
+        }
+
+        // check that weights are set to isMLP == 1
+        for (int j = 0; j < layer->inputSize * layer->outputSize; j++){
+            assert(layer->weights[j]->isMLP == 1);
+        }   
+
+        layer = layer->next;
+    }
+
+    // backpropagate gradient of the output
     Backward(mlp->outputLayer->outputVector[0]);
 
     // check that the gradients are correct for the most output layer.
     assert(mlp->outputLayer->outputVector[0]->value != 0);
     assert(mlp->outputLayer->outputVector[0]->grad == 1);
 
-    printf("\n%s\b", mlp->outputLayer->outputVector[0]->opStr);
-
     // release computation graph once gradient has been accumulated
     releaseGraph(&mlp->outputLayer->outputVector[0]);
-    // assert(mlp->outputLayer->outputVector[0] != NULL); // <-- this is failing at the moment
 
+    // ensure output node still exists
+    assert(mlp->outputLayer->outputVector[0] != NULL);
+
+    // Check that isMLP flag is still set to 1 for the mlp following the release of the graph
+    layer = mlp->inputLayer;
+    for(int i = 0; i < numLayers; i++){
+
+        // check that outputVectors and biases are set to isMLP == 1
+        for (int j = 0; j < layer->outputSize; j++){
+
+            // ensure isMLP flag is set to 1
+            assert(layer->biases[j]->isMLP == 1);
+            assert(layer->outputVector[j]->isMLP == 1);
+
+            // ensure op strings still in tact
+            assert(strcmp(layer->biases[j]->opStr, "initBiases") == 0); // <-- should lways be initBiases
+            assert( // output vector opStr is expected to be overwritten. Can be any of these
+                strcmp(layer->outputVector[j]->opStr, "initOutputVector") == 0 ||
+                strcmp(layer->outputVector[j]->opStr, "add") == 0||
+                strcmp(layer->outputVector[j]->opStr, "mul") == 0 ||
+                strcmp(layer->outputVector[j]->opStr, "relu") == 0
+            );
+        }
+
+        // check that weights are set to isMLP == 1
+        for (int j = 0; j < layer->inputSize * layer->outputSize; j++){
+            // ensure isMLP flag is set to 1
+            assert(layer->weights[j]->isMLP == 1);
+
+            // ensure op strings still in tact
+            assert(strcmp(layer->weights[j]->opStr, "initWeights") == 0); // <-- should lways be initWeights
+        }   
+
+        layer = layer->next;
+    }
 
 
 

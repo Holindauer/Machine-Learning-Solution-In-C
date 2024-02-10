@@ -69,59 +69,50 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     return v;
 }
 
-
-// Forward declaration of the recursive handler to make it available for releaseGraph
-void releaseGraphRecursive(Value** v);
-
-// Landing bay function
+/**
+ * @notice releaseGraph() is a helper function used to deallocated the computational graph of the forward pass
+ * of the mlp. 
+ * @dev releaseGraph() is a recursive funciton that traversees the graph backwards from the most recent node
+ * @dev Value structs are only deallocated once their refCount reaches zero, which is a field of the Value 
+ * struct that measures how many times a specific node has been used as an ancestor and is decremented in this 
+ * function each time the node is visited recursively. Once the refCount is zero, the node is safe to deallocate.
+ * @dev The function also makes sure not to deallocae any ancestors that are part of the mlp. This is done by 
+ * only freeing Value structs that have the isMLP flag set to 0. The isMLP flag is set when a new Value struct is
+ * created. By default it is zero, but is set to 1 when mlp structures of Values are created.
+*/
 void releaseGraph(Value** v) {
+    // Check if the pointer is NULL or points to NULL, serving as the base case for recursion
     if (v == NULL || *v == NULL) {
-        return; // Early exit if the input is NULL
+        return;
     }
 
-    // Call the recursive handler
-    releaseGraphRecursive(v); 
-}
-
-// Recursive handler
-void releaseGraphRecursive(Value** v) {
-
-    // Base case for recursion
-    if (*v == NULL) {
-        return; 
-    }
-
-    // Decrement the refCount and only proceed if it's zero
+    // Decrement the refCount and proceed only if it's zero
     if (--(*v)->refCount == 0) {
+        // Recursively release the graph of each ancestor, if any
         if ((*v)->ancestors != NULL) {
-
-            // Recursively release the graph of each ancestor
             for (int i = 0; i < (*v)->ancestorArrLen; i++) {
-                if ((*v)->ancestors[i] != NULL) {
-                    releaseGraphRecursive(&((*v)->ancestors[i]));
-                }
+                releaseGraph(&((*v)->ancestors[i]));
             }
-
-            // only deallocate non mlp structures
-            if ((*v)->isMLP == 0) {
+            // Deallocate ancestors array if this is not part of the MLP structure
+            if (!(*v)->isMLP) {
                 free((*v)->ancestors);
                 (*v)->ancestors = NULL;
             }
         }
 
-        // Deallocation of the Value struct itself
-        if ((*v)->opStr == 0) {
-            // deallocate the operation string
+        // Deallocate the Value struct itself if opStr indicates it's not an MLP component
+        // Assuming the isMLP flag indicates if the Value is part of the MLP structure and should not be deallocated
+        if (!(*v)->isMLP) {
             if ((*v)->opStr != NULL) {
                 free((*v)->opStr);
                 (*v)->opStr = NULL;
             }
-            // deallocate the value struct
             free(*v);
             *v = NULL;
         }
     }
 }
+
 
 
 
