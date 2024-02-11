@@ -69,6 +69,7 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     return v;
 }
 
+
 /**
  * @notice releaseGraph() is a helper function used to deallocated the computational graph of the forward pass
  * of the mlp. 
@@ -112,9 +113,6 @@ void releaseGraph(Value** v) {
         }
     }
 }
-
-
-
 
 
 /**
@@ -283,6 +281,10 @@ Value* ReLU(Value* a) {
 */
 void dfs(Value* v, HashTable* visitedTable, Value*** stack, int* index) {  
 
+    assert(v != NULL);
+    assert(visitedTable != NULL);
+    assert(stack != NULL);
+
     // If the node has already been visited, return
     if (isVisited(visitedTable, v)) {
         return;
@@ -347,7 +349,6 @@ void reverseTopologicalSort(Value* start, Value*** sorted, int* count) {
     freeHashTable(visited);
 }
 
-// Function to trigger backward propagation using topological sort.
 
 /**
  * @notice Backward() is the main function used to perform reverse mode automatic differentiation on a Value struct 
@@ -383,7 +384,9 @@ void Backward(Value* v) {
     }
 
     // Clean up
-    free(sorted);
+    // if (sorted != NULL) { // @bug this is causing a sef fault. Not exactly sure why. 
+    //     free(sorted); // @bug sorted is not NULL but for some reason, freeing it at the end of the function causes a seg fault
+    // }  
 }
 
 

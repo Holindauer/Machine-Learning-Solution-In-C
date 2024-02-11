@@ -96,17 +96,28 @@ bool isVisited(HashTable* table, Value* value) {
 */
 void freeHashTable(HashTable* table) {
 
+    assert(table != NULL);
+
     // free the memory allocated for each node in the hash table
     for (int i = 0; i < table->size; i++) {
-
-
+        
         VisitedNode* node = table->buckets[i];
+
+
         while (node != NULL) { // iterate through the list
             VisitedNode* temp = node; 
             node = node->next;
-            free(temp);
+
+            if (temp != NULL){
+                free(temp);
+            }
         }
     }
-    free(table->buckets);
-    free(table);
+    if (table->buckets != NULL){
+        free(table->buckets);
+    }
+    if (table != NULL){
+        free(table);
+    }
+
 }

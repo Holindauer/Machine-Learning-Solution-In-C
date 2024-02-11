@@ -1,7 +1,7 @@
 #pragma once
 
 #define NO_ANCESTORS 0
-#define MAX_GRAPH_SIZE 1000
+#define MAX_GRAPH_SIZE 2000
 
 
 #define DATA_FNAME "iris.csv"

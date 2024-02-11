@@ -232,3 +232,4 @@ void freeMLP(MLP* mlp){
 
    free(mlp);
 }
+

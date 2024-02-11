@@ -29,57 +29,53 @@ int main(void){
         input[i] = newValue(features[0][i]->value, NULL, NO_ANCESTORS, "input");
     }
 
+
+    // zero the gradients of the weights and biases
     zeroGrad(mlp);
 
-    // run forward pass
+    // Forward pass
     Forward(mlp, input);
 
-    // backpropagate gradient
+    // Backward pass
     Backward(mlp->outputLayer->outputVector[0]);
 
-    // for (int i =0; i<mlp->inputLayer->)
+    // Update weights and biases
+    Step(mlp, LR);
+
+    // Release the Graph
+    releaseGraph(&mlp->outputLayer->outputVector[0]);
+
+    // check we havent deallocated the mlp
+    assert(mlp->inputLayer->weights[0] != NULL);
+    assert(mlp->outputLayer->outputVector[0] != NULL);
+
+    // ensure we have correctly not deallocated the input vector
+    assert(input[0] != NULL);
 
 
 
-    // for (int epoch = 0; epoch < EPOCHS; epoch++){
+    // Set up an input vector
+    Value** input2;
+    input2 = (Value**) malloc(IRIS_FEATURES * sizeof(Value*));
+    for (int i = 0; i < IRIS_FEATURES; i++){
+        input2[i] = newValue(features[0][i]->value, NULL, NO_ANCESTORS, "input");
+    }
 
-    //     printf("Epoch: %d\n", epoch+1);
+        // zero the gradients of the weights and biases
+    zeroGrad(mlp);
 
-    //     input = (Value**) malloc(IRIS_FEATURES * sizeof(Value*));
-    //     for (int i = 0; i < IRIS_FEATURES; i++){
-    //         input[i] = newValue(features[0][i]->value, NULL, NO_ANCESTORS, "input");
-    //     }
+    // Forward pass
+    Forward(mlp, input2);
+    
+    // Backward pass
+    Backward(mlp->outputLayer->outputVector[0]);  
 
-    //     // // run forward pass
-    //     Forward(mlp, input);
+    // Update weights and biases
+    Step(mlp, LR);
 
-    //     // backpropagate gradient
-    //     Backward(mlp->outputLayer->outputVector[0]);
+    // Release the Graph
+    releaseGraph(&mlp->outputLayer->outputVector[0]);
 
-    //     // appply gradient descent
-    //     Step(mlp, LR);
-
-    //     // zero gradient
-    //     zeroGrad(mlp);
-
-
-    //     assert(mlp->outputLayer->outputVector[0] != NULL);
-
-
-    //     // release computation graph once gradient has been accumulated
-    //     releaseGraph(&mlp->outputLayer->outputVector[0]);
-
-    //     assert(mlp->outputLayer->outputVector[0] != NULL);
-
-    //     // mlp->outputLayer->outputVector[0] = newValue(0, NULL, NO_ANCESTORS, "initOutputVector"); // <--- this is a quick and dirty fix to fix releaseGraph() deallocating the outputVector of the mlp
-    //     // // It fixes the prblem with not being able to run the forward  ass int he second epoch. But causes backward now to work
-
-    //     // free the input vector
-    //     for(int i = 0; i < inputSize; i++){
-    //         freeValue(input[i]);
-    //     }
-    //     free(input);
-    // }
 
     // free memory when done
     freeDataFeatures(features, IRIS_ROWS);
