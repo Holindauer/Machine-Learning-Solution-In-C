@@ -154,27 +154,63 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
 /**
  * @notice zeroGrad() is used in relation to the backward pass of the network. It resets the gradient of all weights
  * and biases to 0.
- * @dev this is for to reset gradient information before a new batch is passed through the network, so that gradient
- * descent is not recieving outdated information about prior weights and biases
- * 
+ * @dev In addition to zeroing the gradients, zeroGrad() also handles deallocation of the computational graph collected 
+ * during the forward pass.  
+ * @dec As well, in order to ensure that the computational graph for the next example/epoch is new, the MLP argument is
+ * copied and dealocated
+ * @param mlp is a pointer to a pointer to an MLP struct to zero the gradients of.
+ * @param layerSizes[] is an array of the output sizes of the mlp
+ * @param intputSize is input vector size for the mlp
+ * @param numLayers is num layers of the mlp
 */
-void zeroGrad(MLP* mlp){
+void zeroGrad(MLP** mlp, int inputSize, int layerSizes[], int numLayers){
 
-    Layer* layer = mlp->inputLayer;
+    // create a new, blank mlp by calling createMLP
+    MLP* newMLP = createMLP(inputSize, layerSizes, numLayers); 
+    assert(newMLP != NULL);
+    assert(newMLP->numLayers == (*mlp)->numLayers);
 
-    for (int i = 0; i < mlp->numLayers; i++){
+    // grab the first layers of both mlps
+    Layer* ogLayer = (*mlp)->inputLayer;
+    Layer* newLayer = newMLP->inputLayer;
+    
+    // copy the og mlp weights, biases, other specs into the new mlp
+    // @dev this should zero the gradients by their initialization so there is no need to zero them again
+    for (int i = 0; i < (*mlp)->numLayers; i++){
 
-        // zero the gradients for the weights and biases
-        for(int j = 0; j < layer->inputSize * layer->outputSize; j++){
-            layer->weights[j]->grad = 0;
+        // ensure the new mlp has the same dimmensions as the old mlp
+        assert(ogLayer->inputSize == newLayer->inputSize);
+        assert(ogLayer->outputSize == newLayer->outputSize);
+
+        // copy weights
+        for(int j = 0; j < ogLayer->inputSize * ogLayer->outputSize; j++){
+
+            // copy the value of the weight
+            newLayer->weights[j]->value = ogLayer->weights[j]->value;
+
+            // check isMLP flag was transfered over
+            assert(newLayer->weights[j]->isMLP == 1);
         }
-        for(int j = 0; j < layer->outputSize; j++){
-            layer->biases[j]->grad = 0;
+        for(int j = 0; j < ogLayer->outputSize; j++){
+            
+            // copy the value of the bias
+            newLayer->biases[j]->value = ogLayer->biases[j]->value;
+
+            // check isMLP flag was transfered over
+            assert(newLayer->biases[j]->isMLP == 1);
         }
 
-        // move to the next layer
-        layer = layer->next;
+        // move to the next layer in both mlps
+        ogLayer = ogLayer->next;
+        newLayer = newLayer->next;
     }
+
+    // release the graph from and free old mlp
+    releaseGraph(&(*mlp)->outputLayer->outputVector[0]);
+    freeMLP(*mlp);
+
+    // set the pointer to the new mlp
+    *mlp = newMLP;
 }
 
 

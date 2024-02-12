@@ -133,7 +133,7 @@ void freeBiases(Value** biases, int outputSize);
 MLP* createMLP(int inputSize, int layerSizes[], int numLayers);
 void freeMLP(MLP* mlp);
 Value** initOutputVector(int outputSize);
-void zeroGrad(MLP* mlp);
+void zeroGrad(MLP** mlp, int inputSize, int layerSizes[], int numLayers);
 
 // Forward Pass Related Prototypes
 void MultiplyWeights(Layer* layer, Value** input);

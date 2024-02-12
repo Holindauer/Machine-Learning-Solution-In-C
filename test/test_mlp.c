@@ -124,7 +124,7 @@ void test_zeroGrad(void){
     Backward(mlp->outputLayer->outputVector[0]);
 
     // zero gradients
-    zeroGrad(mlp);
+    zeroGrad(&mlp, inputSize, layerSizes, numLayers);
 
     // isolate first layer
     Layer* layer = mlp->inputLayer;

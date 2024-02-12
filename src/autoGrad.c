@@ -2,9 +2,6 @@
 #include "macros.h"
 #include "structs.h"
 
-
-// autoGrad.c
-
 /**
  * @notice autoGrad.c is where the functionality for reverse mode automatic differentiation is implemented.
  * @notice This implemenation is based on Andrew Karpathy's micrograd. https://github.com/karpathy/micrograd
@@ -19,7 +16,6 @@
  * graph is traversed in reverse to calculate the gradients.
  * 
 */
-
 
 /**
  * @notice newValue allocates memory for a new Value struct and initializes it with the given value,
@@ -69,7 +65,6 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     return v;
 }
 
-
 /**
  * @notice releaseGraph() is a helper function used to deallocated the computational graph of the forward pass
  * of the mlp. 
@@ -114,7 +109,6 @@ void releaseGraph(Value** v) {
     }
 }
 
-
 /**
  * @notice freeValue() frees the memory allocated for a Value struct and it's ancestors array and operation string
 */
@@ -130,7 +124,6 @@ void freeValue(Value* v){
         free(v);
     }
 }
-
 
 /**
  * @notice addBackard() is used within Add() to store the derivative operations of addition in the Value struct
@@ -151,7 +144,6 @@ void addBackward(Value* v) {
         }
     }
 }
-
 
 /**
  * @notice Add() is used to add two Value structs together. It returns a new Value struct that 
@@ -177,7 +169,6 @@ Value* Add(Value* a, Value* b) {
 
     return sumValue;
 }
-
 
 /**
  * @notice mulBackward() is used within Mul() to store the derivative operations of multiplication in the Value struct
@@ -218,8 +209,6 @@ Value* Mul(Value* a, Value* b) {
 
     return productValue;
 }
-
-
 
 /**
  * @notice reluBackward() is used within ReLU() to store the derivative operations of the ReLU activation function in the Value struct
@@ -295,7 +284,10 @@ void dfs(Value* v, HashTable* visitedTable, Value*** stack, int* index) {
 
     // Recursive call to visit all ancestors of the current node
     for (int i = 0; v->ancestors != NULL && v->ancestors[i] != NULL; i++) {
-        dfs(v->ancestors[i], visitedTable, stack, index);
+
+        if (v->ancestors[i] != NULL){
+            dfs(v->ancestors[i], visitedTable, stack, index);    
+        }
     }
 
     // Push the current node onto the stack
