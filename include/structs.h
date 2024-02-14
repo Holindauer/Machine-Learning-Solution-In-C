@@ -41,7 +41,7 @@ typedef struct _value {
 //------------------------------------------------------------------------------------------------------------------ Value Tracker Struct
 
 /**
- * @notice ValueTracker is node in a stack of Value structs. It is used to store all newly created Value structs. 
+ * @notice GraphNode is node in a stack of Value structs. It is used to store all newly created Value structs. 
  * The stack's function is to divorce the deallocation of the computational graph from the need to traverse the 
  * computational graph. This mechanism is being used to avoid recursively deallocating the graph, which is less 
  * obvious as to how it works and more error prone.
@@ -49,10 +49,21 @@ typedef struct _value {
  * @param next A pointer to the next ValueTracker struct in the list
  * 
 */
-typedef struct _valueTracker {
+typedef struct _graphNode {
     Value* value;
-    struct _valueTracker* next;
-} ValueTracker;
+    struct _graphNode* next;
+} GraphNode;
+
+
+/**
+ * @notice Graph Stack is a stack of ValueTracker structs. It is used to store all newly created Value structs.
+ * @param head A pointer to the head of the stack
+ * @param len The length of the stack
+*/
+typedef struct {
+    GraphNode* head;
+    int len;
+} GraphStack;
 
 //------------------------------------------------------------------------------------------------------------------ Hash Table Struct
 
@@ -159,3 +170,8 @@ void Forward(MLP* mlp, Value** input);
 
 // SGD related prototypes
 void Step(MLP* mlp, int lr);
+
+// Graph Tracker Related Prototypes
+GraphStack* newGraphStack(void);
+void pushGraphStack(GraphStack* stack, Value* value);
+void popGraphStack(GraphStack* stack);
