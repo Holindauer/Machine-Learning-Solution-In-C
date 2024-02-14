@@ -6,8 +6,6 @@
  * @notice forward.c implements the forward pass of the neural network
  */
 
-
-
 /**
  * @notice MultiplyWeights() implements gradient tracked matrix multiplication for a layer and it's input
  * @dev MultiplyWeights() works for a single input vector, not a batch of input vectors.

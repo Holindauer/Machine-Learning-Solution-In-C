@@ -367,9 +367,13 @@ void Backward(Value* v) {
     // Set gradient of the starting node to 1.
     v->grad = 1.0;
 
+    printf("\nInside backward");
+
+    assert(sorted[2]->grad == 0);
+
     // Process nodes in topologically sorted order.
     for (int i = 0; i < count; i++) {
-        
+
         if (sorted[i]->Backward != NULL) { // Ensure backward function exists
             sorted[i]->Backward(sorted[i]);
         }

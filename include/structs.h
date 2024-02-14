@@ -38,6 +38,22 @@ typedef struct _value {
     int isMLP;
 } Value;
 
+//------------------------------------------------------------------------------------------------------------------ Value Tracker Struct
+
+/**
+ * @notice ValueTracker is node in a stack of Value structs. It is used to store all newly created Value structs. 
+ * The stack's function is to divorce the deallocation of the computational graph from the need to traverse the 
+ * computational graph. This mechanism is being used to avoid recursively deallocating the graph, which is less 
+ * obvious as to how it works and more error prone.
+ * @param value A pointer to a Value struct
+ * @param next A pointer to the next ValueTracker struct in the list
+ * 
+*/
+typedef struct _valueTracker {
+    Value* value;
+    struct _valueTracker* next;
+} ValueTracker;
+
 //------------------------------------------------------------------------------------------------------------------ Hash Table Struct
 
 /**
