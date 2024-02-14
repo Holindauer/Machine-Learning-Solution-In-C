@@ -73,3 +73,13 @@ void popGraphStack(GraphStack* stack){
     // decrement the length of the stack
     stack->len--;
 }
+
+
+
+/**
+ * @notice releaseGraph() is used to deallocate all memory associated with a graph that has been
+ * stored up in the GraphStack
+*/
+void releaseGraph(Value** v) {
+
+}

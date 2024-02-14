@@ -23,9 +23,6 @@ typedef void (*pBackwardFunc)(Value*);
  * @param ancestors arr of ancestor nodes (dynamically allocated)
  * @param op Str of operation that produced the value (debugging)
  * @param ancestorArrLen length of the ancestors array
- * @param refCount tracks the number of times a Value is used as an ancestor
- * @param isMLP flag to indicate if the value is a part of an MLP and thus should not be 
- * deallocated when the graph is released
 */
 typedef struct _value {
     double value;             
@@ -33,9 +30,7 @@ typedef struct _value {
     pBackwardFunc Backward; 
     Value **ancestors;       
     char* opStr; 
-    int ancestorArrLen;                
-    int refCount;
-    int isMLP;
+    int ancestorArrLen;        
 } Value;
 
 //------------------------------------------------------------------------------------------------------------------ Value Tracker Struct

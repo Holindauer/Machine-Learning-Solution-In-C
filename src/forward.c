@@ -75,11 +75,6 @@ void Forward(MLP* mlp, Value** input){
     MultiplyWeights(layer, inputCopy);
     AddBias(layer, layer->outputVector);
 
-    // ensure isMLP flag is set to true for this output vector 
-    for (int i = 0; i<layer->outputSize; i++){
-        layer->outputVector[i]->isMLP = 1;
-    }
-
     // for subsequent layers iterate over the rest of the layers, 
     // passing the output of the previous layer to the next layer
     for (int i = 1; i < mlp->numLayers; i++){
@@ -87,10 +82,5 @@ void Forward(MLP* mlp, Value** input){
         layer = layer->next;
         MultiplyWeights(layer, layer->prev->outputVector);
         AddBias(layer, layer->prev->outputVector);
-
-        // ensure isMLP flag is set to true for this output vector
-        for (int j = 0; j<layer->outputSize; j++){
-            layer->outputVector[j]->isMLP = 1;
-        }
     }
 }

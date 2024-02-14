@@ -35,9 +35,7 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     // set Value values
     v->value = _value;
     v->grad = 0.0;
-    v->refCount = 1; // Starting its own reference count for graph deallocation purposes
     v->ancestorArrLen = _ancestorArrLen;
-    v->isMLP = 0; // by default a value is not part of an MLP
  
     // if no ancestors are given, set the ancestors pointer to NULL
     if (_ancestorArrLen == NO_ANCESTORS && _ancestors == NULL) {
@@ -50,7 +48,6 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
         // Copy ancestor nodes into the value struct.
         for (int i = 0; i < _ancestorArrLen; i++) {
             v->ancestors[i] = _ancestors[i];
-            _ancestors[i]->refCount++; // Incrementing the ancestor's reference count to reflect that it's being used as an ancestor
         }
     }
 
@@ -65,49 +62,6 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     return v;
 }
 
-/**
- * @notice releaseGraph() is a helper function used to deallocated the computational graph of the forward pass
- * of the mlp. 
- * @dev releaseGraph() is a recursive funciton that traversees the graph backwards from the most recent node
- * @dev Value structs are only deallocated once their refCount reaches zero, which is a field of the Value 
- * struct that measures how many times a specific node has been used as an ancestor and is decremented in this 
- * function each time the node is visited recursively. Once the refCount is zero, the node is safe to deallocate.
- * @dev The function also makes sure not to deallocae any ancestors that are part of the mlp. This is done by 
- * only freeing Value structs that have the isMLP flag set to 0. The isMLP flag is set when a new Value struct is
- * created. By default it is zero, but is set to 1 when mlp structures of Values are created.
-*/
-void releaseGraph(Value** v) {
-    // Check if the pointer is NULL or points to NULL, serving as the base case for recursion
-    if (v == NULL || *v == NULL) {
-        return;
-    }
-
-    // Decrement the refCount and proceed only if it's zero
-    if (--(*v)->refCount == 0) {
-        // Recursively release the graph of each ancestor, if any
-        if ((*v)->ancestors != NULL) {
-            for (int i = 0; i < (*v)->ancestorArrLen; i++) {
-                releaseGraph(&((*v)->ancestors[i]));
-            }
-            // Deallocate ancestors array if this is not part of the MLP structure
-            if (!(*v)->isMLP) {
-                free((*v)->ancestors);
-                (*v)->ancestors = NULL;
-            }
-        }
-
-        // Deallocate the Value struct itself if opStr indicates it's not an MLP component
-        // Assuming the isMLP flag indicates if the Value is part of the MLP structure and should not be deallocated
-        if (!(*v)->isMLP) {
-            if ((*v)->opStr != NULL) {
-                free((*v)->opStr);
-                (*v)->opStr = NULL;
-            }
-            free(*v);
-            *v = NULL;
-        }
-    }
-}
 
 /**
  * @notice freeValue() frees the memory allocated for a Value struct and it's ancestors array and operation string
@@ -157,13 +111,6 @@ Value* Add(Value* a, Value* b) {
     // Create a new Value for the sum
     Value* sumValue = newValue(a->value + b->value, (Value*[]){a, b}, 2, "add");
 
-    // increment ancestor reference counts
-    a->refCount++;
-    b->refCount++;
-
-    // by default, an added value is not part of an MLP
-    sumValue->isMLP = 0;
-
     // Set the backward function pointer to addBackward
     sumValue->Backward = addBackward;
 
@@ -196,13 +143,6 @@ Value* Mul(Value* a, Value* b) {
 
     // Create a new Value for the product
     Value* productValue = newValue(a->value * b->value, (Value*[]){a, b}, 2, "mul");
-
-    // increment ancestor reference counts
-    a->refCount++;
-    b->refCount++;
-
-    // by default, a multiplied value is not part of an MLP
-    productValue->isMLP = 0;
 
     // Set the backward function pointer to mulBackward
     productValue->Backward = mulBackward;
@@ -247,12 +187,6 @@ Value* ReLU(Value* a) {
     // Create a new Value for the ReLU activation
     double reluResult = a->value > 0 ? a->value : 0; // f(x) = max(0, x)
     Value* reluValue = newValue(reluResult, (Value*[]){a}, 1, "relu");
-
-    // increment ancestor reference counts
-    a->refCount++;
-
-    // by default, a ReLU value is not part of an MLP
-    reluValue->isMLP = 0;
 
     // Set the backward function pointer to reluBackward
     reluValue->Backward = reluBackward;
