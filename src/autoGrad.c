@@ -169,15 +169,8 @@ Value* Mul(Value* a, Value* b, GraphStack* graphStack) {
  * @dev the chain rule for ReLU is dz/dx = 1 if x > 0 else 0
 */
 void reluBackward(Value* v) {
-    
-    // the only case where ancestors can be null is if we are a node created by newValue()
-    if (
-        strcmp(v->opStr, "add") == 0 ||
-        strcmp(v->opStr, "mul") == 0 ||
-        strcmp(v->opStr, "relu") == 0
-    ){
-        assert(v != NULL && v->ancestors != NULL && v->ancestors[0] != NULL );
-    }
+
+    assert(v != NULL && v->ancestors != NULL && v->ancestors[0] != NULL );
     
     // Apply the chain rule for ReLU: dz/dx = 1 if x > 0 else 0
     Value* x = v->ancestors[0];
@@ -270,24 +263,24 @@ void reverseArray(Value** arr, int start, int end) {
  * @param sorted is a pointer to an array of Value pointers that will store the topological sort order of the graph ancestors.
  * @param count is a pointer to an integer that will store the number of nodes sorted.
 */
-void reverseTopologicalSort(Value* start, Value*** sorted, int* count) {
+void reverseTopologicalSort(Value* start, Value*** sortedStack, int* count) {
 
-    assert(*sorted == NULL);
+    assert(*sortedStack == NULL);
 
     // use a hash table to store visited nodes
     HashTable* visited = createHashTable(MAX_GRAPH_SIZE); 
     assert(visited != NULL);
 
     // Allocate memory for a stack to store the topological sort order of graph ancestors.
-    *sorted = (Value**)malloc(MAX_GRAPH_SIZE * sizeof(Value*)); 
-    assert(*sorted != NULL);
+    *sortedStack = (Value**)malloc(MAX_GRAPH_SIZE * sizeof(Value*)); 
+    assert(*sortedStack != NULL);
 
     // Perform depth-first search to visit all nodes and push them onto the stack.
     int index = 0;
-    dfs(start, visited, sorted, &index);
+    dfs(start, visited, sortedStack, &index);
 
     // Reverse the sorted array to get correct topological ordering.
-    reverseArray(*sorted, 0, index - 1);
+    reverseArray(*sortedStack, 0, index - 1);
     *count = index; // Update count to reflect number of nodes sorted.
 
     freeHashTable(visited);
@@ -309,32 +302,38 @@ void Backward(Value* v) {
     assert(v != NULL);
 
     // declare a pointer for an array of Value pointers
-    Value** sorted = NULL;
+    Value** sortedStack = NULL;
     int count = 0;
+
+    printf("\n\nreverseTopologicalSort() on Graph of Value Structs:");
 
     // Perform a topological sort on the graph of Value structs. This will in place sort
     // fill sorted array with the topological sort order of the graph ancestors.
-    reverseTopologicalSort(v, &sorted, &count);
+    reverseTopologicalSort(v, &sortedStack, &count);
 
     // Set gradient of the starting node to 1.
     v->grad = 1.0;
 
-    printf("\nInside backward");
-
-    assert(sorted[2]->grad == 0);
+    printf("\n\nComputing Grad On Stack Backward Pass: ");
 
     // Process nodes in topologically sorted order.
     for (int i = 0; i < count; i++) {
 
-        if (sorted[i]->Backward != NULL) { // Ensure backward function exists
-            sorted[i]->Backward(sorted[i]);
+        // printf("\nComputing Gradient for Node: %s", sortedStack[i]->opStr);
+
+        if (sortedStack[i]->Backward != NULL) { // Ensure backward function exists
+            sortedStack[i]->Backward(sortedStack[i]);
+            printf("\nGradient for Node: %s: ", sortedStack[i]->opStr);
+        }
+        else {
+            // printf("\nNo Backward Function for Node: %s", sortedStack[i]->opStr);
         }
     }
 
-    // Clean up
-    // if (sorted != NULL) { // @bug this is causing a sef fault. Not exactly sure why. 
-    //     free(sorted); // @bug sorted is not NULL but for some reason, freeing it at the end of the function causes a seg fault
-    // }  
+    //Clean up
+    if (sortedStack != NULL) { 
+        free(sortedStack); 
+    }  
 }
 
 

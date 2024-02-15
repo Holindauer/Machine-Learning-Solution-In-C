@@ -42,6 +42,9 @@ void AddBias(Layer* layer, Value** input, GraphStack* graphStack){
 
         // elementwise Add() the bias to the output vector
         layer->outputVector[i] = Add(layer->outputVector[i], input[i], graphStack);
+
+        // apply relu after adding
+        layer->outputVector[i] = ReLU(layer->outputVector[i], graphStack);
     }
 }
 

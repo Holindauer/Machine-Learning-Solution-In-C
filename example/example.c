@@ -32,9 +32,7 @@ int main(void){
 
     zeroGrad(mlp);
 
-
-    printf("\n%lf", mlp->outputLayer->outputVector[0]->value);
-
+    printf("\n\n Forward() and Backward() Post zeroGrad()");
 
     Forward(mlp, features[example+1]);
 
@@ -45,8 +43,9 @@ int main(void){
     /**
      * @bug This should not raise a segfault, but it
     */
-    // Backward(mlp->outputLayer->outputVector[0]);
+    Backward(mlp->outputLayer->outputVector[0]);
 
+    printf("\n%lf", mlp->outputLayer->outputVector[0]->value);
     
     
 
