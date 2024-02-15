@@ -171,6 +171,9 @@ void zeroGrad(MLP* mlp){
             
             // copy the value of the bias
             layer->biases[j]->grad = 0;
+
+            // also zero the output vector
+            layer->outputVector[j]->grad = 0;
         }
 
         // move to the next layer in both mlps
