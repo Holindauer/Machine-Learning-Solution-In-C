@@ -54,6 +54,7 @@ void AddBias(Layer* layer, Value** input, GraphStack* graphStack){
  * when we deallocate the forward pass graph, we do not inadvertently deallocate the training data at the base of it. 
 */
 Value** copyInput(Value** input, int inputSize){
+    
     Value** inputCopy = (Value**)malloc(inputSize * sizeof(Value*));
     for(int i = 0; i < inputSize; i++){
         inputCopy[i] = newValue(input[i]->value, NULL, NO_ANCESTORS, "copyInput");

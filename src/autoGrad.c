@@ -305,16 +305,12 @@ void Backward(Value* v) {
     Value** sortedStack = NULL;
     int count = 0;
 
-    printf("\n\nreverseTopologicalSort() on Graph of Value Structs:");
-
     // Perform a topological sort on the graph of Value structs. This will in place sort
     // fill sorted array with the topological sort order of the graph ancestors.
     reverseTopologicalSort(v, &sortedStack, &count);
 
     // Set gradient of the starting node to 1.
     v->grad = 1.0;
-
-    printf("\n\nComputing Grad On Stack Backward Pass: ");
 
     // Process nodes in topologically sorted order.
     for (int i = 0; i < count; i++) {
@@ -323,10 +319,6 @@ void Backward(Value* v) {
 
         if (sortedStack[i]->Backward != NULL) { // Ensure backward function exists
             sortedStack[i]->Backward(sortedStack[i]);
-            printf("\nGradient for Node: %s: ", sortedStack[i]->opStr);
-        }
-        else {
-            // printf("\nNo Backward Function for Node: %s", sortedStack[i]->opStr);
         }
     }
 

@@ -82,6 +82,179 @@ void test_popGraphStack(void){
 }
 
 
+/**
+ * @test There is currently an issue when running example.c where calling zeroGrad() which contains a call to 
+ * releaseGraph() is breaking the Backward() function. This this is designed to address this bug and ensure 
+ * the program does not segfault when calling Backward() after zeroGrad() in an isolated test. 
+*/
+void test_postReleaseGradIntegrity(void){
+
+    // Declare an MLP
+    MLP* mlp = createMLP(4, (int[]){16, 8, 4, 1}, 4);
+
+    // Declare an input Value array
+    Value** input = (Value**)malloc(4 * sizeof(Value*));
+    for(int i = 0; i < 4; i++){
+        input[i] = newValue(1, NULL, NO_ANCESTORS, "testInput");
+    }
+
+    // run a forward pass
+    Forward(mlp, input);
+
+    // run a backward pass
+    Backward(mlp->outputLayer->outputVector[0]);
+
+    // zero the gradients
+    zeroGrad(mlp);
+
+    // // run a forward pass
+    Forward(mlp, input);
+
+    // run a backward pass
+    Backward(mlp->outputLayer->outputVector[0]);
+}
+
+
+/**
+ * @test test_mlpIntactPostZeroGrad() tests that after calling a forward pass, backward pass, and zeroGrad() an 
+ * MLP is same as prior to calling zeroGrad()
+ * @dev this involves copying the MLP and comparing the two
+ * 
+*/
+void test_mlpIntactPostZeroGrad(void){
+
+    // Create an MLP
+    MLP* mlp = createMLP(4, (int[]){16, 8, 4, 1}, 4);
+
+    // Declare an input Value array
+    Value** input = (Value**)malloc(4 * sizeof(Value*));
+    for(int i = 0; i < 4; i++){
+        input[i] = newValue(1, NULL, NO_ANCESTORS, "testInput");
+    }
+
+    // run a forward pass
+    Forward(mlp, input);
+
+    // run a backward pass
+    Backward(mlp->outputLayer->outputVector[0]);
+
+    // Create another MLP of the same specs
+    MLP* mlpCopy = createMLP(4, (int[]){16, 8, 4, 1}, 4);
+
+    // Now were going to copy the mlp into mlpCopy for all layers
+    Layer *layer = mlp->inputLayer;
+    Layer *layerCopy = mlpCopy->inputLayer; 
+
+    // copy each layer of the mlp into the mlpCopy
+    for (int i = 0; i < mlp->numLayers; i++){   
+        
+        // copy layer specs
+        layerCopy->inputSize = layer->inputSize;
+        layerCopy->outputSize = layer->outputSize;
+
+        for (int i = 0; i< layer->inputSize * layer->outputSize; i++){ 
+            // copy weights
+            layerCopy->weights[i]->value = layer->weights[i]->value;
+            layerCopy->weights[i]->grad = layer->weights[i]->grad;
+            strcpy(layerCopy->weights[i]->opStr, layer->weights[i]->opStr);
+
+            // @note there won't be any ancestors to copy since this is an mlp
+            assert(layer->weights[i]->ancestors == NULL);
+            assert(layerCopy->weights[i]->ancestors == NULL);
+
+        }
+        for (int i = 0; i< layer->outputSize; i++){ // copy biases and outputVector
+
+            // copy biases
+            layerCopy->biases[i]->value = layer->biases[i]->value;
+            layerCopy->biases[i]->grad = layer->biases[i]->grad;
+            strcpy(layerCopy->biases[i]->opStr, layer->biases[i]->opStr);
+
+             // @note there won't be any ancestors to copy since this is an mlp
+            assert(layer->biases[i]->ancestors == NULL);
+            assert(layerCopy->biases[i]->ancestors == NULL);
+
+            // copy outputVector
+            layerCopy->outputVector[i]->value = layer->outputVector[i]->value;
+            layerCopy->outputVector[i]->grad = layer->outputVector[i]->grad;
+            strcpy(layerCopy->outputVector[i]->opStr, layer->outputVector[i]->opStr);
+
+            // @note outputVector will have ancestors 
+        }
+
+        // move to the next layer
+        layer = layer->next;
+        layerCopy = layerCopy->next;
+    }
+
+    // zero the gradients
+    zeroGrad(mlp);
+
+    // reset layer and layerCopy to the inputLayers
+    layer = mlp->inputLayer;
+    layerCopy = mlpCopy->inputLayer;
+
+    printf("\nNow checking that the mlpCopy is the same as the mlp post zero grad\n");
+
+
+    // now check whether the fields we copied are still in the og mlp post zero grad
+    for (int i = 0; i < mlp->numLayers; i++){   
+        
+        // check layer specs
+        assert(layerCopy->inputSize == layer->inputSize);
+        assert(layerCopy->outputSize == layer->outputSize);
+
+        // check that weight, bias, and outputVector fields still exist
+        assert(layerCopy->weights != NULL);
+        assert(layerCopy->biases != NULL);
+        assert(layerCopy->outputVector != NULL);
+
+        for (int i = 0; i< layer->inputSize * layer->outputSize; i++){ 
+            // check weights
+
+            assert(layerCopy->weights[i]->value == layer->weights[i]->value);
+            assert(layerCopy->weights[i]->grad == layer->weights[i]->grad);
+            assert(strcpy(layerCopy->weights[i]->opStr, layer->weights[i]->opStr) == 0);
+
+            // @note there won't be any ancestors to copy since this is an mlp
+            assert(layer->weights[i]->ancestors == NULL);
+            assert(layerCopy->weights[i]->ancestors == NULL);
+
+        }
+        for (int i = 0; i< layer->outputSize; i++){ // copy biases and outputVector
+
+            // copy biases
+            assert(layerCopy->biases[i]->value == layer->biases[i]->value);
+            assert(layerCopy->biases[i]->grad == layer->biases[i]->grad);
+            assert(strcpy(layerCopy->biases[i]->opStr, layer->biases[i]->opStr) == 0);
+
+             // @note there won't be any ancestors to copy since this is an mlp
+            assert(layer->biases[i]->ancestors == NULL);
+            assert(layerCopy->biases[i]->ancestors == NULL);
+
+            // copy outputVector
+            assert(layerCopy->outputVector[i]->value == layer->outputVector[i]->value);
+            assert(layerCopy->outputVector[i]->grad == layer->outputVector[i]->grad);
+            assert(strcpy(layerCopy->outputVector[i]->opStr, layer->outputVector[i]->opStr) == 0);
+
+            // @note outputVector will have ancestors 
+        }
+
+        // move to the next layer
+        layer = layer->next;
+        layerCopy = layerCopy->next;
+    }
+
+
+    // cleanup
+    freeMLP(mlp);
+    freeMLP(mlpCopy);
+    for (int i = 0; i < 4; i++){
+        freeValue(input[i]);
+    }
+    free(input);
+}
+
 
 int main(void){
 
@@ -90,6 +263,8 @@ int main(void){
     test_GraphStackInit();
     test_pushGraphStack();
     test_popGraphStack();
+    test_mlpIntactPostZeroGrad();
+    test_postReleaseGradIntegrity();
 
     printf("\nAll tests passed!\n");
 
