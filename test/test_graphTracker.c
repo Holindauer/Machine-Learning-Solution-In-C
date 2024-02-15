@@ -42,13 +42,7 @@ void test_pushGraphStack(void){
     assert(stack->head->value == value2);
     assert(stack->head->next->value == value1);
 
-    for (int i = 0; i < 2; i++){
-        popGraphStack(stack);
-    }
-
-    freeValue(value1);
-    freeValue(value2);
-    free(stack);
+    releaseGraph(stack);
 
     printf("test_pushGraphStack passed\n");
 }
@@ -82,8 +76,6 @@ void test_popGraphStack(void){
     assert(stack->head == NULL);
     assert(stack->len == 0);
 
-    freeValue(value1);
-    freeValue(value2);
     free(stack);
 
     printf("test_popGraphStack passed\n");

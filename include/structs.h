@@ -111,11 +111,14 @@ typedef struct _layer {
  * @param inputLayer A pointer to the first layer in the network
  * @param outputLayer A pointer to the last layer in the network
  * @param numLayers The number of layers in the network
+ * @param graphStack A stack of all unique Value ptrs within the computational graph. Not including 
+ * the weights, biases, and output vectors of the mlp itself.
 */
 typedef struct {
     Layer* inputLayer;
     Layer* outputLayer;
     int numLayers;
+    GraphStack* graphStack;
 } MLP;
 
 //------------------------------------------------------------------------------------------------------------------ Function Prototypes
@@ -123,17 +126,17 @@ typedef struct {
 // Auto Grad Related Prototypes
 Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _opStr[]);
 void addBackward(Value* v);
-Value* Add(Value* a, Value* b);
+Value* Add(Value* a, Value* b, GraphStack *graphStack);
 void mulBackward(Value* v);
-Value* Mul(Value* a, Value* b);
+Value* Mul(Value* a, Value* b, GraphStack *graphStack);
 void reluBackward(Value* v);
-Value* ReLU(Value* a);
+Value* ReLU(Value* a, GraphStack *graphStack);
 void dfs(Value* v, HashTable* visited, Value*** stack, int* index);
 void reverseArray(Value** arr, int start, int end);
 void reverseTopologicalSort(Value* start, Value*** sorted, int* count);
 void Backward(Value* v);
 void freeValue(Value* v);
-void releaseGraph(Value** v);
+void releaseGraph(GraphStack* graphStack);
 
 // Hash Table Related Prototypes
 HashTable* createHashTable(int size);
@@ -158,8 +161,8 @@ Value** initOutputVector(int outputSize);
 void zeroGrad(MLP** mlp, int inputSize, int layerSizes[], int numLayers);
 
 // Forward Pass Related Prototypes
-void MultiplyWeights(Layer* layer, Value** input);
-void AddBias(Layer* layer, Value** input);
+void MultiplyWeights(Layer* layer, Value** input, GraphStack* graphStack);
+void AddBias(Layer* layer, Value** input, GraphStack* graphStack);
 Value** copyInput(Value** input, int inputSize);
 void Forward(MLP* mlp, Value** input);
 

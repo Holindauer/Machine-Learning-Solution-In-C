@@ -77,6 +77,9 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
     MLP* mlp = (MLP*)malloc(sizeof(MLP));  
     assert(mlp != NULL);
 
+    // allocate memory for the graph stack
+    mlp->graphStack = newGraphStack();
+
     // allocate memory for the input layer
     Layer* inputLayer = (Layer*)malloc(sizeof(Layer));
     assert(inputLayer != NULL);
@@ -189,7 +192,7 @@ void zeroGrad(MLP** mlp, int inputSize, int layerSizes[], int numLayers){
     }
 
     // release the graph from and free old mlp
-    releaseGraph(&(*mlp)->outputLayer->outputVector[0]);
+    releaseGraph((*mlp)->graphStack);
     freeMLP(*mlp);
 
     // set the pointer to the new mlp

@@ -104,12 +104,19 @@ void addBackward(Value* v) {
  * represents the sum of the two input Value structs.
  * @dev The function also sets the Backward function pointer of the new Value struct to
  *  the address of the addBackward function.
+ * @param a A pointer to a Value struct
+ * @param b A pointer to a Value struct
+ * @param stack A pointer to a GraphStack struct
+ * @param graphStack A pointer to a GraphStack struct
 */
-Value* Add(Value* a, Value* b) {
+Value* Add(Value* a, Value* b, GraphStack* graphStack) {
     assert(a != NULL && b != NULL);
 
     // Create a new Value for the sum
     Value* sumValue = newValue(a->value + b->value, (Value*[]){a, b}, 2, "add");
+
+    // push the new value onto the graph stack
+    pushGraphStack(graphStack, sumValue);
 
     // Set the backward function pointer to addBackward
     sumValue->Backward = addBackward;
@@ -137,12 +144,18 @@ void mulBackward(Value* v) {
  * @notice Mul() is used to multiply two Value structs together. It returns a new Value struct that 
  * represents the product of the two input Value structs.
  * @dev The function also sets the Backward function pointer of the new Value struct to the address of the mulBackward function.
+ * @param a A pointer to a Value struct
+ * @param b A pointer to a Value struct
+ * @param graphStack A pointer to a GraphStack struct
 */
-Value* Mul(Value* a, Value* b) {
+Value* Mul(Value* a, Value* b, GraphStack* graphStack) {
     assert(a != NULL && b != NULL);
 
     // Create a new Value for the product
     Value* productValue = newValue(a->value * b->value, (Value*[]){a, b}, 2, "mul");
+
+    // push the new value onto the graph stack
+    pushGraphStack(graphStack, productValue);
 
     // Set the backward function pointer to mulBackward
     productValue->Backward = mulBackward;
@@ -180,13 +193,18 @@ void reluBackward(Value* v) {
  * @dev The function also sets the Backward function pointer of the new Value struct to the address of the reluBackward function.
  * @dev The ReLU activation function is defined as f(x) = max(0, x)
  * @dev The derivative of ReLU is 1 if x > 0 else 0
+ * @param a A pointer to a Value struct
+ * @param graphStack A pointer to a GraphStack struct
 */
-Value* ReLU(Value* a) {
+Value* ReLU(Value* a, GraphStack* graphStack) {
     assert(a != NULL);
 
     // Create a new Value for the ReLU activation
     double reluResult = a->value > 0 ? a->value : 0; // f(x) = max(0, x)
     Value* reluValue = newValue(reluResult, (Value*[]){a}, 1, "relu");
+
+    // push the new value onto the graph stack
+    pushGraphStack(graphStack, reluValue);
 
     // Set the backward function pointer to reluBackward
     reluValue->Backward = reluBackward;

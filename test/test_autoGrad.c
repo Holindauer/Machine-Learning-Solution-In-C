@@ -45,11 +45,14 @@ void test_newValue(){
 */
 void test_valueOperations(void){
 
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
     Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
     Value* b = newValue(4, NULL, NO_ANCESTORS, "b");
 
     // test addition
-    Value* c = Add(a, b);
+    Value* c = Add(a, b, graphStack);
     assert(c->value == 7);
     assert(c->grad == 0);
     assert(c->ancestors[0] == a);
@@ -58,7 +61,7 @@ void test_valueOperations(void){
 
     // test multiplication
     Value* d = newValue(7, NULL, NO_ANCESTORS, "d");
-    Value* e = Mul(c, d);
+    Value* e = Mul(c, d, graphStack);
     assert(e->value == 49);
     assert(e->grad == 0);
     assert(e->ancestors[0] == c);
@@ -66,19 +69,21 @@ void test_valueOperations(void){
     assert(strcmp(e->opStr, "mul") == 0);
 
     // test relu (positive case)
-    Value* f = ReLU(e);
+    Value* f = ReLU(e, graphStack);
     assert(f->value == 49);
     assert(f->grad == 0);
     assert(f->ancestors[0] == e);
     assert(strcmp(f->opStr, "relu") == 0);    
 
     // test relu (negative case)
-    Value* g = Mul(e, newValue(-1, NULL, NO_ANCESTORS, "neg1"));
-    Value* h = ReLU(g);
+    Value* g = Mul(e, newValue(-1, NULL, NO_ANCESTORS, "neg1"), graphStack);
+    Value* h = ReLU(g, graphStack);
     assert(h->value == 0);
     assert(h->grad == 0);
     assert(h->ancestors[0] == g);
     assert(strcmp(h->opStr, "relu") == 0);
+
+    releaseGraph(graphStack);
 }
 
 /**
@@ -89,12 +94,15 @@ void test_valueOperations(void){
 */
 void test_AddDiff(void){
 
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
     // create some ancestor nodes
     Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
     Value* b = newValue(4, NULL, NO_ANCESTORS, "b");
 
     // create a new value node
-    Value* c = Add(a, b);
+    Value* c = Add(a, b, graphStack);
 
     // Within Backward() which is the environment in which ->Backward() is called, the grad of the 
     // output node is set to 1 in order to kick off the backpropagation process
@@ -106,9 +114,7 @@ void test_AddDiff(void){
     // check that the gradients are correct
     assert(a->grad == 1);
 
-    freeValue(a);
-    freeValue(b);
-    freeValue(c);
+    releaseGraph(graphStack);
 }
 
 /**
@@ -119,12 +125,15 @@ void test_AddDiff(void){
 */
 void test_MulDiff(void){
 
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
     // create some ancestor nodes
     Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
     Value* b = newValue(4, NULL, NO_ANCESTORS, "b");
 
     // create a new value node
-    Value* c = Mul(a, b);
+    Value* c = Mul(a, b, graphStack);
 
     // Within Backward() which is the environment in which ->Backward() is called, the grad of the 
     // output node is set to 1 in order to kick off the backpropagation process
@@ -137,9 +146,7 @@ void test_MulDiff(void){
     assert(a->grad == 4);
     assert(b->grad == 3);
 
-    freeValue(a);
-    freeValue(b);
-    freeValue(c);
+    releaseGraph(graphStack);
 }
 
 /**
@@ -150,13 +157,16 @@ void test_MulDiff(void){
 */
 void test_reluDiff(void){
 
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
     // create some ancestor nodes
     Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
     Value* b = newValue(-4, NULL, NO_ANCESTORS, "b");
 
     // create a new value nodes
-    Value* c = ReLU(a);
-    Value* d = ReLU(b);
+    Value* c = ReLU(a, graphStack);
+    Value* d = ReLU(b, graphStack);
 
     // Within Backward() which is the environment in which ->Backward() is called, the grad of the 
     // output node is set to 1 in order to kick off the backpropagation process
@@ -171,10 +181,7 @@ void test_reluDiff(void){
     assert(a->grad == 1);
     assert(b->grad == 0);
 
-    freeValue(a);
-    freeValue(b);
-    freeValue(c);
-    freeValue(d);
+    releaseGraph(graphStack);
 }
 
 
@@ -211,17 +218,22 @@ Karpathy's test case:
 */
 void test_Backprop(void){   
 
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
     // create some ancestor nodes
     Value* x = newValue(-4, NULL, NO_ANCESTORS, "x");
+
     Value* z = Add(
         Mul(
-            newValue(2, NULL, NO_ANCESTORS, "2"), x), 
-            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x
-            )
+            newValue(2, NULL, NO_ANCESTORS, "2"), x, graphStack), 
+            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x, graphStack),
+            graphStack
         );
-    Value* q = Add(ReLU(z), Mul(z, x));
-    Value* h = ReLU(Mul(z, z));
-    Value* y = Add(Add(h, q), Mul(q, x));
+
+    Value* q = Add(ReLU(z, graphStack), Mul(z, x, graphStack), graphStack);
+    Value* h = ReLU(Mul(z, z, graphStack), graphStack);
+    Value* y = Add(Add(h, q, graphStack), Mul(q, x, graphStack), graphStack);
 
 
     assert(y->value == -20);
@@ -231,11 +243,7 @@ void test_Backprop(void){
     // check that the gradients are correct
     assert(x->grad == 46);
 
-    freeValue(x);
-    freeValue(z);
-    freeValue(q);
-    freeValue(h);
-    freeValue(y);
+    releaseGraph(graphStack);
 }
 
 

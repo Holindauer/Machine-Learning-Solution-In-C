@@ -65,6 +65,7 @@ void popGraphStack(GraphStack* stack){
     GraphNode* next = stack->head->next;
 
     // free the head of the stack
+    freeValue(stack->head->value);
     free(stack->head);
 
     // set the head of the stack to the next node
@@ -80,6 +81,9 @@ void popGraphStack(GraphStack* stack){
  * @notice releaseGraph() is used to deallocate all memory associated with a graph that has been
  * stored up in the GraphStack
 */
-void releaseGraph(Value** v) {
-
+void releaseGraph(GraphStack* graphStack) {
+    // pop all nodes off the stack
+    for (int i = 0; i < graphStack->len; i++){
+        popGraphStack(graphStack);
+    }
 }

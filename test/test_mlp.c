@@ -141,7 +141,7 @@ void test_zeroGrad(void){
     }
 
     // Cleanup
-    releaseGraph(&mlp->outputLayer->outputVector[0]);
+    releaseGraph(mlp->graphStack);
     for(int i = 0; i< mlp->numLayers; i++){
         freeValue(input[i]);
     }
