@@ -30,7 +30,7 @@ int main(void){
 
     Step(mlp, LR);
 
-    zeroGrad(&mlp, inputSize, layerSizes, numLayers);
+    zeroGrad(mlp);
 
 
     printf("\n%lf", mlp->outputLayer->outputVector[0]->value);
