@@ -173,3 +173,4 @@ void Step(MLP* mlp, int lr);
 GraphStack* newGraphStack(void);
 void pushGraphStack(GraphStack* stack, Value* value);
 void popGraphStack(GraphStack* stack);
+Value *peekGraphStack(GraphStack *stack);

@@ -231,6 +231,7 @@ void dfs(Value* v, HashTable* visitedTable, Value*** stack, int* index) {
     for (int i = 0; v->ancestors != NULL && v->ancestors[i] != NULL; i++) {
 
         if (v->ancestors[i] != NULL){
+
             dfs(v->ancestors[i], visitedTable, stack, index);    
         }
     }
@@ -253,7 +254,6 @@ void reverseArray(Value** arr, int start, int end) {
     }
 }
 
-
 /**
  * @notice reverseTopologicalSort() is a helper function used to perform a topological sort on the graph of Value structs.
  * @dev reverseTopologicalSort() is called within the Backward() function to sort a Value's computational graph in topological order
@@ -268,8 +268,8 @@ void reverseTopologicalSort(Value* start, Value*** sortedStack, int* count) {
     assert(*sortedStack == NULL);
 
     // use a hash table to store visited nodes
-    HashTable* visited = createHashTable(MAX_GRAPH_SIZE); 
-    assert(visited != NULL);
+    HashTable* visitedHashTable = createHashTable(MAX_GRAPH_SIZE); 
+    assert(visitedHashTable != NULL);
 
     // Allocate memory for a stack to store the topological sort order of graph ancestors.
     *sortedStack = (Value**)malloc(MAX_GRAPH_SIZE * sizeof(Value*)); 
@@ -277,13 +277,15 @@ void reverseTopologicalSort(Value* start, Value*** sortedStack, int* count) {
 
     // Perform depth-first search to visit all nodes and push them onto the stack.
     int index = 0;
-    dfs(start, visited, sortedStack, &index);
+    dfs(start, visitedHashTable, sortedStack, &index);
+
+    // printf("Post depth first search\n");
 
     // Reverse the sorted array to get correct topological ordering.
     reverseArray(*sortedStack, 0, index - 1);
     *count = index; // Update count to reflect number of nodes sorted.
 
-    freeHashTable(visited);
+    freeHashTable(visitedHashTable);
 }
 
 
@@ -314,8 +316,6 @@ void Backward(Value* v) {
 
     // Process nodes in topologically sorted order.
     for (int i = 0; i < count; i++) {
-
-        // printf("\nComputing Gradient for Node: %s", sortedStack[i]->opStr);
 
         if (sortedStack[i]->Backward != NULL) { // Ensure backward function exists
             sortedStack[i]->Backward(sortedStack[i]);

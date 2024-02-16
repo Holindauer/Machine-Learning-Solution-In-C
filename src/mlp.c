@@ -142,7 +142,6 @@ MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
     return mlp;
 }
 
-
 /**
  * @notice zeroGrad() is used in relation to the backward pass of the network. It resets the gradient of all weights
  * and biases to 0.
@@ -172,8 +171,9 @@ void zeroGrad(MLP* mlp){
             // copy the value of the bias
             layer->biases[j]->grad = 0;
 
-            // also zero the output vector
+            // also zero the output vector for both grad and val
             layer->outputVector[j]->grad = 0;
+            layer->outputVector[j]->value = 0;
         }
 
         // move to the next layer in both mlps
@@ -184,7 +184,6 @@ void zeroGrad(MLP* mlp){
     releaseGraph(mlp->graphStack);
 
 }
-
 
 /**
  * @notice freeWeights() is a helper function for the createMLP() destructor. It frees the memory allocated

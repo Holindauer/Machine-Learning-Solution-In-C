@@ -29,7 +29,6 @@ void MultiplyWeights(Layer* layer, Value** input, GraphStack* graphStack){
     }
 }
 
-
 /**
  * @notice AddBias() adds the bias to the output vector of a layer after MultiplyWeights() has been called
  * @dev AddBias() works for a single input vector, not a batch of input vectors.

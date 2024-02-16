@@ -76,6 +76,9 @@ void popGraphStack(GraphStack* stack){
 }
 
 
+Value *peekGraphStack(GraphStack *stack) {
+    return stack->head->value;
+}
 
 /**
  * @notice releaseGraph() is used to deallocate all memory associated with a graph that has been
