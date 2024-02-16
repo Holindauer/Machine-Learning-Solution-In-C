@@ -96,30 +96,6 @@ void test_AddBias(void){
     printf("AddBias() passed\n");
 }
 
-/**
- * @test test_copyInput() tests the copying an array of ptrs to Value structs 
- * (w/ the contents of those structs) by the copyInput() function from forward.c
-*/
-void test_copyInput(){
-
-    int inputSize = 3;
-    Value** input = (Value**)malloc(inputSize * sizeof(Value*));
-    for(int i = 0; i < inputSize; i++){
-        input[i] = newValue(i, NULL, NO_ANCESTORS, "test_copyInput");
-    }
-
-    Value** inputCopy = copyInput(input, inputSize);
-
-    for(int i = 0; i < inputSize; i++){
-        assert(inputCopy[i]->value == i);
-        assert(inputCopy[i]->grad == 0);
-    }
-
-    free(input);
-    free(inputCopy);
-
-    printf("copyInput() passed\n");
-}
 
 /**
  * @notice test_Forward() tests that the forward pass of the network does not crash
@@ -132,17 +108,28 @@ void test_Forward(){
     int numLayers = 3;
     MLP* mlp = createMLP(inputSize, layerSizes, numLayers);
 
+    printf("MLP created\n");
+
     // create a new input vector
     Value** input = (Value**)malloc(inputSize * sizeof(Value*));
     for(int i = 0; i < inputSize; i++){
         input[i] = newValue(i, NULL, NO_ANCESTORS, "test_Forward");
     }
 
+    printf("Input created\n");
+
     // run the forward pass
-    Forward(mlp, input);    
+    Forward(mlp, input);   
+
+    printf("Forward() ran\n");
+    printf("Output: %f\n", mlp->outputLayer->outputVector[0]->value);
+    printf("Output: %f\n", mlp->outputLayer->outputVector[0]->grad);
+    
 
     // run a backward pass
     Backward(mlp->outputLayer->outputVector[0]);
+
+    printf("Backward() ran\n");
 
     releaseGraph(mlp->graphStack);
     freeMLP(mlp);
@@ -157,7 +144,6 @@ int main(void){
 
     test_MultiplyWeights();
     test_AddBias();
-    test_copyInput();
     test_Forward();
 
     printf("All forward tests passed\n");

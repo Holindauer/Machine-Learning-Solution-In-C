@@ -50,34 +50,17 @@ void AddBias(Layer* layer, Value** input, GraphStack* graphStack){
 
 
 /**
- * @notice copyInput() is a helper function used to copy the input vector at the start of the forward pass so that
- * when we deallocate the forward pass graph, we do not inadvertently deallocate the training data at the base of it. 
-*/
-Value** copyInput(Value** input, int inputSize){
-    
-    Value** inputCopy = (Value**)malloc(inputSize * sizeof(Value*));
-    for(int i = 0; i < inputSize; i++){
-        inputCopy[i] = newValue(input[i]->value, NULL, NO_ANCESTORS, "copyInput");
-    }
-    return inputCopy;
-}
-
-/**
  * @notice Forward() is used to perform the forward pass of an mlp. 
  * @dev The final output of the network is stored in the outputVector memebr of the 
  * outputLayer member of the mlp struct
 */
 void Forward(MLP* mlp, Value** input){
 
-    // copy input vector to avoid deallocation of training data when calling releaseGraph()
-    Value** inputCopy = copyInput(input, mlp->inputLayer->inputSize);
-    assert(inputCopy != NULL);
-
     // retrieve the input layer
     Layer* layer = mlp->inputLayer;
 
     // pass input to the inputlayer
-    MultiplyWeights(layer, inputCopy, mlp->graphStack);
+    MultiplyWeights(layer, input, mlp->graphStack);
     AddBias(layer, layer->outputVector, mlp->graphStack);
 
     // for subsequent layers iterate over the rest of the layers, 
