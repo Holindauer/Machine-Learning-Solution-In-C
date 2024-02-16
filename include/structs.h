@@ -23,9 +23,6 @@ typedef void (*pBackwardFunc)(Value*);
  * @param ancestors arr of ancestor nodes (dynamically allocated)
  * @param op Str of operation that produced the value (debugging)
  * @param ancestorArrLen length of the ancestors array
- * @param refCount tracks the number of times a Value is used as an ancestor
- * @param isMLP flag to indicate if the value is a part of an MLP and thus should not be 
- * deallocated when the graph is released
 */
 typedef struct _value {
     double value;             
@@ -33,10 +30,35 @@ typedef struct _value {
     pBackwardFunc Backward; 
     Value **ancestors;       
     char* opStr; 
-    int ancestorArrLen;                
-    int refCount;
-    int isMLP;
+    int ancestorArrLen;        
 } Value;
+
+//------------------------------------------------------------------------------------------------------------------ Value Tracker Struct
+
+/**
+ * @notice GraphNode is node in a stack of Value structs. It is used to store all newly created Value structs. 
+ * The stack's function is to divorce the deallocation of the computational graph from the need to traverse the 
+ * computational graph. This mechanism is being used to avoid recursively deallocating the graph, which is less 
+ * obvious as to how it works and more error prone.
+ * @param value A pointer to a Value struct
+ * @param next A pointer to the next ValueTracker struct in the list
+ * 
+*/
+typedef struct _graphNode {
+    Value* value;
+    struct _graphNode* next;
+} GraphNode;
+
+
+/**
+ * @notice Graph Stack is a stack of ValueTracker structs. It is used to store all newly created Value structs.
+ * @param head A pointer to the head of the stack
+ * @param len The length of the stack
+*/
+typedef struct {
+    GraphNode* head;
+    int len;
+} GraphStack;
 
 //------------------------------------------------------------------------------------------------------------------ Hash Table Struct
 
@@ -89,11 +111,14 @@ typedef struct _layer {
  * @param inputLayer A pointer to the first layer in the network
  * @param outputLayer A pointer to the last layer in the network
  * @param numLayers The number of layers in the network
+ * @param graphStack A stack of all unique Value ptrs within the computational graph. Not including 
+ * the weights, biases, and output vectors of the mlp itself.
 */
 typedef struct {
     Layer* inputLayer;
     Layer* outputLayer;
     int numLayers;
+    GraphStack* graphStack;
 } MLP;
 
 //------------------------------------------------------------------------------------------------------------------ Function Prototypes
@@ -101,17 +126,17 @@ typedef struct {
 // Auto Grad Related Prototypes
 Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _opStr[]);
 void addBackward(Value* v);
-Value* Add(Value* a, Value* b);
+Value* Add(Value* a, Value* b, GraphStack *graphStack);
 void mulBackward(Value* v);
-Value* Mul(Value* a, Value* b);
+Value* Mul(Value* a, Value* b, GraphStack *graphStack);
 void reluBackward(Value* v);
-Value* ReLU(Value* a);
+Value* ReLU(Value* a, GraphStack *graphStack);
 void dfs(Value* v, HashTable* visited, Value*** stack, int* index);
 void reverseArray(Value** arr, int start, int end);
 void reverseTopologicalSort(Value* start, Value*** sorted, int* count);
 void Backward(Value* v);
 void freeValue(Value* v);
-void releaseGraph(Value** v);
+void releaseGraph(GraphStack* graphStack);
 
 // Hash Table Related Prototypes
 HashTable* createHashTable(int size);
@@ -133,13 +158,19 @@ void freeBiases(Value** biases, int outputSize);
 MLP* createMLP(int inputSize, int layerSizes[], int numLayers);
 void freeMLP(MLP* mlp);
 Value** initOutputVector(int outputSize);
-void zeroGrad(MLP** mlp, int inputSize, int layerSizes[], int numLayers);
+void zeroGrad(MLP* mlp);
 
 // Forward Pass Related Prototypes
-void MultiplyWeights(Layer* layer, Value** input);
-void AddBias(Layer* layer, Value** input);
+void MultiplyWeights(Layer* layer, Value** input, GraphStack* graphStack);
+void AddBias(Layer* layer, Value** input, GraphStack* graphStack);
 Value** copyInput(Value** input, int inputSize);
 void Forward(MLP* mlp, Value** input);
 
 // SGD related prototypes
 void Step(MLP* mlp, int lr);
+
+// Graph Tracker Related Prototypes
+GraphStack* newGraphStack(void);
+void pushGraphStack(GraphStack* stack, Value* value);
+void popGraphStack(GraphStack* stack);
+Value *peekGraphStack(GraphStack *stack);

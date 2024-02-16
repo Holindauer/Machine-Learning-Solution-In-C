@@ -35,9 +35,7 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     // set Value values
     v->value = _value;
     v->grad = 0.0;
-    v->refCount = 1; // Starting its own reference count for graph deallocation purposes
     v->ancestorArrLen = _ancestorArrLen;
-    v->isMLP = 0; // by default a value is not part of an MLP
  
     // if no ancestors are given, set the ancestors pointer to NULL
     if (_ancestorArrLen == NO_ANCESTORS && _ancestors == NULL) {
@@ -50,7 +48,6 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
         // Copy ancestor nodes into the value struct.
         for (int i = 0; i < _ancestorArrLen; i++) {
             v->ancestors[i] = _ancestors[i];
-            _ancestors[i]->refCount++; // Incrementing the ancestor's reference count to reflect that it's being used as an ancestor
         }
     }
 
@@ -65,49 +62,6 @@ Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _o
     return v;
 }
 
-/**
- * @notice releaseGraph() is a helper function used to deallocated the computational graph of the forward pass
- * of the mlp. 
- * @dev releaseGraph() is a recursive funciton that traversees the graph backwards from the most recent node
- * @dev Value structs are only deallocated once their refCount reaches zero, which is a field of the Value 
- * struct that measures how many times a specific node has been used as an ancestor and is decremented in this 
- * function each time the node is visited recursively. Once the refCount is zero, the node is safe to deallocate.
- * @dev The function also makes sure not to deallocae any ancestors that are part of the mlp. This is done by 
- * only freeing Value structs that have the isMLP flag set to 0. The isMLP flag is set when a new Value struct is
- * created. By default it is zero, but is set to 1 when mlp structures of Values are created.
-*/
-void releaseGraph(Value** v) {
-    // Check if the pointer is NULL or points to NULL, serving as the base case for recursion
-    if (v == NULL || *v == NULL) {
-        return;
-    }
-
-    // Decrement the refCount and proceed only if it's zero
-    if (--(*v)->refCount == 0) {
-        // Recursively release the graph of each ancestor, if any
-        if ((*v)->ancestors != NULL) {
-            for (int i = 0; i < (*v)->ancestorArrLen; i++) {
-                releaseGraph(&((*v)->ancestors[i]));
-            }
-            // Deallocate ancestors array if this is not part of the MLP structure
-            if (!(*v)->isMLP) {
-                free((*v)->ancestors);
-                (*v)->ancestors = NULL;
-            }
-        }
-
-        // Deallocate the Value struct itself if opStr indicates it's not an MLP component
-        // Assuming the isMLP flag indicates if the Value is part of the MLP structure and should not be deallocated
-        if (!(*v)->isMLP) {
-            if ((*v)->opStr != NULL) {
-                free((*v)->opStr);
-                (*v)->opStr = NULL;
-            }
-            free(*v);
-            *v = NULL;
-        }
-    }
-}
 
 /**
  * @notice freeValue() frees the memory allocated for a Value struct and it's ancestors array and operation string
@@ -150,19 +104,19 @@ void addBackward(Value* v) {
  * represents the sum of the two input Value structs.
  * @dev The function also sets the Backward function pointer of the new Value struct to
  *  the address of the addBackward function.
+ * @param a A pointer to a Value struct
+ * @param b A pointer to a Value struct
+ * @param stack A pointer to a GraphStack struct
+ * @param graphStack A pointer to a GraphStack struct
 */
-Value* Add(Value* a, Value* b) {
+Value* Add(Value* a, Value* b, GraphStack* graphStack) {
     assert(a != NULL && b != NULL);
 
     // Create a new Value for the sum
     Value* sumValue = newValue(a->value + b->value, (Value*[]){a, b}, 2, "add");
 
-    // increment ancestor reference counts
-    a->refCount++;
-    b->refCount++;
-
-    // by default, an added value is not part of an MLP
-    sumValue->isMLP = 0;
+    // push the new value onto the graph stack
+    pushGraphStack(graphStack, sumValue);
 
     // Set the backward function pointer to addBackward
     sumValue->Backward = addBackward;
@@ -190,19 +144,18 @@ void mulBackward(Value* v) {
  * @notice Mul() is used to multiply two Value structs together. It returns a new Value struct that 
  * represents the product of the two input Value structs.
  * @dev The function also sets the Backward function pointer of the new Value struct to the address of the mulBackward function.
+ * @param a A pointer to a Value struct
+ * @param b A pointer to a Value struct
+ * @param graphStack A pointer to a GraphStack struct
 */
-Value* Mul(Value* a, Value* b) {
+Value* Mul(Value* a, Value* b, GraphStack* graphStack) {
     assert(a != NULL && b != NULL);
 
     // Create a new Value for the product
     Value* productValue = newValue(a->value * b->value, (Value*[]){a, b}, 2, "mul");
 
-    // increment ancestor reference counts
-    a->refCount++;
-    b->refCount++;
-
-    // by default, a multiplied value is not part of an MLP
-    productValue->isMLP = 0;
+    // push the new value onto the graph stack
+    pushGraphStack(graphStack, productValue);
 
     // Set the backward function pointer to mulBackward
     productValue->Backward = mulBackward;
@@ -216,15 +169,8 @@ Value* Mul(Value* a, Value* b) {
  * @dev the chain rule for ReLU is dz/dx = 1 if x > 0 else 0
 */
 void reluBackward(Value* v) {
-    
-    // the only case where ancestors can be null is if we are a node created by newValue()
-    if (
-        strcmp(v->opStr, "add") == 0 ||
-        strcmp(v->opStr, "mul") == 0 ||
-        strcmp(v->opStr, "relu") == 0
-    ){
-        assert(v != NULL && v->ancestors != NULL && v->ancestors[0] != NULL );
-    }
+
+    assert(v != NULL && v->ancestors != NULL && v->ancestors[0] != NULL );
     
     // Apply the chain rule for ReLU: dz/dx = 1 if x > 0 else 0
     Value* x = v->ancestors[0];
@@ -240,19 +186,18 @@ void reluBackward(Value* v) {
  * @dev The function also sets the Backward function pointer of the new Value struct to the address of the reluBackward function.
  * @dev The ReLU activation function is defined as f(x) = max(0, x)
  * @dev The derivative of ReLU is 1 if x > 0 else 0
+ * @param a A pointer to a Value struct
+ * @param graphStack A pointer to a GraphStack struct
 */
-Value* ReLU(Value* a) {
+Value* ReLU(Value* a, GraphStack* graphStack) {
     assert(a != NULL);
 
     // Create a new Value for the ReLU activation
     double reluResult = a->value > 0 ? a->value : 0; // f(x) = max(0, x)
     Value* reluValue = newValue(reluResult, (Value*[]){a}, 1, "relu");
 
-    // increment ancestor reference counts
-    a->refCount++;
-
-    // by default, a ReLU value is not part of an MLP
-    reluValue->isMLP = 0;
+    // push the new value onto the graph stack
+    pushGraphStack(graphStack, reluValue);
 
     // Set the backward function pointer to reluBackward
     reluValue->Backward = reluBackward;
@@ -286,6 +231,7 @@ void dfs(Value* v, HashTable* visitedTable, Value*** stack, int* index) {
     for (int i = 0; v->ancestors != NULL && v->ancestors[i] != NULL; i++) {
 
         if (v->ancestors[i] != NULL){
+
             dfs(v->ancestors[i], visitedTable, stack, index);    
         }
     }
@@ -308,7 +254,6 @@ void reverseArray(Value** arr, int start, int end) {
     }
 }
 
-
 /**
  * @notice reverseTopologicalSort() is a helper function used to perform a topological sort on the graph of Value structs.
  * @dev reverseTopologicalSort() is called within the Backward() function to sort a Value's computational graph in topological order
@@ -318,27 +263,29 @@ void reverseArray(Value** arr, int start, int end) {
  * @param sorted is a pointer to an array of Value pointers that will store the topological sort order of the graph ancestors.
  * @param count is a pointer to an integer that will store the number of nodes sorted.
 */
-void reverseTopologicalSort(Value* start, Value*** sorted, int* count) {
+void reverseTopologicalSort(Value* start, Value*** sortedStack, int* count) {
 
-    assert(*sorted == NULL);
+    assert(*sortedStack == NULL);
 
     // use a hash table to store visited nodes
-    HashTable* visited = createHashTable(MAX_GRAPH_SIZE); 
-    assert(visited != NULL);
+    HashTable* visitedHashTable = createHashTable(MAX_GRAPH_SIZE); 
+    assert(visitedHashTable != NULL);
 
     // Allocate memory for a stack to store the topological sort order of graph ancestors.
-    *sorted = (Value**)malloc(MAX_GRAPH_SIZE * sizeof(Value*)); 
-    assert(*sorted != NULL);
+    *sortedStack = (Value**)malloc(MAX_GRAPH_SIZE * sizeof(Value*)); 
+    assert(*sortedStack != NULL);
 
     // Perform depth-first search to visit all nodes and push them onto the stack.
     int index = 0;
-    dfs(start, visited, sorted, &index);
+    dfs(start, visitedHashTable, sortedStack, &index);
+
+    // printf("Post depth first search\n");
 
     // Reverse the sorted array to get correct topological ordering.
-    reverseArray(*sorted, 0, index - 1);
+    reverseArray(*sortedStack, 0, index - 1);
     *count = index; // Update count to reflect number of nodes sorted.
 
-    freeHashTable(visited);
+    freeHashTable(visitedHashTable);
 }
 
 
@@ -357,28 +304,28 @@ void Backward(Value* v) {
     assert(v != NULL);
 
     // declare a pointer for an array of Value pointers
-    Value** sorted = NULL;
+    Value** sortedStack = NULL;
     int count = 0;
 
     // Perform a topological sort on the graph of Value structs. This will in place sort
     // fill sorted array with the topological sort order of the graph ancestors.
-    reverseTopologicalSort(v, &sorted, &count);
+    reverseTopologicalSort(v, &sortedStack, &count);
 
     // Set gradient of the starting node to 1.
     v->grad = 1.0;
 
     // Process nodes in topologically sorted order.
     for (int i = 0; i < count; i++) {
-        
-        if (sorted[i]->Backward != NULL) { // Ensure backward function exists
-            sorted[i]->Backward(sorted[i]);
+
+        if (sortedStack[i]->Backward != NULL) { // Ensure backward function exists
+            sortedStack[i]->Backward(sortedStack[i]);
         }
     }
 
-    // Clean up
-    // if (sorted != NULL) { // @bug this is causing a sef fault. Not exactly sure why. 
-    //     free(sorted); // @bug sorted is not NULL but for some reason, freeing it at the end of the function causes a seg fault
-    // }  
+    //Clean up
+    if (sortedStack != NULL) { 
+        free(sortedStack); 
+    }  
 }
 
 

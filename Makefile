@@ -11,7 +11,7 @@ LIB_SOURCES=$(wildcard $(SRC_DIR)/*.c)
 # Create bin directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-all: example test_autoGrad test_hashTable test_loadData test_mlp test_forward test_sgd
+all: example test_autoGrad test_hashTable test_loadData test_mlp test_forward test_sgd test_graphTracker
 
 # Example target
 example: $(EXAMPLE_SRC) $(LIB_SOURCES)
@@ -34,6 +34,9 @@ test_forward: $(TEST_DIR)/test_forward.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
 test_sgd: $(TEST_DIR)/test_sgd.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
+
+test_graphTracker: $(TEST_DIR)/test_graphTracker.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
 clean:
