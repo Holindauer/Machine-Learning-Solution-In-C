@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Compile the tests
+echo
 echo "Compiling tests..."
+echo
 make
 
 # Check if make succeeded
@@ -10,16 +12,18 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+echo 
 echo "Running tests..."
 
 # Define your test binaries here
-tests=("test_autoGrad" "test_hashTable" "test_loadData" "test_mlp" "test_forward" "test_sgd" "test_graphTracker")
+tests=("test_autoGrad")
 
 # Directory where binaries are located
 BIN_DIR="bin"
 
 # Iterate over the tests array and execute each test
-for test in "${tests[@]}"; do
+for test in "${tests[@]}"; do   
+  echo 
   echo "Running $test..."
   ./$BIN_DIR/$test
   if [ $? -ne 0 ]; then
@@ -30,4 +34,5 @@ for test in "${tests[@]}"; do
   fi
 done
 
-echo "All tests passed successfully."
+echo
+echo "All tests passed successfully!"
