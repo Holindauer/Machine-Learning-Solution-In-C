@@ -1,6 +1,5 @@
 #pragma once
-#include "libraries.h"
-#include "macros.h"
+#include "lib.h"
 
 // autoGrad.h
 
@@ -38,11 +37,11 @@ typedef struct _value {
  * @dev Each time a Value is created during the forward pass, it is stored in a GraphNode and 
  * pushed to the GraphStack. This allows for sequential deallocation of memory for complicated
  * computation graphs without risk of double frees. 
- * @param value A pointer to a Value struct
+ * @param pValStruct A pointer to the Value struct at this node
  * @param next A pointer to the next ValueTracker struct in the stack
 */
 typedef struct _graphNode {
-    Value* value;
+    Value* pValStruct;
     struct _graphNode* next;
 } GraphNode;
 
@@ -62,4 +61,10 @@ typedef struct {
 
 // autoGrad related functions
 Value* newValue(double value, Value* ancestors[], int ancestorArrLen, char opString[]);
-int freeValue(Value** v);
+void freeValue(Value** v);
+
+// GraphStack related functions
+GraphStack* newGraphStack(void);
+void pushGraphStack(GraphStack* stack, Value* value);
+void popGraphStack(GraphStack* stack);
+void releaseGraph(GraphStack* graphStack);

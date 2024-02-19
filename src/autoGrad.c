@@ -1,7 +1,7 @@
 #include "autoGrad.h"
-#include "libraries.h"
-#include "macros.h"
+#include "lib.h"
 
+//---------------------------------------------------------------------------------------------------------------------- Value Constructor
 
 /**
  * @note newValue() allocates memory for a Value struct and initializes its fields given passed arguments
@@ -55,14 +55,15 @@ Value* newValue(double value, Value* ancestors[], int ancestorArrLen, char opStr
     return v;
 }
 
+//---------------------------------------------------------------------------------------------------------------------- Value Destructor
+
 /**
  * @note freeValue is used to free the memory within a value struct
  * @dev all ptrs are set to NULL after releasing
  * @param v ptr to a ptr to a Value to free
- * @return 0 or 1 depending on success
 */
-int freeValue(Value** v){
-    
+void freeValue(Value** v){
+   
     assert((*v) != NULL);
 
     // free dynamically allocated members first
@@ -71,13 +72,17 @@ int freeValue(Value** v){
         free((*v)->ancestors); 
         (*v)->ancestors = NULL;
     }
-    if ((*v)-> opString != NULL){
+    if ((*v)->opString != NULL){
 
         free((*v)->opString);
         (*v)->ancestors = NULL;
     }
-    
+       
     // free Value struct itself and set to NULL
     free((*v));
     (*v) = NULL;
 }
+
+
+//---------------------------------------------------------------------------------------------------------------------- Add Operation
+

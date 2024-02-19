@@ -1,4 +1,5 @@
 #include "autoGrad.h"
+#include "lib.h"
 
 /**
  * @helper checks if a new value with no ancestors was initialized properly
@@ -17,6 +18,8 @@ void check_newValueInitialized(Value* value, int intendedValue, char opString[])
  * @test ensures new values are initialized properly and ancestor mechanism is working correctly
 */
 void test_newValue(void){
+
+    printf("test_newValue()...");
 
     Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
     check_newValueInitialized(a, 3, "a");
@@ -39,19 +42,20 @@ void test_newValue(void){
     assert(v->ancestors[1] == b);
     assert(v->ancestors[2] == c);
 
-    
-    freeValue(&v);
-    assert(v == NULL);
 
     freeValue(&v);
     assert(v == NULL);
 
-    freeValue(&v);
-    assert(v == NULL);
+    freeValue(&a);
+    assert(a == NULL);
 
-    freeValue(&v);
-    assert(v == NULL);
+    freeValue(&b);
+    assert(b == NULL);
 
+    freeValue(&c);
+    assert(c == NULL);
+
+    printf("PASS!\n");
 }
 
 
@@ -59,7 +63,7 @@ void test_newValue(void){
 int main(void){
 
 
-
+    test_newValue();
 
         
 }
