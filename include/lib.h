@@ -7,3 +7,5 @@
 
 
 #define NO_ANCESTORS 0
+#define BINARY 1
+#define UNARY 0
