@@ -217,11 +217,9 @@ void test_ReLU(void){
 }
 
 int main(void){
-
-
+    
     test_newValue();
     test_Add();
     test_Mul();
-    test_ReLU();
-        
+    test_ReLU();       
 }

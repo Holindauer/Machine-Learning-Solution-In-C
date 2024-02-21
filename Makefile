@@ -8,11 +8,14 @@ LIB_SOURCES=$(wildcard $(SRC_DIR)/*.c)
 # Create bin directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-all: test_autoGrad test_graphStack
+all: test_autoGrad test_graphStack test_hashTable
 
 # Test targets
 test_autoGrad: $(TEST_DIR)/test_autoGrad.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
 test_graphStack: $(TEST_DIR)/test_graphStack.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
+
+test_hashTable: $(TEST_DIR)/test_hashTable.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)

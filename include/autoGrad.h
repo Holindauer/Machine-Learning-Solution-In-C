@@ -3,7 +3,6 @@
 
 // autoGrad.h
 
-
 /**
  * @notice pBackwardFunc is a pointer to a function that computes the derivative of the operation 
  * that produced a given Value struct based on it's ancestor values.
@@ -57,22 +56,22 @@ typedef struct {
     int len;
 } GraphStack;
 
-
-
 // Value Constructor/Destructor
 Value* newValue(double value, Value* ancestors[], int ancestorArrLen, char opString[]);
 void freeValue(Value** v);
 
-// GraphStack related functions
+// Value Operations
+void addBackward(Value* v);
+Value* Add(Value* a, Value* b, GraphStack* graphStack);
+
+void mulBackward(Value* v);
+Value* Mul(Value* a, Value* b, GraphStack* graphStack);
+
+void reluBackward(Value* v);
+Value* ReLU(Value* a, GraphStack* graphStack);
+
+// GraphStack functions
 GraphStack* newGraphStack(void);
 void pushGraphStack(GraphStack* stack, Value* value);
 void popGraphStack(GraphStack* stack);
 void releaseGraph(GraphStack* graphStack);
-
-// Value Operations
-void addBackward(Value* v);
-Value* Add(Value* a, Value* b, GraphStack* graphStack);
-void mulBackward(Value* v);
-Value* Mul(Value* a, Value* b, GraphStack* graphStack);
-void reluBackward(Value* v);
-Value* ReLU(Value* a, GraphStack* graphStack);
