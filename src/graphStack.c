@@ -71,6 +71,39 @@ void popGraphStack(GraphStack* stack){
     stack->len--;
 }
 
+
+/**
+ * @note reverseGraphStack reverses a GraphStack struct by creating a new stack, then iterating the push of pops to it 
+ * @param stack ptr to a ptr of the GraphStack to reverse
+*/
+void reverseGraphStack(GraphStack** stack){
+    assert(stack != NULL);
+    assert((*stack) != NULL);
+
+    // create new graph stack to hold reversed stack
+    GraphStack* reverseStack = newGraphStack();
+
+    // retrieve head node from stack
+    GraphNode* graphNode = (*stack)->head;
+    GraphNode* nextGraphNode = NULL;
+
+    // push each element of reverse stack onto new stack
+    while(graphNode != NULL && graphNode->pValStruct != NULL){
+
+        // push next val in input param stack to new reverse stack
+        pushGraphStack(reverseStack, graphNode->pValStruct);
+
+        // move forward one node, freeing previous (Value ptrs still intact)
+        nextGraphNode = graphNode->next;
+        free(graphNode);
+        graphNode = nextGraphNode;
+    }
+
+    // free the input param GraphStack and replace w/ the new reversed version
+    free(*stack);
+    *stack = reverseStack;
+}
+
 /**
  * @note releaseGraph() pops (deallocates) all nodes within a graph stack
  * @dev the GraphStack itself is preservered
