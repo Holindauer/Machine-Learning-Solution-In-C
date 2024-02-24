@@ -250,8 +250,6 @@ void depthFirstSearch(Value* value, HashTable* visitedHashTable, GraphStack* sor
     assert(visitedHashTable != NULL);
     assert(sortedStack != NULL);
 
-    printf("Inside Depth First Search -- len stack: %d\n", sortedStack->len);
-
     // exit call if value has alread been visited
     if (isInHashTable(visitedHashTable, value)){
         return;
@@ -267,11 +265,7 @@ void depthFirstSearch(Value* value, HashTable* visitedHashTable, GraphStack* sor
     }
 
     // push current node onto the stack after recursion returns
-    printf("Exit Recursionm\n");
-
     pushGraphStack(sortedStack, value);
-    
-    printf("value pushed");
 }
 
 /**
@@ -279,12 +273,9 @@ void depthFirstSearch(Value* value, HashTable* visitedHashTable, GraphStack* sor
  * ptr as the starting point.
  * @dev a topological sort is a linear ordering of nodes in a directed acyclic graph such that every directed edge uv from 
  * u to v comes before v in the ordering.
- * 
+ * @param start is the leading value of the computationall graph 
 */
-void reverseTopologicalSort(Value* start, GraphStack* sortedStack){
-
-    printf("\nInside Reverse Topologial Sort");
-
+void reverseTopologicalSort(Value* start, GraphStack** sortedStack){
     assert(start != NULL);
     assert(sortedStack != NULL);
 
@@ -293,10 +284,10 @@ void reverseTopologicalSort(Value* start, GraphStack* sortedStack){
     assert(visitedHashTable != NULL);  
 
     // kickstart recursive depth first search on graph
-    depthFirstSearch(start, visitedHashTable, sortedStack);
+    depthFirstSearch(start, visitedHashTable, (*sortedStack));
 
     // reverse GraphStack so the start is at the graph output 
-    reverseGraphStack(&sortedStack);
+    reverseGraphStack(sortedStack);
 }
 
 
@@ -308,19 +299,13 @@ void reverseTopologicalSort(Value* start, GraphStack* sortedStack){
 */
 void Backward(Value* value){
 
-    printf("\nInside Backward()");
-
     assert(value != NULL);
 
     // create a new GraphStack to store the reverse topologically sorted graph
     GraphStack* sortedStack = newGraphStack();
 
-    printf("\nGraph Stack Created");
-
     // perform reverse topological sort on graph
-    reverseTopologicalSort(value, sortedStack);
-
-    printf("\nreverse Topo Sort Complete");
+    reverseTopologicalSort(value, &sortedStack);
 
     // grad must be 1 to kickstart backprop
     value->grad = 1.0;

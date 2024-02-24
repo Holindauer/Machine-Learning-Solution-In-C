@@ -389,6 +389,58 @@ void test_depthFirstSearch(void){
 }
 
 /**
+ * @test test_reverseTopologicalSort() tests to make sure that the topological sorted of the computational 
+ * graph within reverseTopologicalSort() correctly ordered nodes such that none come before their ancestors.
+*/
+void test_reverseTopologicalSort(void){
+
+    printf("test_reverseTopologicalSort()...");
+
+    // perform value operations
+    GraphStack* opStack = newGraphStack(); // seperate graph stack needed to perform autograph ops
+
+    // create ancestor group 1
+    Value* a1 = newValue(10, NULL, NO_ANCESTORS, "a1");
+    Value* a2 = newValue(10, NULL, NO_ANCESTORS, "a2");
+
+    // create ancestor group 2
+    Value* a3 = newValue(10, NULL, NO_ANCESTORS, "a3");
+    Value* a4 = newValue(10, NULL, NO_ANCESTORS, "a4");
+
+    // combine group 1 and group 2 each into output groups 1 and 2
+    Value* o1 = Add(a1, a2, opStack);
+    Value* o2 = Add(a3, a4, opStack);
+
+    // combine output groupts 1 and 2 into output3
+    Value* o3 = Add(o1, o2, opStack);
+    assert(o3->value == 40);
+
+    GraphStack* sortStack = newGraphStack();
+
+    // apply reverse topological sort    
+    reverseTopologicalSort(o3, &sortStack);
+
+    // verify stack still exists
+    assert(sortStack != NULL);
+    assert(sortStack->head != NULL);
+    assert(sortStack->head->pValStruct != NULL );
+
+    // verify order is correct
+    assert(sortStack->head->pValStruct->value == 10);
+    assert(sortStack->head->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->next->next->next->next->pValStruct->value == 40);
+
+    // cleanup
+    releaseGraph(sortStack);
+
+    printf("PASS!\n");
+}
+
+/**
  * @test test_Backward() tests the backpropagation (Backward()) function by performing some basic operations and 
  * checking that the gradients are calculated correctly.
  * @dev this test case is based on the sanity check test case in karpathy's micrograd tests
@@ -448,7 +500,7 @@ void test_Backward(void){
     // check that the gradients are correct
     assert(x->grad == 46);
 
-    // releaseGraph(graphStack);
+    releaseGraph(graphStack);
 
     printf("PASS!");
 }
@@ -464,5 +516,6 @@ int main(void){
     test_MulDiff();
     test_AddDiff();
     test_depthFirstSearch();
+    test_reverseTopologicalSort();
     // test_Backward();  //<---- Currently failing
 }
