@@ -298,7 +298,6 @@ void reverseTopologicalSort(Value* start, GraphStack** sortedStack){
  * 
 */
 void Backward(Value* value){
-
     assert(value != NULL);
 
     // create a new GraphStack to store the reverse topologically sorted graph
@@ -307,22 +306,24 @@ void Backward(Value* value){
     // perform reverse topological sort on graph
     reverseTopologicalSort(value, &sortedStack);
 
-    // grad must be 1 to kickstart backprop
-    value->grad = 1.0;
 
-    // get head node
-    GraphNode* graphNode = sortedStack->head;
 
-    // compute gradient
-    while(graphNode != NULL && graphNode->pValStruct != NULL){
+    // // grad must be 1 to kickstart backprop
+    // value->grad = 1.0;
 
-        // compute the current node's partial derivative
-        graphNode->pValStruct->Backward(graphNode->pValStruct);
+    // // get head node
+    // GraphNode* graphNode = sortedStack->head;
 
-        // get next node
-        graphNode = graphNode->next;
-    }
+    // // compute gradient
+    // while(graphNode != NULL && graphNode->pValStruct != NULL){
+
+    //     // compute the current node's partial derivative
+    //     graphNode->pValStruct->Backward(graphNode->pValStruct);
+
+    //     // get next node
+    //     graphNode = graphNode->next;
+    // }
 
     // free the sort stack
-    releaseGraph(sortedStack);
+    // releaseGraph(sortedStack);
 }   

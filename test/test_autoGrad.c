@@ -497,6 +497,8 @@ void test_Backward(void){
 
     Backward(y);
 
+    assert(y->ancestors != NULL);
+
     // check that the gradients are correct
     assert(x->grad == 46);
 
@@ -517,5 +519,5 @@ int main(void){
     test_AddDiff();
     test_depthFirstSearch();
     test_reverseTopologicalSort();
-    // test_Backward();  //<---- Currently failing
+    test_Backward(); 
 }

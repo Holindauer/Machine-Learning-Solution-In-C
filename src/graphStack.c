@@ -73,6 +73,49 @@ void popGraphStack(GraphStack* stack){
     stack->len--;
 }
 
+/**
+ * @note releaseGraph() pops (deallocates) all nodes within a graph stack
+ * @dev the GraphStack itself is preservered
+ * @param ptr to a graphStackStruct to release the Graph of
+*/
+void releaseGraph(GraphStack* graphStack) {
+
+    while(graphStack->len > 1){
+        popGraphStack(graphStack);
+    }
+
+    assert(graphStack->head != NULL);
+    assert(graphStack->head->pValStruct == NULL);
+    assert(graphStack->head->next == NULL);
+}
+
+/**
+ * @note graphPreservingStackRelease() frees all memory associaed with a graph stack struct, without
+ * deallocating the Value structs inside.
+ * 
+*/
+void graphPreservingStackRelease(GraphStack** graphStack){
+
+    // retrieve head node
+    GraphNode* graphNode = (*graphStack)->head; 
+
+    // free all graph nodes in the graphStack
+    while(graphNode != NULL){
+
+        // save next
+        GraphNode* next = graphNode->next;
+
+        free(graphNode);
+
+        // move forward 1 node
+        graphNode = next;
+    }
+
+    // free graphStack indirect val, set to null
+    free(*graphStack);
+    *graphStack = NULL;
+}   
+
 
 /**
  * @note reverseGraphStack reverses a GraphStack struct by creating a new stack, then iterating the push of pops to it 
@@ -106,17 +149,3 @@ void reverseGraphStack(GraphStack** stack){
     *stack = reverseStack;
 }
 
-/**
- * @note releaseGraph() pops (deallocates) all nodes within a graph stack
- * @dev the GraphStack itself is preservered
-*/
-void releaseGraph(GraphStack* graphStack) {
-
-    while(graphStack->len > 1){
-        popGraphStack(graphStack);
-    }
-
-    assert(graphStack->head != NULL);
-    assert(graphStack->head->pValStruct == NULL);
-    assert(graphStack->head->next == NULL);
-}

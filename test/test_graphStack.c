@@ -202,6 +202,65 @@ void test_reverseGraphStack(void){
     printf("PASS!\n");
 }
 
+/**
+ * @test test_graphPreservingStackRelease() checks to make sure that when calling the graphPreservingStackRelease()
+ * function, the Value structs within the graph being deallocated are preserved. Callling releaseGraph() on the 
+ * operations graphStack should still be possible and not cause double frees.
+*/
+void test_graphPreservingStackRelease(void){
+
+    printf("test_graphPreservingStackRelease()...");
+
+    // Create a graph stack to use for the operations
+    GraphStack* opStack = newGraphStack();
+
+    // create some ancestor nodes
+    Value* x = newValue(-4, NULL, NO_ANCESTORS, "x");
+    assert(x->value == -4);
+
+    Value* z = Add(
+        Mul(
+            newValue(2, NULL, NO_ANCESTORS, "2"), x, opStack), 
+            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x, opStack),
+            opStack
+        );
+    assert(z->value == -10);
+
+    Value* q = Add(ReLU(z, opStack), Mul(z, x, opStack), opStack);
+    assert(q->value == 40);
+
+    Value* h = ReLU(Mul(z, z, opStack), opStack);
+    assert(h->value == 100);
+
+    Value* y = Add(Add(h, q, opStack), Mul(q, x, opStack), opStack);
+    assert(y->value == -20);
+
+    // create a new graphstack to hold x,z, q, h, y
+    GraphStack* graphStack = newGraphStack();
+
+    // push 
+    pushGraphStack(graphStack, x);
+    pushGraphStack(graphStack, z);
+    pushGraphStack(graphStack, q);
+    pushGraphStack(graphStack, h);
+    pushGraphStack(graphStack, y);
+
+    // release the stack
+    graphPreservingStackRelease(&graphStack);
+
+    // assert that values pushed still exist
+    assert(x->value == -4);
+    assert(z->value == -10);
+    assert(q->value == 40);
+    assert(h->value == 100);
+    assert(y->value == -20);
+
+    // make sure releaseGraph still works
+    releaseGraph(opStack);
+
+    printf("PASS!\n");
+}
+
 
 int main(void){
 
@@ -210,6 +269,7 @@ int main(void){
     test_popGraphStack();
     test_releaseGraph();
     test_reverseGraphStack();
+    test_graphPreservingStackRelease();
 
     return 0;
 }
