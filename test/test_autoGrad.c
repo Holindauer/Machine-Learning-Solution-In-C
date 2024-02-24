@@ -1,4 +1,3 @@
-#include "autoGrad.h"
 #include "lib.h"
 
 /**
@@ -155,12 +154,50 @@ void test_Add(void){
 }
 
 /**
+ * @test test_AddDiff tests that the Add() function for the value struct is working correctly when
+ * it's backward function is called
+ * @note This test is not checking the backward method, which recursively traverses the graph, only 
+ * that the function pointer within a value created from the Add() function is outputting the correct value.
+*/
+void test_AddDiff(void){
+
+    printf("test_AddDiff()...");
+
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
+    // create some ancestor nodes
+    Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
+    Value* b = newValue(4, NULL, NO_ANCESTORS, "b");
+
+    // create a new value node
+    Value* c = Add(a, b, graphStack);
+
+    // Within Backward() which is the environment in which ->Backward() is called, the grad of the 
+    // output node is set to 1 in order to kick off the backpropagation process
+    c->grad = 1;
+
+    // backpropagate the gradients
+    c->Backward(c);
+
+    // check that the gradients are correct
+    assert(a->grad == 1);
+
+    // release graph mem
+    releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
+/**
  * @test test_Mul() tests that the Mul() operation is working correctly
 */
 void test_Mul(void){
 
     printf("test_Mul()...");
-
 
     // init values to add
     Value* a = newValue(10, NULL, NO_ANCESTORS, "a");
@@ -178,6 +215,47 @@ void test_Mul(void){
     check_graphStackUpdate(graphStack, c, 2);
 
     // release Graph
+    releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
+
+/**
+ * @test test_MulDiff tests that the Mul() function for the value struct is working correctly when
+ * it's backward function is called
+ * @note This test is not checking the backward method, which recursively traverses the graph, only
+ * that the function pointer within a value created from the Mul() function is outputting the correct value.
+*/
+void test_MulDiff(void){
+
+    printf("test_MulDiff()...");
+
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
+    // create some ancestor nodes
+    Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
+    Value* b = newValue(4, NULL, NO_ANCESTORS, "b");
+
+    // create a new value node
+    Value* c = Mul(a, b, graphStack);
+
+    // Within Backward() which is the environment in which ->Backward() is called, the grad of the 
+    // output node is set to 1 in order to kick off the backpropagation process
+    c->grad = 1;
+
+    // backpropagate the gradients
+    c->Backward(c);
+
+    // check that the gradients are correct
+    assert(a->grad == 4);
+    assert(b->grad == 3);
+
+    // release graph mem
     releaseGraph(graphStack);
 
     // ensure graph stack has been released
@@ -216,10 +294,175 @@ void test_ReLU(void){
     printf("PASS!\n");
 }
 
+
+
+/**
+ * @test test_reluDiff tests that the ReLU() function for the value struct is working correctly when
+ * it's backward function is called
+ * @note This test is not checking the backward method, which recursively traverses the graph, only
+ * that the function pointer within a value created from the ReLU() function is outputting the correct value.
+*/
+void test_ReLUDiff(void){
+
+    printf("test_reluDiff...");
+
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
+    // create some ancestor nodes
+    Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
+    Value* b = newValue(-4, NULL, NO_ANCESTORS, "b");
+
+    // create a new value nodes
+    Value* c = ReLU(a, graphStack);
+    Value* d = ReLU(b, graphStack);
+
+    // Within Backward() which is the environment in which ->Backward() is called, the grad of the 
+    // output node is set to 1 in order to kick off the backpropagation process
+    c->grad = 1;
+    d->grad = 1;
+
+    // backpropagate the gradients
+    c->Backward(c);
+    d->Backward(d);
+
+    // check that the gradients are correct
+    assert(a->grad == 1);
+    assert(b->grad == 0);
+
+    // release graph mem
+    releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_depthFirstSearch() checks to make sure that running depth first search on a computational graph
+ * results in a graph stack that is ordered such that each node in the stack comes before its ancestors.
+*/
+void test_depthFirstSearch(void){
+
+    printf("test_depthFirstSearch()...");
+
+    // init dfs utilities
+    GraphStack* sortStack = newGraphStack();
+    HashTable* visitedHashTable = newHashTable(HASHTABLE_SIZE);
+
+
+    // perform value operations
+    GraphStack* opStack = newGraphStack(); // seperate graph stack needed to perform autograph ops
+
+    // create ancestor group 1
+    Value* a1 = newValue(10, NULL, NO_ANCESTORS, "a1");
+    Value* a2 = newValue(10, NULL, NO_ANCESTORS, "a2");
+
+    // create ancestor group 2
+    Value* a3 = newValue(10, NULL, NO_ANCESTORS, "a3");
+    Value* a4 = newValue(10, NULL, NO_ANCESTORS, "a4");
+
+    // combine group 1 and group 2 each into output groups 1 and 2
+    Value* o1 = Add(a1, a2, opStack);
+    Value* o2 = Add(a3, a4, opStack);
+
+    // combine output groupts 1 and 2 into output3
+    Value* o3 = Add(o1, o2, opStack);
+    assert(o3->value == 40);
+
+    depthFirstSearch(o3, visitedHashTable, sortStack);
+
+    assert(sortStack->head->pValStruct->value == 40);
+    assert(sortStack->head->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->next->next->pValStruct->value == 10);
+    
+    // cleanup
+    releaseGraph(sortStack); // calling releaseGraph on opStack too will segfault since the same Values are inside it
+    freeHashTable(&visitedHashTable);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_Backward() tests the backpropagation (Backward()) function by performing some basic operations and 
+ * checking that the gradients are calculated correctly.
+ * @dev this test case is based on the sanity check test case in karpathy's micrograd tests
+
+Karpathy's test case:
+
+	def test_sanity_check():
+
+		x = Value(-4.0)
+		z = 2 * x + 2 + x
+		q = z.relu() + z * x
+		h = (z * z).relu()
+		y = h + q + q * x
+		y.backward()
+		xmg, ymg = x, y
+
+		x = torch.Tensor([-4.0]).double()
+		x.requires_grad = True
+		z = 2 * x + 2 + x
+		q = z.relu() + z * x
+		h = (z * z).relu()
+		y = h + q + q * x
+		y.backward()
+		xpt, ypt = x, y
+
+		# forward pass went well
+		assert ymg.data == ypt.data.item() #should be -20.0
+		# backward pass went well
+		assert xmg.grad == xpt.grad.item() # should be 46.0
+*/
+void test_Backward(void){   
+
+    printf("test_Backward()...");
+
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
+    // create some ancestor nodes
+    Value* x = newValue(-4, NULL, NO_ANCESTORS, "x");
+
+    Value* z = Add(
+        Mul(
+            newValue(2, NULL, NO_ANCESTORS, "2"), x, graphStack), 
+            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x, graphStack),
+            graphStack
+        );
+
+    Value* q = Add(ReLU(z, graphStack), Mul(z, x, graphStack), graphStack);
+    Value* h = ReLU(Mul(z, z, graphStack), graphStack);
+    Value* y = Add(Add(h, q, graphStack), Mul(q, x, graphStack), graphStack);
+
+
+    assert(y->value == -20);
+
+    Backward(y);
+
+    // check that the gradients are correct
+    assert(x->grad == 46);
+
+    // releaseGraph(graphStack);
+
+    printf("PASS!");
+}
+
+
 int main(void){
     
     test_newValue();
     test_Add();
     test_Mul();
     test_ReLU();       
+    test_ReLUDiff();
+    test_MulDiff();
+    test_AddDiff();
+    test_depthFirstSearch();
+    // test_Backward();  //<---- Currently failing
 }

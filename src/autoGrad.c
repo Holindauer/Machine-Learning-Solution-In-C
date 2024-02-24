@@ -1,5 +1,8 @@
 #include "autoGrad.h"
+#include "hashTable.h"
 #include "lib.h"
+
+// autoGrad.c
 
 //---------------------------------------------------------------------------------------------------------------------- Value Constructor
 
@@ -24,7 +27,7 @@ Value* newValue(double value, Value* ancestors[], int ancestorArrLen, char opStr
 
     // New Node (not created from an operation)
     if (ancestorArrLen == NO_ANCESTORS && ancestors == NULL){
-        v->ancestors == NULL;
+        v->ancestors = NULL;
     }
     // New Node (derived from existing nodes via an operation)
     else if (ancestorArrLen > 0 && ancestors != NULL){  
@@ -48,7 +51,7 @@ Value* newValue(double value, Value* ancestors[], int ancestorArrLen, char opStr
     v->Backward = NULL;
 
     // allocate mem for operation str, then copy 
-    v->opString = (char*)malloc(strlen(opString) + 1); // +1 for \n 
+    v->opString = (char*)malloc(strlen(opString) + 1); // +1 for \0
     assert(v->opString != NULL);
     strcpy(v->opString, opString);
 
@@ -75,7 +78,7 @@ void freeValue(Value** v){
     if ((*v)->opString != NULL){
 
         free((*v)->opString);
-        (*v)->ancestors = NULL;
+        (*v)->opString = NULL;
     }
        
     // free Value struct itself and set to NULL
@@ -230,3 +233,111 @@ Value* ReLU(Value* a, GraphStack* graphStack) {
     return reluValue;
 }
 
+//---------------------------------------------------------------------------------------------------------------------- Backpropragation
+
+/**
+ * @note depthFirstSearch() is a helper function that performs a recursive depth first search on a computational graph 
+ * built up from applying Value operations (Add(), Mul(), ReLU()).
+ * @dev This algorithm works by recursively traversing the computational graph until the deepest point is reached. At 
+ * that point, before the recursive calls return, they push the Value ptr at that point in the graph to a GraphStack 
+ * @dev a HashTable is used to ensure that values are only pushed to the graphStack once, even if encountered twice 
+ * @param value is a value ptr somewhere in the computational graph
+ * @param visitedHashTable is a HashTable struct ptr created prior to this call
+ * @param sortedStack is a GraphStack struct ptr that stores the linear ordering 
+*/
+void depthFirstSearch(Value* value, HashTable* visitedHashTable, GraphStack* sortedStack){
+    assert(value != NULL);
+    assert(visitedHashTable != NULL);
+    assert(sortedStack != NULL);
+
+    printf("Inside Depth First Search -- len stack: %d\n", sortedStack->len);
+
+    // exit call if value has alread been visited
+    if (isInHashTable(visitedHashTable, value)){
+        return;
+    }
+
+    // otherwise store as visited in the hash table
+    insertHashTable(visitedHashTable, value);
+
+    // Recursive call to visit all ancestors of current node
+    for (int i = 0; value->ancestors != NULL && value->ancestors[i] != NULL; i++){
+
+        depthFirstSearch(value->ancestors[i], visitedHashTable, sortedStack);
+    }
+
+    // push current node onto the stack after recursion returns
+    printf("Exit Recursionm\n");
+
+    pushGraphStack(sortedStack, value);
+    
+    printf("value pushed");
+}
+
+/**
+ * @note reverseTopologicalSort() applies a reverse topological sort of the computational graph from a single Value struct
+ * ptr as the starting point.
+ * @dev a topological sort is a linear ordering of nodes in a directed acyclic graph such that every directed edge uv from 
+ * u to v comes before v in the ordering.
+ * 
+*/
+void reverseTopologicalSort(Value* start, GraphStack* sortedStack){
+
+    printf("\nInside Reverse Topologial Sort");
+
+    assert(start != NULL);
+    assert(sortedStack != NULL);
+
+    // hash table for checking if nodes have already been visited
+    HashTable* visitedHashTable = newHashTable(HASHTABLE_SIZE);
+    assert(visitedHashTable != NULL);  
+
+    // kickstart recursive depth first search on graph
+    depthFirstSearch(start, visitedHashTable, sortedStack);
+
+    // reverse GraphStack so the start is at the graph output 
+    reverseGraphStack(&sortedStack);
+}
+
+
+/**
+ * @note Backward() applies backpropagration of the gradient wrt to all ancestors in the computational graph
+ * that produced the inputted value.
+ * @param value is the leading output of the computational graph to backpropogate
+ * 
+*/
+void Backward(Value* value){
+
+    printf("\nInside Backward()");
+
+    assert(value != NULL);
+
+    // create a new GraphStack to store the reverse topologically sorted graph
+    GraphStack* sortedStack = newGraphStack();
+
+    printf("\nGraph Stack Created");
+
+    // perform reverse topological sort on graph
+    reverseTopologicalSort(value, sortedStack);
+
+    printf("\nreverse Topo Sort Complete");
+
+    // grad must be 1 to kickstart backprop
+    value->grad = 1.0;
+
+    // get head node
+    GraphNode* graphNode = sortedStack->head;
+
+    // compute gradient
+    while(graphNode != NULL && graphNode->pValStruct != NULL){
+
+        // compute the current node's partial derivative
+        graphNode->pValStruct->Backward(graphNode->pValStruct);
+
+        // get next node
+        graphNode = graphNode->next;
+    }
+
+    // free the sort stack
+    releaseGraph(sortedStack);
+}   

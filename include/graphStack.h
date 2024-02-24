@@ -2,6 +2,8 @@
 #include "value.h"
 #include "autoGrad.h"
 
+// graphStack.h
+
 /**
  * @notice GraphNode is used to track each node within a stack of Value structs (GraphStack). 
  * @dev Each time a Value is created during the forward pass, it is stored in a GraphNode and 

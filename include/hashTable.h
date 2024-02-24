@@ -2,6 +2,8 @@
 #include "value.h"
 #include "autoGrad.h"
 
+// hashTable.h
+
 /**
  * @note hashTable.h contains the struct definitions for a hashTable that stores pointers to Value structs
  * @dev this hash table implementation is used in the Backward() funciton of autoGrad.c during a reverse 

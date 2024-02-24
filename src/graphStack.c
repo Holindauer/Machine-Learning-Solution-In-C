@@ -1,6 +1,8 @@
 #include "lib.h"
 #include "autoGrad.h"
 
+// graphStack.c
+
 /**
  * @note newGraphStack() allocates memory for a GraphStack struct
  * @return ptr to the new graph stack

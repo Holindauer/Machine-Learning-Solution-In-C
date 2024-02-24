@@ -1,5 +1,4 @@
-#include "autoGrad.h"
-#include "hashTable.h"
+#include "lib.h"
 
 /**
  * @test test_hashValuePtr() tests the hashValuePtr() func, ensuring that the same Value ptr will
