@@ -145,64 +145,6 @@ void test_releaseGraph(void){
 }
 
 /**
- * @test test_reverseGraphStack() checks to make sure the reverseGraphStack() func works as expected
-*/
-void test_reverseGraphStack(void){
-
-    printf("test_reverseGraphStack()...");
-
-    // init some Values to push to the stack
-    Value* v1 = newValue(1, NULL, NO_ANCESTORS, "v1");
-    Value* v2 = newValue(2, NULL, NO_ANCESTORS, "v2");
-    Value* v3 = newValue(3, NULL, NO_ANCESTORS, "v3");
-    Value* v4 = newValue(4, NULL, NO_ANCESTORS, "v4");
-    Value* v5 = newValue(5, NULL, NO_ANCESTORS, "v5");
-    Value* v6 = newValue(6, NULL, NO_ANCESTORS, "v6");
-
-    // init GraphStack
-    GraphStack* graphStack = newGraphStack();
-
-    // push to the stack
-    pushGraphStack(graphStack, v1);
-    pushGraphStack(graphStack, v2);
-    pushGraphStack(graphStack, v3);
-    pushGraphStack(graphStack, v4);
-    pushGraphStack(graphStack, v5);
-    pushGraphStack(graphStack, v6);
-
-    // check stack order is correct
-    assert(graphStack->len == 7);
-    assert(v6 == graphStack->head->pValStruct);
-    assert(v5 == graphStack->head->next->pValStruct);
-    assert(v4 == graphStack->head->next->next->pValStruct);
-    assert(v3 == graphStack->head->next->next->next->pValStruct);
-    assert(v2 == graphStack->head->next->next->next->next->pValStruct);
-    assert(v1 == graphStack->head->next->next->next->next->next->pValStruct);
-    
-    // reverse stack
-    reverseGraphStack(&graphStack);
-
-    // check stack order is reversed
-    assert(graphStack->len == 7);
-    assert(v1 == graphStack->head->pValStruct);
-    assert(v2 == graphStack->head->next->pValStruct);
-    assert(v3 == graphStack->head->next->next->pValStruct);
-    assert(v4 == graphStack->head->next->next->next->pValStruct);
-    assert(v5 == graphStack->head->next->next->next->next->pValStruct);
-    assert(v6 == graphStack->head->next->next->next->next->next->pValStruct);
-    
-
-    // release the graph
-    releaseGraph(graphStack);
-    assert(graphStack-> head != NULL);
-    assert(graphStack->head->next == NULL);
-    assert(graphStack->head->pValStruct == NULL);
-
-
-    printf("PASS!\n");
-}
-
-/**
  * @test test_graphPreservingStackRelease() checks to make sure that when calling the graphPreservingStackRelease()
  * function, the Value structs within the graph being deallocated are preserved. Callling releaseGraph() on the 
  * operations graphStack should still be possible and not cause double frees.
@@ -268,7 +210,6 @@ int main(void){
     test_pushGraphStack();
     test_popGraphStack();
     test_releaseGraph();
-    test_reverseGraphStack();
     test_graphPreservingStackRelease();
 
     return 0;

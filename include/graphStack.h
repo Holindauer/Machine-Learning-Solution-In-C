@@ -34,5 +34,4 @@ GraphStack* newGraphStack(void);
 void pushGraphStack(GraphStack* stack, Value* value);
 void popGraphStack(GraphStack* stack);
 void releaseGraph(GraphStack* graphStack);
-void reverseGraphStack(GraphStack** stack);
 void graphPreservingStackRelease(GraphStack** graphStack);

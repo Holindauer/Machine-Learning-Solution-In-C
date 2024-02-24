@@ -426,13 +426,13 @@ void test_reverseTopologicalSort(void){
     assert(sortStack->head->pValStruct != NULL );
 
     // verify order is correct
-    assert(sortStack->head->pValStruct->value == 10);
-    assert(sortStack->head->next->pValStruct->value == 10);
-    assert(sortStack->head->next->next->pValStruct->value == 20);
+    assert(sortStack->head->pValStruct->value == 40);
+    assert(sortStack->head->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->pValStruct->value == 10);
     assert(sortStack->head->next->next->next->pValStruct->value == 10);
-    assert(sortStack->head->next->next->next->next->pValStruct->value == 10);
-    assert(sortStack->head->next->next->next->next->next->pValStruct->value == 20);
-    assert(sortStack->head->next->next->next->next->next->next->pValStruct->value == 40);
+    assert(sortStack->head->next->next->next->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->next->next->pValStruct->value == 10);
 
     // cleanup
     releaseGraph(sortStack);
@@ -476,25 +476,30 @@ void test_Backward(void){
     printf("test_Backward()...");
 
     // Create a graph stack to use for the operations
-    GraphStack* graphStack = newGraphStack();
+    GraphStack* opStack = newGraphStack();
 
     // create some ancestor nodes
     Value* x = newValue(-4, NULL, NO_ANCESTORS, "x");
+    assert(x->value == -4);
 
     Value* z = Add(
         Mul(
-            newValue(2, NULL, NO_ANCESTORS, "2"), x, graphStack), 
-            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x, graphStack),
-            graphStack
+            newValue(2, NULL, NO_ANCESTORS, "2"), x, opStack), 
+            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x, opStack),
+            opStack
         );
+    assert(z->value == -10);
 
-    Value* q = Add(ReLU(z, graphStack), Mul(z, x, graphStack), graphStack);
-    Value* h = ReLU(Mul(z, z, graphStack), graphStack);
-    Value* y = Add(Add(h, q, graphStack), Mul(q, x, graphStack), graphStack);
+    Value* q = Add(ReLU(z, opStack), Mul(z, x, opStack), opStack);
+    assert(q->value == 40);
 
+    Value* h = ReLU(Mul(z, z, opStack), opStack);
+    assert(h->value == 100);
 
+    Value* y = Add(Add(h, q, opStack), Mul(q, x, opStack), opStack);
     assert(y->value == -20);
 
+    // apply backpropagation
     Backward(y);
 
     assert(y->ancestors != NULL);
@@ -502,9 +507,9 @@ void test_Backward(void){
     // check that the gradients are correct
     assert(x->grad == 46);
 
-    releaseGraph(graphStack);
+    releaseGraph(opStack);
 
-    printf("PASS!");
+    printf("PASS!\n");
 }
 
 

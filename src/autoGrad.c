@@ -259,13 +259,15 @@ void depthFirstSearch(Value* value, HashTable* visitedHashTable, GraphStack* sor
     insertHashTable(visitedHashTable, value);
 
     // Recursive call to visit all ancestors of current node
-    for (int i = 0; value->ancestors != NULL && value->ancestors[i] != NULL; i++){
+    for (int i = 0; i < value->ancestorArrLen; i++){
 
-        depthFirstSearch(value->ancestors[i], visitedHashTable, sortedStack);
+        if (value->ancestors != NULL && value->ancestors[i] != NULL){
+            depthFirstSearch(value->ancestors[i], visitedHashTable, sortedStack);
+        }
     }
 
     // push current node onto the stack after recursion returns
-    pushGraphStack(sortedStack, value);
+    pushGraphStack(sortedStack, value);  
 }
 
 /**
@@ -285,9 +287,6 @@ void reverseTopologicalSort(Value* start, GraphStack** sortedStack){
 
     // kickstart recursive depth first search on graph
     depthFirstSearch(start, visitedHashTable, (*sortedStack));
-
-    // reverse GraphStack so the start is at the graph output 
-    reverseGraphStack(sortedStack);
 }
 
 
@@ -295,35 +294,33 @@ void reverseTopologicalSort(Value* start, GraphStack** sortedStack){
  * @note Backward() applies backpropagration of the gradient wrt to all ancestors in the computational graph
  * that produced the inputted value.
  * @param value is the leading output of the computational graph to backpropogate
- * 
 */
 void Backward(Value* value){
     assert(value != NULL);
 
     // create a new GraphStack to store the reverse topologically sorted graph
-    GraphStack* sortedStack = newGraphStack();
+    GraphStack* sortStack = newGraphStack();
 
     // perform reverse topological sort on graph
-    reverseTopologicalSort(value, &sortedStack);
+    reverseTopologicalSort(value, &sortStack);
 
+    // grad must be 1 to kickstart backprop
+    value->grad = 1.0;
 
+    // get head node
+    GraphNode* graphNode = sortStack->head;
 
-    // // grad must be 1 to kickstart backprop
-    // value->grad = 1.0;
+    // compute gradient of graph
+    while (graphNode != NULL && graphNode->pValStruct != NULL){        
 
-    // // get head node
-    // GraphNode* graphNode = sortedStack->head;
+        // compute partial derivative of next node
+        if (graphNode->pValStruct->Backward != NULL){
+            graphNode->pValStruct->Backward(graphNode->pValStruct);
+        }
 
-    // // compute gradient
-    // while(graphNode != NULL && graphNode->pValStruct != NULL){
+        // get next
+        graphNode = graphNode->next;
+    }
 
-    //     // compute the current node's partial derivative
-    //     graphNode->pValStruct->Backward(graphNode->pValStruct);
-
-    //     // get next node
-    //     graphNode = graphNode->next;
-    // }
-
-    // free the sort stack
-    // releaseGraph(sortedStack);
+    graphPreservingStackRelease(&sortStack);
 }   
