@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <time.h>
+#include <math.h>
 
 // header files
 #include "value.h"
@@ -14,6 +16,7 @@
 #include "graphStack.h"
 #include "hashTable.h"
 #include "backward.h"
+#include "mlp.h"
 
 // macros
 #define NO_ANCESTORS 0
