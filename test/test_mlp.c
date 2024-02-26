@@ -90,10 +90,12 @@ void test_newMLP(void){
         layer = layer->next;
     }
 
+    // cleanup
+    freeMLP(&mlp);
+    assert(mlp == NULL);
+
     printf("PASS!\n");
 }
-
-
 
 
 int main(void){

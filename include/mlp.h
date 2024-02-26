@@ -45,3 +45,4 @@ typedef struct {
 Layer* newLayer(int inputSize, int outputSize);
 void freeLayer(Layer** layer);
 MLP* newMLP(int inputSize, int layerSizes[], int numLayers);
+void freeMLP(MLP** mlp);

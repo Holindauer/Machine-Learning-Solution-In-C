@@ -141,3 +141,32 @@ MLP* newMLP(int inputSize, int layerSizes[], int numLayers){
     return mlp;
 }
 
+
+/**
+ * @note free mlp frees all memory inside an mlp struct
+*/
+void freeMLP(MLP** mlp){
+
+    // get first layer
+    Layer* layer = (*mlp)->inputLayer;
+    Layer* next = NULL;
+
+    // free all layers
+    while (layer != NULL){
+
+        next = layer->next;
+
+        freeLayer(&layer);
+        assert(layer == NULL);
+
+        layer = next;
+    }
+
+    // release graph stack
+    releaseGraph((*mlp)->graphStack);
+
+    // free mlp struct
+    free(*mlp);
+    *mlp = NULL;
+}
+
