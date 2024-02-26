@@ -65,11 +65,7 @@ void freeLayer(Layer** layer){
 
         freeValue(&((*layer)->weights[i]));
         assert((*layer)->weights[i] == NULL);
-    }
-
-    // free weights array of Value struct ptrs
-    free((*layer)->weights);
-    (*layer)->weights = NULL;
+    } 
 
     // free Value structs in biases and output vector
     for (int i = 0; i < (*layer)->outputSize; i++){
@@ -83,9 +79,12 @@ void freeLayer(Layer** layer){
         assert((*layer)->output[i] == NULL);
     }
 
-    // free bias and out arrays of Value struct ptrs
+    // free weights, bias, output arrays of Value struct ptrs
+    free((*layer)->weights);
     free((*layer)->biases);
     free((*layer)->output);
+
+    (*layer)->weights = NULL;
     (*layer)->biases = NULL;
     (*layer)->output = NULL;
 
@@ -121,7 +120,7 @@ MLP* newMLP(int inputSize, int layerSizes[], int numLayers){
     Layer* currentLayer = NULL;
 
     // create the rest of the layers
-    for (int i; i<numLayers; i++){
+    for (int i=1; i<numLayers; i++){
 
         // allocate mem and init layer
         currentLayer = newLayer(layerSizes[i-1], layerSizes[i]);

@@ -56,14 +56,13 @@ void test_newMLP(void){
 
     // validate member init
     assert(mlp->numLayers = numLayers);
+
+    // input layer sizes
     assert(mlp->inputLayer->inputSize == inputSize);
     assert(mlp->inputLayer->outputSize = layerSizes[0]);
 
-
+    // output layer sizes
     assert(mlp->outputLayer->inputSize == layerSizes[2]);
-
-    printf("\noutput size: %d\n", mlp->outputLayer->outputSize);
-
     assert(mlp->outputLayer->outputSize == layerSizes[3]);
 
     // validate graph stack init
@@ -82,9 +81,14 @@ void test_newMLP(void){
             assert(layer->weights[i]->value > -1 || layer->weights[i]->value < 1);
         }
 
+        // validate biases and output vectors
+        for (int i=0; i<layer->outputSize; i++){
+            assert(layer->biases[i]->value > -1 || layer->biases[i]->value < 1);
+            assert(layer->output[i]->value == 0);
+        }
+
         layer = layer->next;
     }
-
 
     printf("PASS!\n");
 }
@@ -95,7 +99,7 @@ void test_newMLP(void){
 int main(void){
 
     test_newLayer();
-    test_newMLP(); // currently failing
+    test_newMLP(); 
 
     return 0;
 }
