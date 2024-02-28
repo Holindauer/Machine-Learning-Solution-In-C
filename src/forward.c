@@ -56,7 +56,25 @@ Value** MultiplyWeights(Layer* layer, Value** input, GraphStack* graphStack){
     return output;
 }
 
+/**
+ * @note AddBias performs elementwise vector addition on the output of MultiplyWeights() with the biases from 
+ * a Layer struct using the Value operations from autograd.c
+ * @dev Elementwise addition is done in place on the input array
+ * @param layer the layer in which to use its bias matrix
+ * @param input input vecctor represented as array of Value struct ptrs 
+ * @param graphStack the graph stack of the mlp of which the layer came from
+ * @return A ptr to the input vector array
+*/
+Value** AddBias(Layer* layer, Value** input, GraphStack* graphStack){
 
+    // Add biases to input vector in place
+    for (int i = 0; i<layer->outputSize; i++){
+        input[i] = Add(layer->biases[i], input[i], graphStack);
+    }
+
+    // retrun ptr to input vector acted on in place
+    return input;
+}
 
 /**
  * @note Forward() is used to perform the forward pass of an MLP struct. 
@@ -71,6 +89,7 @@ Value** Forward(MLP* mlp, Value** input){
 
     // compute output of first layer 
     Value** output = MultiplyWeights(layer, input, mlp->graphStack);
+    output = AddBias(layer, output, mlp->graphStack);
 
     // compute next hidden states
     for (int i=1; i<mlp->numLayers; i++){
@@ -79,7 +98,7 @@ Value** Forward(MLP* mlp, Value** input){
         layer = layer->next;
 
         output = MultiplyWeights(layer, output, mlp->graphStack);
-
+        output = AddBias(layer, output, mlp->graphStack);
     }
 
 }
