@@ -71,6 +71,10 @@ void test_MultiplyWeights(void){
     printf("PASS!\n");
 }
 
+/**
+ * @test test_AddBias() checks that the elementwise addition of arrays of Value ptrs done by AddBias()
+ * is carried out as expected.
+*/
 void test_AddBias(void){
 
     printf("test_AddBias()...");    
@@ -109,6 +113,41 @@ void test_AddBias(void){
     printf("PASS!\n");
 }
 
+/**
+ * @test test_ApplyReLU() tests that relu is applied to an output vector as is expected when calling ApplyReLU()
+*/
+void test_ApplyReLU(void){
+
+    printf("test_ApplyReLU()...");    
+
+    // init input vector
+    int inputSize = 5;
+    Value** input = newOutputVector(inputSize);
+    input[0]->value = 1;
+    input[1]->value = 2;
+    input[2]->value = 3;  
+    input[3]->value = 4;
+    input[4]->value = 5;
+
+    // create graph stack for the operations
+    GraphStack* graphStack = newGraphStack();
+
+    // create layer
+    int outputSize = 5;
+    Layer* layer = newLayer(inputSize, outputSize);
+
+    // Add biases to input vector
+    Value** output = ApplyReLU(layer, input, graphStack);
+
+    // validate output when vector of ones added to input 
+    assert(output[0]->value == 1);
+    assert(output[1]->value == 2);
+    assert(output[2]->value == 3);
+    assert(output[3]->value == 4);
+    assert(output[4]->value == 5);
+
+    printf("PASS!\n");
+}
 
 // /**
 //  * @test test_Forward() tests to make sure backpropgation will run following an mlp forward pass 
@@ -155,6 +194,7 @@ int main(void){
     test_newOutputVector();
     test_MultiplyWeights();
     test_AddBias();
+    test_ApplyReLU();
     // test_Forward();
 
     return 0;

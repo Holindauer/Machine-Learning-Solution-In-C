@@ -77,6 +77,26 @@ Value** AddBias(Layer* layer, Value** input, GraphStack* graphStack){
 }
 
 /**
+ * @note ApplyReLU() applies elementwise ReLU() to the input vector array of Value Struct ptrs
+ * @dev Elementwise ReLU is done in place on the input array
+ * @param layer the layer of which this output vector is being computed for (to get dimmensions)
+ * @param input input vecctor represented as array of Value struct ptrs 
+ * @param graphStack the graph stack of the mlp of which the layer came from
+ * @return A ptr to the input vector array
+*/
+Value** ApplyReLU(Layer* layer, Value** input, GraphStack* graphStack){
+
+    // applie relue to all elements of the input
+    for (int i = 0; i<layer->outputSize; i++){
+        input[i] = ReLU(input[i], graphStack);
+    }
+
+    // return ptr to input vector acted on in place
+    return input;
+}
+
+
+/**
  * @note Forward() is used to perform the forward pass of an MLP struct. 
  * @dev 
  * 
