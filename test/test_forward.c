@@ -1,152 +1,252 @@
-#include "macros.h"
-#include "structs.h"
-#include "libraries.h"
+#include "lib.h"
+
 
 
 /**
- * @notice test_MultiplyWeights() tests gradient tracked matrix multiplication for a layer and it's input
+ * @test test_newOutputVector() ensures that the array of Value ptrs returned by newOutputVector() are
+ * initialized to zero
 */
-void test_MultiplyWeights(){
+void test_newOutputVector(void){
 
-    // Create a graph stack to use for the operations
-    GraphStack* graphStack = newGraphStack();
+    printf("test_newOutputVector()...");
 
+    Value** output = newOutputVector(15);
+    assert(output != NULL);
 
-    // reusing initOutputVector() for input
-    Value** input = initOutputVector(3);
+    // validate init
+    for (int i=0; i<15; i++){
+        assert(output[i]->value == 0);
+    }
+    
+    for (int i=0; i<15; i++){
+        freeValue(&output[i]);
+    } 
+    free(output);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_MultiplyWeights() tests that the MultiplyWeights() function from forward.c correctly 
+ * computes matrix vector multiplication using autograd.c Value operations
+*/
+void test_MultiplyWeights(void){
+
+    printf("test_MultiplyWeights()...");
+
+    // init input vector
+    int inputSize = 5;
+    Value** input = newOutputVector(inputSize);
     input[0]->value = 1;
     input[1]->value = 2;
-    input[2]->value = 3;
+    input[2]->value = 3;  
+    input[3]->value = 4;
+    input[4]->value = 5;
+
+    // create graph stack for the operations
+    GraphStack* graphStack = newGraphStack();
 
     // create layer
-    Layer* layer = malloc(sizeof(Layer));
-    layer->inputSize = 3;
-    layer->outputSize = 4;
-    layer->weights = initWeights(3, 4);   
-    layer->outputVector = initOutputVector(4);
+    int outputSize = 3;
+    Layer* layer = newLayer(inputSize, outputSize);
 
-    // I'm going to reset all weights to 1 for testing purposes
-    for(int i = 0; i < 12; i++){
+    // reset all weights to 1 for testing purposes
+    for(int i = 0; i < 15; i++){
         layer->weights[i]->value = 1;
     }
 
-    MultiplyWeights(layer, input, graphStack);
+    // multiply weights
+    Value** output = MultiplyWeights(layer, input, graphStack);
 
-    assert(layer->outputVector[0]->value == 6);
-    assert(layer->outputVector[1]->value == 6);
-    assert(layer->outputVector[2]->value == 6);
+    // check that dot product of input vector w/ones vector equals 15
+    assert(output[0]->value == 15);
+    assert(output[1]->value == 15);
+    assert(output[2]->value == 15);
 
-    // Small backprop test 
-    // We'll sum together the output vector and backpropagate the sum to the input
-    // @note: this is  not an extensive test for backprop. More so just to check that the function runs
-    Value* sum = Add(layer->outputVector[2], Add(layer->outputVector[0], layer->outputVector[1], graphStack), graphStack);
+
+    //cleanup
+    releaseGraph(graphStack);
+    freeLayer(&layer);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_AddBias() checks that the elementwise addition of arrays of Value ptrs done by AddBias()
+ * is carried out as expected.
+*/
+void test_AddBias(void){
+
+    printf("test_AddBias()...");    
+
+    // init input vector
+    int inputSize = 5;
+    Value** input = newOutputVector(inputSize);
+    input[0]->value = 1;
+    input[1]->value = 2;
+    input[2]->value = 3;  
+    input[3]->value = 4;
+    input[4]->value = 5;
+
+    // create graph stack for the operations
+    GraphStack* graphStack = newGraphStack();
+
+    // create layer
+    int outputSize = 5;
+    Layer* layer = newLayer(inputSize, outputSize);
+
+    // reset all biases to 1 for testing purposes
+    for(int i = 0; i < 5; i++){
+        layer->biases[i]->value = 1;
+    }
+
+    // Add biases to input vector
+    Value** output = AddBias(layer, input, graphStack);
+
+    // validate output when vector of ones added to input 
+    assert(output[0]->value == 2);
+    assert(output[1]->value == 3);
+    assert(output[2]->value == 4);
+    assert(output[3]->value == 5);
+    assert(output[4]->value == 6);
+
+    // cleanup
+    releaseGraph(graphStack);
+    freeLayer(&layer);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_ApplyReLU() tests that relu is applied to an output vector as is expected when calling ApplyReLU()
+*/
+void test_ApplyReLU(void){
+
+    printf("test_ApplyReLU()...");    
+
+    // init input vector
+    int inputSize = 5;
+    Value** input = newOutputVector(inputSize);
+    input[0]->value = 1;
+    input[1]->value = 2;
+    input[2]->value = 3;  
+    input[3]->value = 4;
+    input[4]->value = 5;
+
+    // create graph stack for the operations
+    GraphStack* graphStack = newGraphStack();
+
+    // create layer
+    int outputSize = 5;
+    Layer* layer = newLayer(inputSize, outputSize);
+
+    // Add biases to input vector
+    Value** output = ApplyReLU(layer, input, graphStack);
+
+    // validate output when vector of ones added to input 
+    assert(output[0]->value == 1);
+    assert(output[1]->value == 2);
+    assert(output[2]->value == 3);
+    assert(output[3]->value == 4);
+    assert(output[4]->value == 5);
+
+    // cleanup
+    releaseGraph(graphStack);
+    freeLayer(&layer);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_Forward() tests to make sure backpropgation will run following an mlp forward pass, As well as making 
+ * sure that calling backward on a scalar outp from the forward pass doesn't break the program.
+*/
+void test_Forward(void){
+
+    printf("test_Forward()...");
+
+    // create a new mlp
+    int inputSize = 3;
+    int layerSizes[] = {16, 8, 4, 2};
+    int numLayers = 4;
+    MLP* mlp = newMLP(inputSize, layerSizes, numLayers);
+
+    // init input vector
+    Value** input = newOutputVector(inputSize);
+    input[0]->value = 1;
+    input[1]->value = 2;
+    input[2]->value = 3;  
+
+    // run forward pass
+    Value** output = Forward(mlp, input);
+    assert(output != NULL);
+
+
+    // sum ouput vector to test backprop works on layer output
+    Value* sum = Add(output[0], output[1], mlp->graphStack);
+
+    // backpropagate gradient
     Backward(sum);
 
-    // free memory
-    releaseGraph(graphStack);
+    // cleanup
+    releaseGraph(mlp->graphStack);
+    freeMLP(&mlp);
 
-    printf("MultiplyWeights() passed\n");
+    printf("PASS!\n");
 }   
 
 
 /**
- * @notice test_AddBias() tests adding the bias to the output vector of a layer after MultiplyWeights() has been called
- * @dev AddBias() works for a single input vector, not a batch of input vectors.
- * @dev AddBias() uses the autoGrad.c infrastructure to track the forward pass for backpropagation
+ * @test test_repeatedBackward() tests to make sure that backward can be called multiple times following 
+ * a call to releaseGraph(). This addressed issue #1
 */
-void test_AddBias(void){
+void test_repeatedBackward(void){
 
-    // Create a graph stack to use for the operations
-    GraphStack* graphStack = newGraphStack();
-
-    // init a vector of 3 values
-    Value** input = initOutputVector(3);
-    input[0]->value = 1;
-    input[1]->value = 2;
-    input[2]->value = 3;
-
-    // create layer
-    Layer* layer = malloc(sizeof(Layer));
-    layer->inputSize = 3;
-    layer->outputSize = 3;
-    layer->outputVector = initOutputVector(3);
-
-    // I'm going to reset all weights to 1 for testing purposes
-    for(int i = 0; i < 3; i++){
-        layer->outputVector[i]->value = 1;
-    }
-
-    // Add bias
-    AddBias(layer, input, graphStack);
-
-    assert(layer->outputVector[0]->value == 2);
-    assert(layer->outputVector[1]->value == 3);
-    assert(layer->outputVector[2]->value == 4);
-
-
-    // Small backprop test
-    // We'll sum together the output vector and backpropagate the sum to the input
-    // @note: this is  not an extensive test for backprop. More so just to check that the function runs
-    Value* sum = Add(layer->outputVector[2], Add(layer->outputVector[0], layer->outputVector[1], graphStack), graphStack);
-    Backward(sum);
-
-    // free memory
-    releaseGraph(graphStack);
-
-    printf("AddBias() passed\n");
-}
-
-
-/**
- * @notice test_Forward() tests that the forward pass of the network does not crash
-*/
-void test_Forward(){
+    printf("test_repeatedBackward()...");
 
     // create a new mlp
-    int inputSize = 4;
-    int layerSizes[] = {4, 3, 1};
-    int numLayers = 3;
-    MLP* mlp = createMLP(inputSize, layerSizes, numLayers);
+    int inputSize = 3;
+    int layerSizes[] = {16, 8, 4, 2};
+    int numLayers = 4;
+    MLP* mlp = newMLP(inputSize, layerSizes, numLayers);
 
-    printf("MLP created\n");
+    // declare input and output arr
+    Value** input, **output, *sum;
 
-    // create a new input vector
-    Value** input = (Value**)malloc(inputSize * sizeof(Value*));
-    for(int i = 0; i < inputSize; i++){
-        input[i] = newValue(i, NULL, NO_ANCESTORS, "test_Forward");
+    for (int i = 0; i<6; i++){
+
+        // create new input vector for next forward passs
+        input = newOutputVector(inputSize);
+        input[0]->value = 1;
+        input[1]->value = 2;
+        input[2]->value = 3;    
+
+        output = Forward(mlp, input);
+
+        // convert output to a single value
+        sum = Add(output[0], output[1], mlp->graphStack);     
+
+        // backpropagate gradient
+        Backward(sum);  
+
+        // release Graph
+        releaseGraph(mlp->graphStack);
     }
 
-    printf("Input created\n");
+    // cleanup
+    freeMLP(&mlp);
 
-    // run the forward pass
-    Forward(mlp, input);   
-
-    printf("Forward() ran\n");
-    printf("Output: %f\n", mlp->outputLayer->outputVector[0]->value);
-    printf("Output: %f\n", mlp->outputLayer->outputVector[0]->grad);
-    
-
-    // run a backward pass
-    Backward(mlp->outputLayer->outputVector[0]);
-
-    printf("Backward() ran\n");
-
-    releaseGraph(mlp->graphStack);
-    freeMLP(mlp);
-
-    printf("Forward() passed\n");
+    printf("PASS!\n");
 }
-
 
 int main(void){
 
-    printf("\nRunning tests for forward.c\n");
-
+    test_newOutputVector();
     test_MultiplyWeights();
     test_AddBias();
-    // test_Forward();  // <-- currently not passing
-
-    printf("All forward tests passed\n");
+    test_ApplyReLU();
+    test_Forward();
+    test_repeatedBackward();
 
     return 0;
 }

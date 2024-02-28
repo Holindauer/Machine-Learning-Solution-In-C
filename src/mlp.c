@@ -1,242 +1,166 @@
-#include "libraries.h"
-#include "macros.h"
-#include "structs.h"
+#include "lib.h"
 
 
 /**
- * @notice mlp.c contains the implementation of a constructor for a multi-layer perceptron
- * @dev Each layer of an mlp is a node in a doubly linked list
- * @dev Each layer contains a weight matrix and a bias vector. These parameters are represented as
- * Value structs in order to support backpropagation using the autograd implementation from autoGrad.c
+ * @note randDouble is a helper function that returns a double value between -1 and 1
 */
-
-
-/**
- * @notice initWeights() is a helper function for the createMLP() constructor. It initializes the weights
- * (Value structs) for a given layer with random values between -1 and 1. 
-*/
-Value** initWeights(int inputSize, int outputSize){
-
-    Value** weights = (Value**)malloc(inputSize * outputSize * sizeof(Value*));
-
-    for(int i = 0; i < (inputSize * outputSize); i++){
-
-        // create random value between -1 and 1
-        float randomFloat = (float)rand() / (RAND_MAX + 1u) * 2.0f - 1.0f;
-        weights[i] = newValue(randomFloat, NULL, NO_ANCESTORS, "initWeights");
-    }
-
-    return weights;
+double randDouble(void){
+    return (double)rand() / (RAND_MAX + 1u) * 2.0f - 1.0f;
 }
 
 /**
- * @notice initBiases() is a helper function for the createMLP() constructor. It initializes the biases
- * (Value structs) for a given layer with random values between -1 and 1. 
+ * @note newLayer allocates memory for and intializes a new Layer struct. 
+ * @dev weights and biases within the Value struct ptr arrays are initialized to random doubles between -1 and 1
+ * @dev output vector array of Value struct ptrs initialized to Value structs of zeroes
+ * @param inputSize
+ * @param outputSize
 */
-Value** initBiases(int outputSize){
+Layer* newLayer(int inputSize, int outputSize){
 
-    Value** biases = (Value**)malloc(outputSize * sizeof(Value*));
+    // allocate mem for layer
+    Layer* layer = (Layer*)malloc(sizeof(Layer));
+    assert(layer != NULL); 
 
-    for(int i = 0; i < outputSize; i++){
+    // set layer dimmensions
+    layer->inputSize = inputSize;
+    layer->outputSize = outputSize;
 
-        // create random value between -1 and 1
-        float randomFloat = (float)rand() / (RAND_MAX + 1u) * 2.0f - 1.0f;
-        biases[i] = newValue(randomFloat, NULL, 0, "initBiases");
+    // init layer links to NULL
+    layer->next = NULL, layer->prev = NULL;
+
+    // allocate mem for weights, biases, hidden/output state
+    layer->weights = (Value**)malloc(inputSize * outputSize * sizeof(Value*));
+    layer->biases = (Value**)malloc(outputSize * sizeof(Value*));
+    assert(layer->weights != NULL && layer->biases != NULL);
+
+    // init weights
+    for (int i = 0; i < (inputSize * outputSize); i++){
+
+        // weights initialized between -1 and 1
+        layer->weights[i] = newValue(randDouble(), NULL, NO_ANCESTORS, "init weights");
+        assert(layer->weights[i] != NULL);
     }
 
-    return biases;
-}
+    // init biases and output/hidden state
+    for (int i = 0; i < outputSize; i++){
 
-/**
- * @notice initOutputVector() is a helper function for the forward pass of the network. It initializes the output
- * vector for a given layer with Value structs that have a value of 0 and no ancestors.
-*/
-Value** initOutputVector(int outputSize){
-
-    Value** output = (Value**)malloc(outputSize * sizeof(Value*));
-    assert(output != NULL);
-
-    for(int i = 0; i < outputSize; i++){
-        output[i] = newValue(0, NULL, NO_ANCESTORS, "initOutputVector");
+        // init biases between -1 and 1
+        layer->biases[i] = newValue(randDouble(), NULL, NO_ANCESTORS, "init biases");
+        assert(layer->biases[i] != NULL);
     }
 
-    return output;
+    return layer;
 }
 
+
 /**
- * @notice createMLP() is a constructor function that creates a multi-layer perceptron with the specified
- * layer sizes. The weights and biases are initialized with random values between -1 and 1. 
- * @dev The MLP struct is used to store the Layer structs in a doubly linked list. The head and tail pointers
- * are used to access the start and end of the network.
- * @param inputSize The length of the input feature vector
+ * @note newMLP() is a constructor for an MLP struct containing a listed list of Layer structs 
+ * @param inputSize the length of the input feature vector
  * @param layerSizes An array of integers representing the number of neurons in each layer of the network
+ * @param numLayers
 */
-MLP* createMLP(int inputSize, int layerSizes[], int numLayers){
+MLP* newMLP(int inputSize, int layerSizes[], int numLayers){
 
-    // allocate memory for the MLP struct
-    MLP* mlp = (MLP*)malloc(sizeof(MLP));  
+    // allocate mem for layer
+    MLP* mlp = (MLP*)malloc(sizeof(MLP));
     assert(mlp != NULL);
 
-    // allocate memory for the graph stack
+    // create graph stack
     mlp->graphStack = newGraphStack();
+    assert(mlp->graphStack != NULL);
+    
+    // create input layer
+    Layer* prevLayer = newLayer(inputSize, layerSizes[0]); 
+    assert(prevLayer != NULL);
 
-    // allocate memory for the input layer
-    Layer* inputLayer = (Layer*)malloc(sizeof(Layer));
-    assert(inputLayer != NULL);
+    // set link to input layer
+    mlp->inputLayer = prevLayer;
 
-    // set input layer fields
-    inputLayer->inputSize = inputSize;  
-    inputLayer->outputSize = layerSizes[0];
-    inputLayer->prev = NULL;
+    // temp for iteration
+    Layer* currentLayer = NULL;
 
-    // initialize weights and biases for input layer
-    inputLayer->weights = initWeights(inputSize, layerSizes[0]);
-    inputLayer->biases = initBiases(layerSizes[0]);
-    inputLayer->outputVector = initOutputVector(layerSizes[0]);
-
-    // check that memory was allocated
-    assert(inputLayer->weights != NULL);
-    assert(inputLayer->biases != NULL);
-    assert(inputLayer->outputVector != NULL);
-
-    // set links for the input layer of mlp
-    mlp->inputLayer = inputLayer;
-    mlp->numLayers = numLayers;
-
-    // allocate create the rest of the layers
+    // create the rest of the layers
     for (int i=1; i<numLayers; i++){
 
-        // allocate memory for the current layer
-        Layer* currentLayer = (Layer*)malloc(sizeof(Layer));
+        // allocate mem and init layer
+        currentLayer = newLayer(layerSizes[i-1], layerSizes[i]);
         assert(currentLayer != NULL);
 
-        // set current layer fields
-        currentLayer->inputSize = layerSizes[i-1];
-        currentLayer->outputSize = layerSizes[i];
-        currentLayer->prev = inputLayer;
-
-        // initialize weights and biases for current layer
-        currentLayer->weights = initWeights(layerSizes[i-1], layerSizes[i]); 
-        currentLayer->biases = initBiases(layerSizes[i]);
-        currentLayer->outputVector = initOutputVector(layerSizes[i]);
-
-        // check that memory was allocated
-        assert(currentLayer->weights != NULL);
-        assert(currentLayer->biases != NULL);
-        assert(currentLayer->outputVector != NULL);
-
-        // set next pointer for input layer
-        inputLayer->next = currentLayer;
-
-        // set links for the most recent layer
+        // set links
+        prevLayer->next = currentLayer;
         currentLayer->next = NULL;
-        currentLayer->prev = inputLayer;
+        currentLayer->prev = prevLayer;
 
-        // update input layer pointer to current layer
-        inputLayer = currentLayer;
+        // update prev layer
+        prevLayer = currentLayer;
     }
 
-    // set output layer pointer
-    mlp->outputLayer = inputLayer;
+    // set link to output layer
+    mlp->outputLayer = prevLayer;
 
     return mlp;
 }
 
+
 /**
- * @notice zeroGrad() is used in relation to the backward pass of the network. It resets the gradient of all weights
- * and biases to 0.
- * @dev In addition to zeroing the gradients, zeroGrad() also handles deallocation of the computational graph collected 
- * during the forward pass.  
- * @dec As well, in order to ensure that the computational graph for the next example/epoch is new, the MLP argument is
- * copied and dealocated
- * @param mlp is a pointer to an MLP struct to zero the gradients of.
+ * @note freeLayer() frees a layer struct and all memory witin it. This includes all Value structs in the weights and biases
+ * @param layer ptr to Layer struct ptr
 */
-void zeroGrad(MLP* mlp){
+void freeLayer(Layer** layer){
 
-    // grab the first layers of both mlps
-    Layer* layer = mlp->inputLayer;
-    
-    // @dev this should zero the gradients by their initialization so there is no need to zero them again
-    for (int i = 0; i < mlp->numLayers; i++){
+    // free Value structs in weights
+    for (int i = 0; i < (*layer)->outputSize * (*layer)->inputSize; i++){
 
+        freeValue(&((*layer)->weights[i]));
+        assert((*layer)->weights[i] == NULL);
+    } 
 
-        // zero weights
-        for(int j = 0; j < layer->inputSize * layer->outputSize; j++){
+    // free Value structs in biases and output vector
+    for (int i = 0; i < (*layer)->outputSize; i++){
 
-            // copy the value of the weight
-            layer->weights[j]->grad = 0;
-        }
-        for(int j = 0; j < layer->outputSize; j++){
-            
-            // copy the value of the bias
-            layer->biases[j]->grad = 0;
-
-            // also zero the output vector for both grad and val
-            layer->outputVector[j]->grad = 0;
-            layer->outputVector[j]->value = 0;
-        }
-
-        // move to the next layer in both mlps
-        layer = layer->next;
+        // free bias
+        freeValue(&((*layer)->biases[i]));
+        assert((*layer)->biases[i] == NULL);    
     }
 
-    // release the graph from and free old mlp
-    releaseGraph(mlp->graphStack);
+    // free weights, bias, output arrays of Value struct ptrs
+    free((*layer)->weights);
+    free((*layer)->biases);
 
+    (*layer)->weights = NULL;
+    (*layer)->biases = NULL;
+
+    // free layer struct
+    free(*layer);
+    *layer = NULL;
 }
 
 /**
- * @notice freeWeights() is a helper function for the createMLP() destructor. It frees the memory allocated
- * for the weights of a given layer.
+ * @note free mlp frees all memory inside an mlp struct
+ * @param mlp ptr to MLP struct ptr
 */
-void freeWeights(Value** weights, int inputSize, int outputSize){
-    for(int i =0; i < (inputSize * outputSize); i++){
-        freeValue(weights[i]);
+void freeMLP(MLP** mlp){
+
+    // get first layer
+    Layer* layer = (*mlp)->inputLayer;
+    Layer* next = NULL;
+
+    // free all layers
+    while (layer != NULL){
+
+        next = layer->next;
+
+        freeLayer(&layer);
+        assert(layer == NULL);
+
+        layer = next;
     }
-    free(weights);
-}
 
-/**
- * @notice freeBiases() is a helper function for the createMLP() destructor. It frees the memory allocated
- * for the biases of a given layer.
-*/
-void freeBiases(Value** biases, int outputSize){
-    for(int i =0; i < outputSize; i++){
-        freeValue(biases[i]);
-    }
-    free(biases);
-}
+    // release graph stack
+    releaseGraph((*mlp)->graphStack);
 
-/**
- * @notice freeMLP() is a destructor function that frees the memory allocated for the MLP struct and all of its
- * associated layers, weights, and biases.
-*/
-void freeMLP(MLP* mlp){
-
-    Layer* layer =mlp->inputLayer;
-    Layer* nextLayer = layer; 
-
-    for (int i = 0; i < mlp->numLayers; i++){
-
-        // move to the next layer
-        layer = nextLayer;
-
-        // free the weights, biases, and output vector
-        for(int j = 0; j < layer->inputSize * layer->outputSize; j++){
-            freeValue(layer->weights[j]);
-        }
-        for(int j = 0; j < layer->outputSize; j++){
-            freeValue(layer->biases[j]);
-        }
-        free(layer->weights);
-        free(layer->biases);
-        free(layer->outputVector);
-        
-        // set next layer then free current layer
-        nextLayer = layer->next;
-        free(layer);
-   }
-
-   free(mlp);
+    // free mlp struct
+    free(*mlp);
+    *mlp = NULL;
 }
 

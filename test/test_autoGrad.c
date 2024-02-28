@@ -1,89 +1,156 @@
-#include "../include/structs.h"
-
-// test_autoGrad.c
+#include "lib.h"
 
 /**
- * @test test_newValue tests the newValue function by creating a new value node and checking that it was initialized correctly
- * @dev The function creates some ancestor nodes, creates an array of ancestor nodes, and then creates a new value node.
- * @dev The function then checks that the value was initialized correctly.
+ * @helper checks if a new value with no ancestors was initialized properly
 */
-void test_newValue(){
+void check_newValueInitialized(Value* value, int intendedValue, char opString[]){
 
-    // create some ancestor nodes
+    assert(value->ancestorArrLen == 0);
+    assert(value->ancestors == NULL);
+    assert(value->grad == 0);
+    assert(value->value == intendedValue);
+    assert(value->Backward == NULL);
+    assert(strcmp(value->opString, opString) == 0);
+}
+
+/**
+ * @test ensures new values are initialized properly and ancestor mechanism is working correctly
+*/
+void test_newValue(void){
+
+    printf("test_newValue()...");
+
+    // create three values and check they are initialized properly
     Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
-    Value* b = newValue(4, NULL, NO_ANCESTORS, "b");
-    Value* c = newValue(5, NULL, NO_ANCESTORS, "c");
+    check_newValueInitialized(a, 3, "a");
 
-    // create an array of ancestor nodes
+    Value* b = newValue(4, NULL, NO_ANCESTORS, "b");
+    check_newValueInitialized(a, 3, "a");
+
+    Value* c = newValue(5, NULL, NO_ANCESTORS, "c");
+    check_newValueInitialized(a, 3, "a");
+
+    // manually set the ancestors of a new value to  a, b, and c
     Value* ancestors[3] = {a, b, c};
     int ancestorArrLen = 3;
+    Value* v = newValue(9, ancestors, ancestorArrLen, "add");
 
-    // create a new value node
-    Value* v = newValue(10, ancestors, ancestorArrLen, "add");
-
-    // check that the value was initialized correctly
-    assert(v->value == 10);
+    // check init of new value
+    assert(v->value == 9);
     assert(v->grad == 0);
+    assert(strcmp(v->opString, "add") == 0);
+
+    // check ancestors are a, b, and c
     assert(v->ancestors[0] == a);
     assert(v->ancestors[1] == b);
     assert(v->ancestors[2] == c);
-    assert(v->ancestors[0]->value == 3);
-    assert(v->ancestors[1]->value == 4);
-    assert(v->ancestors[2]->value == 5);
-    assert(strcmp(v->opStr, "add") == 0);
 
-    freeValue(v);
-    freeValue(a);
-    freeValue(b);
-    freeValue(c);
+    // cleanup
+    freeValue(&v);
+    assert(v == NULL);
+
+    freeValue(&a);
+    assert(a == NULL);
+
+    freeValue(&b);
+    assert(b == NULL);
+
+    freeValue(&c);
+    assert(c == NULL);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @helper check_emptyGraphStack() ensures that there is only one node in the graph stack and
+ * that its fields are 0. Meant to check that releaseGraph() worked
+*/
+void check_emptyGraphStack(GraphStack* graphStack){
+    assert(graphStack->len == 1);
+    assert(graphStack->head != NULL);
+    assert(graphStack->head->pValStruct == NULL);
+    assert(graphStack->head->next == NULL);
+}
+
+/**
+ * @helper check_graphStackAncestorUpdate() checks that the output Value from an autograd operation contains the 
+ * expected fields.
+ * @param opResult The Value struct that was the result of the operation
+ * @param ancestor1 The first ancestor of the operation
+ * @param ancestor2 The second ancestor of the operation (optiional if op isnt binary)
+ * @param expectedValue The expected value of the operation
+ * @param expectedGrad The expected gradient of the operation
+ * @param ddx The expected type pBackwardFunc ptr to the backward function for the operation
+ * @param opString The expected operation string (e.g. "add", "mull", "relu") 
+ * @param binary A flag indicating if the operation is binary or not
+*/
+void check_opResultFields(
+    Value* opResult, 
+    Value* ancestor1, 
+    Value* ancestor2, 
+    double expectedValue, 
+    double expectedGrad, 
+    pBackwardFunc ddx, 
+    char opString[], 
+    int binary
+    ){
+
+    // assert value correctly added and related fields correctly updated
+    assert(opResult->value == expectedValue);
+    assert(opResult->grad == expectedGrad);
+    assert(opResult->Backward == ddx);
+    assert(strcmp(opResult->opString, opString) == 0);
+    
+    // check ancestors
+    assert(opResult->ancestors[0] == ancestor1 || opResult->ancestors[1] == ancestor1);
+    if (binary){
+        assert(opResult->ancestors[0] == ancestor2 || opResult->ancestors[1] == ancestor2);
+    }
+}
+
+/**
+ * @helper check_graphStackUpdate() checks that the graph stack was updated correctly after an operation
+ * by checking that the head of the graph stack is the result of the operation and that the length of the
+ * graph stack matches expectations.
+*/
+void check_graphStackUpdate(GraphStack* graphStack, Value* expectedHead, int expectedLen){
+
+    // assert resulting value correctly pushed to the graph stack
+    assert(graphStack->head->pValStruct->value == expectedHead->value);
+    assert(graphStack->head->pValStruct == expectedHead);
+    assert(graphStack->len == expectedLen);
 }
 
 
 /**
- * @test test_valueOperations() tests the valueOperations function by performing some basic operations and 
- * checking that the initialized correctly. This test does not check backpropagation.
+ * @test test_Add() tests that the add operation is working correctly
 */
-void test_valueOperations(void){
+void test_Add(void){
 
-    // Create a graph stack to use for the operations
+    printf("test_Add()...");
+
+    // init values to add
+    Value* a = newValue(10, NULL, NO_ANCESTORS, "a");
+    Value* b = newValue(10, NULL, NO_ANCESTORS, "b");
+
+    // init GraphStack for addition
     GraphStack* graphStack = newGraphStack();
 
-    Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
-    Value* b = newValue(4, NULL, NO_ANCESTORS, "b");
-
-    // test addition
+    // Add a and b
     Value* c = Add(a, b, graphStack);
-    assert(c->value == 7);
-    assert(c->grad == 0);
-    assert(c->ancestors[0] == a);
-    assert(c->ancestors[1] == b);
-    assert(strcmp(c->opStr, "add") == 0);
 
-    // test multiplication
-    Value* d = newValue(7, NULL, NO_ANCESTORS, "d");
-    Value* e = Mul(c, d, graphStack);
-    assert(e->value == 49);
-    assert(e->grad == 0);
-    assert(e->ancestors[0] == c);
-    assert(e->ancestors[1] == d);
-    assert(strcmp(e->opStr, "mul") == 0);
+    check_opResultFields(c, a, b, 20, 0, addBackward, "add", BINARY);
 
-    // test relu (positive case)
-    Value* f = ReLU(e, graphStack);
-    assert(f->value == 49);
-    assert(f->grad == 0);
-    assert(f->ancestors[0] == e);
-    assert(strcmp(f->opStr, "relu") == 0);    
+    // assert resulting value correctly pushed to the graph stack
+    check_graphStackUpdate(graphStack, c, 2);
 
-    // test relu (negative case)
-    Value* g = Mul(e, newValue(-1, NULL, NO_ANCESTORS, "neg1"), graphStack);
-    Value* h = ReLU(g, graphStack);
-    assert(h->value == 0);
-    assert(h->grad == 0);
-    assert(h->ancestors[0] == g);
-    assert(strcmp(h->opStr, "relu") == 0);
-
+    // release Graph
     releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+    
+    printf("PASS!\n");
 }
 
 /**
@@ -93,6 +160,8 @@ void test_valueOperations(void){
  * that the function pointer within a value created from the Add() function is outputting the correct value.
 */
 void test_AddDiff(void){
+
+    printf("test_AddDiff()...");
 
     // Create a graph stack to use for the operations
     GraphStack* graphStack = newGraphStack();
@@ -114,8 +183,46 @@ void test_AddDiff(void){
     // check that the gradients are correct
     assert(a->grad == 1);
 
+    // release graph mem
     releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
 }
+
+/**
+ * @test test_Mul() tests that the Mul() operation is working correctly
+*/
+void test_Mul(void){
+
+    printf("test_Mul()...");
+
+    // init values to add
+    Value* a = newValue(10, NULL, NO_ANCESTORS, "a");
+    Value* b = newValue(10, NULL, NO_ANCESTORS, "b");
+
+    // init GraphStack for addition
+    GraphStack* graphStack = newGraphStack();
+
+    // Mul a and b
+    Value* c = Mul(a, b, graphStack);
+
+    check_opResultFields(c, a, b, 100, 0, mulBackward, "mul", BINARY);
+
+    // assert resulting value correctly pushed to the graph stack
+    check_graphStackUpdate(graphStack, c, 2);
+
+    // release Graph
+    releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
 
 /**
  * @test test_MulDiff tests that the Mul() function for the value struct is working correctly when
@@ -124,6 +231,8 @@ void test_AddDiff(void){
  * that the function pointer within a value created from the Mul() function is outputting the correct value.
 */
 void test_MulDiff(void){
+
+    printf("test_MulDiff()...");
 
     // Create a graph stack to use for the operations
     GraphStack* graphStack = newGraphStack();
@@ -146,8 +255,46 @@ void test_MulDiff(void){
     assert(a->grad == 4);
     assert(b->grad == 3);
 
+    // release graph mem
     releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
 }
+
+/**
+ * @test test_ReLU() tests that the ReLU() operation is working correctly
+*/
+void test_ReLU(void){
+
+    printf("test_ReLU()...");
+
+    // init values to add
+    Value* a = newValue(-10, NULL, NO_ANCESTORS, "a");
+
+    // init GraphStack for addition
+    GraphStack* graphStack = newGraphStack();
+
+    // ReLU a
+    Value* c = ReLU(a, graphStack);
+
+    check_opResultFields(c, a, NULL, 0, 0, reluBackward, "relu", UNARY);
+
+    // assert resulting value correctly pushed to the graph stack
+    check_graphStackUpdate(graphStack, c, 2);
+
+    // release Graph
+    releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
+
 
 /**
  * @test test_reluDiff tests that the ReLU() function for the value struct is working correctly when
@@ -155,7 +302,9 @@ void test_MulDiff(void){
  * @note This test is not checking the backward method, which recursively traverses the graph, only
  * that the function pointer within a value created from the ReLU() function is outputting the correct value.
 */
-void test_reluDiff(void){
+void test_ReLUDiff(void){
+
+    printf("test_reluDiff...");
 
     // Create a graph stack to use for the operations
     GraphStack* graphStack = newGraphStack();
@@ -181,12 +330,118 @@ void test_reluDiff(void){
     assert(a->grad == 1);
     assert(b->grad == 0);
 
+    // release graph mem
     releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
 }
 
+/**
+ * @test test_depthFirstSearch() checks to make sure that running depth first search on a computational graph
+ * results in a graph stack that is ordered such that each node in the stack comes before its ancestors.
+*/
+void test_depthFirstSearch(void){
+
+    printf("test_depthFirstSearch()...");
+
+    // init dfs utilities
+    GraphStack* sortStack = newGraphStack();
+    HashTable* visitedHashTable = newHashTable(HASHTABLE_SIZE);
+
+
+    // perform value operations
+    GraphStack* opStack = newGraphStack(); // seperate graph stack needed to perform autograph ops
+
+    // create ancestor group 1
+    Value* a1 = newValue(10, NULL, NO_ANCESTORS, "a1");
+    Value* a2 = newValue(10, NULL, NO_ANCESTORS, "a2");
+
+    // create ancestor group 2
+    Value* a3 = newValue(10, NULL, NO_ANCESTORS, "a3");
+    Value* a4 = newValue(10, NULL, NO_ANCESTORS, "a4");
+
+    // combine group 1 and group 2 each into output groups 1 and 2
+    Value* o1 = Add(a1, a2, opStack);
+    Value* o2 = Add(a3, a4, opStack);
+
+    // combine output groupts 1 and 2 into output3
+    Value* o3 = Add(o1, o2, opStack);
+    assert(o3->value == 40);
+
+    depthFirstSearch(o3, visitedHashTable, sortStack);
+
+    assert(sortStack->head->pValStruct->value == 40);
+    assert(sortStack->head->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->next->next->pValStruct->value == 10);
+    
+    // cleanup
+    releaseGraph(sortStack); // calling releaseGraph on opStack too will segfault since the same Values are inside it
+    freeHashTable(&visitedHashTable);
+
+    printf("PASS!\n");
+}
 
 /**
- * @test test_Backprop() tests the backpropagation (Backward()) function by performing some basic operations and 
+ * @test test_reverseTopologicalSort() tests to make sure that the topological sorted of the computational 
+ * graph within reverseTopologicalSort() correctly ordered nodes such that none come before their ancestors.
+*/
+void test_reverseTopologicalSort(void){
+
+    printf("test_reverseTopologicalSort()...");
+
+    // perform value operations
+    GraphStack* opStack = newGraphStack(); // seperate graph stack needed to perform autograph ops
+
+    // create ancestor group 1
+    Value* a1 = newValue(10, NULL, NO_ANCESTORS, "a1");
+    Value* a2 = newValue(10, NULL, NO_ANCESTORS, "a2");
+
+    // create ancestor group 2
+    Value* a3 = newValue(10, NULL, NO_ANCESTORS, "a3");
+    Value* a4 = newValue(10, NULL, NO_ANCESTORS, "a4");
+
+    // combine group 1 and group 2 each into output groups 1 and 2
+    Value* o1 = Add(a1, a2, opStack);
+    Value* o2 = Add(a3, a4, opStack);
+
+    // combine output groupts 1 and 2 into output3
+    Value* o3 = Add(o1, o2, opStack);
+    assert(o3->value == 40);
+
+    GraphStack* sortStack = newGraphStack();
+
+    // apply reverse topological sort    
+    reverseTopologicalSort(o3, &sortStack);
+
+    // verify stack still exists
+    assert(sortStack != NULL);
+    assert(sortStack->head != NULL);
+    assert(sortStack->head->pValStruct != NULL );
+
+    // verify order is correct
+    assert(sortStack->head->pValStruct->value == 40);
+    assert(sortStack->head->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->pValStruct->value == 20);
+    assert(sortStack->head->next->next->next->next->next->pValStruct->value == 10);
+    assert(sortStack->head->next->next->next->next->next->next->pValStruct->value == 10);
+
+    // cleanup
+    releaseGraph(sortStack);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_Backward() tests the backpropagation (Backward()) function by performing some basic operations and 
  * checking that the gradients are calculated correctly.
  * @dev this test case is based on the sanity check test case in karpathy's micrograd tests
 
@@ -216,52 +471,58 @@ Karpathy's test case:
 		# backward pass went well
 		assert xmg.grad == xpt.grad.item() # should be 46.0
 */
-void test_Backprop(void){   
+void test_Backward(void){   
+
+    printf("test_Backward()...");
 
     // Create a graph stack to use for the operations
-    GraphStack* graphStack = newGraphStack();
+    GraphStack* opStack = newGraphStack();
 
     // create some ancestor nodes
     Value* x = newValue(-4, NULL, NO_ANCESTORS, "x");
+    assert(x->value == -4);
 
     Value* z = Add(
         Mul(
-            newValue(2, NULL, NO_ANCESTORS, "2"), x, graphStack), 
-            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x, graphStack),
-            graphStack
+            newValue(2, NULL, NO_ANCESTORS, "2"), x, opStack), 
+            Add(newValue(2, NULL, NO_ANCESTORS, "2"), x, opStack),
+            opStack
         );
+    assert(z->value == -10);
 
-    Value* q = Add(ReLU(z, graphStack), Mul(z, x, graphStack), graphStack);
-    Value* h = ReLU(Mul(z, z, graphStack), graphStack);
-    Value* y = Add(Add(h, q, graphStack), Mul(q, x, graphStack), graphStack);
+    Value* q = Add(ReLU(z, opStack), Mul(z, x, opStack), opStack);
+    assert(q->value == 40);
 
+    Value* h = ReLU(Mul(z, z, opStack), opStack);
+    assert(h->value == 100);
 
+    Value* y = Add(Add(h, q, opStack), Mul(q, x, opStack), opStack);
     assert(y->value == -20);
 
+    // apply backpropagation
     Backward(y);
+
+    assert(y->ancestors != NULL);
 
     // check that the gradients are correct
     assert(x->grad == 46);
 
-    releaseGraph(graphStack);
+    releaseGraph(opStack);
+
+    printf("PASS!\n");
 }
 
 
-
-
-// run the tests
 int main(void){
-
-    printf("Running Autograd tests...\n");
-
+    
     test_newValue();
-    test_valueOperations();
-    test_AddDiff();
+    test_Add();
+    test_Mul();
+    test_ReLU();       
+    test_ReLUDiff();
     test_MulDiff();
-    test_reluDiff();
-    test_Backprop(); 
-
-    printf("All Autograd Tests Passed!\n\n");
-
-    return 0;
+    test_AddDiff();
+    test_depthFirstSearch();
+    test_reverseTopologicalSort();
+    test_Backward(); 
 }

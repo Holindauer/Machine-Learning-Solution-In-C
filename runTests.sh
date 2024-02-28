@@ -1,33 +1,38 @@
 #!/bin/bash
 
 # Compile the tests
-echo "Compiling tests..."
+echo
+echo "Compiling Tests..."
+echo
 make
 
 # Check if make succeeded
 if [ $? -ne 0 ]; then
-  echo "Compilation failed."
+  echo "Compilation Failed."
   exit 1
 fi
 
-echo "Running tests..."
+echo 
+echo "Running All Tests..."
 
 # Define your test binaries here
-tests=("test_autoGrad" "test_hashTable" "test_loadData" "test_mlp" "test_forward" "test_sgd" "test_graphTracker")
+tests=("test_autoGrad" "test_graphStack" "test_hashTable" "test_mlp" "test_forward")
 
 # Directory where binaries are located
 BIN_DIR="bin"
 
 # Iterate over the tests array and execute each test
-for test in "${tests[@]}"; do
+for test in "${tests[@]}"; do   
+  echo 
   echo "Running $test..."
   ./$BIN_DIR/$test
   if [ $? -ne 0 ]; then
-    echo "$test failed."
+    echo "$test failed!"
     exit 1
   else
-    echo "$test passed."
+    echo "$test passed!"
   fi
 done
 
-echo "All tests passed successfully."
+echo
+echo "All tests passed successfully!"

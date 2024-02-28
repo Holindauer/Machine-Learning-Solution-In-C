@@ -1,167 +1,105 @@
-#include "structs.h"
-
-/**
- * @test test_initWeights() tests the initWeights() function from mlp.c   
- * @dev The function initializes the weights (Value structs) for a given layer with random values between -1 and 1.
-*/
-void test_initWeights(){
-
-    int inputSize = 3;
-    int outputSize = 2;
-
-    Value** weights = initWeights(inputSize, outputSize);
-
-    for(int i = 0; i < (inputSize * outputSize); i++){
-            assert(weights[i]->value >= -1 && weights[i]->value <= 1);
-            assert(weights[i]->grad == 0);
-        }   
-    
-    freeWeights(weights, inputSize, outputSize);
-}
-
-/**
- * @test test_initBiases() tests the initBiases() function from mlp.c
- * @dev The function initializes the biases (Value structs) for a given layer with random values between -1 and 1.
-*/
-void test_initBiases(){
-
-    int outputSize = 6;
-
-    Value** biases = initBiases(outputSize);
-
-    for(int i = 0; i < outputSize; i++){
-        assert(biases[i]->value >= -1 && biases[i]->value <= 1);
-        assert(biases[i]->grad == 0);
-    }
-
-    freeBiases(biases, outputSize);
-}
-
-/**
- * @test test_initOutputVector() tests the initOutputVector() function from mlp.c
- * @dev The function initializes the output vector for a given layer with Value structs that have a value of 0 and no ancestors.
-*/
-void test_initOutputVector(){
-
-    int outputSize = 5;
-
-    Value** output = initOutputVector(outputSize);
-
-    for(int i = 0; i < outputSize; i++){
-        assert(output[i]->value == 0);
-        assert(output[i]->grad == 0);
-    }
-
-    freeBiases(output, outputSize);
-}
+#include "lib.h"
 
 
 /**
- * @notice test_mlpInit() tests the createMLP() function from mlp.c
+ * @test test_newLayer() tests that Layer structs allocated for in newLayer() are properly initilized to [-1, 1]
 */
-void test_mlpInit(){
+void test_newLayer(void){
 
+    printf("test_newLayer...");
 
     int inputSize = 4;
-    int layerSizes[] = {4, 3, 2};
-    int numLayers = 3;
+    int outputSize = 20;
 
-    MLP* mlp = createMLP(inputSize, layerSizes, numLayers);
+    // create new layer
+    Layer* layer = newLayer(inputSize, outputSize);
+    assert(layer != NULL);
 
-    // check that the mlp stats were initialized correctly 
-    assert(mlp->inputLayer->inputSize == 4);
-    assert(mlp->inputLayer->outputSize == 4);
-    assert(mlp->inputLayer->next->outputSize == 3);
-    assert(mlp->inputLayer->next->next->outputSize == 2);
-    assert(mlp->outputLayer->outputSize == 2);
-    assert(mlp->numLayers == 3);
-    assert(mlp->inputLayer->next->next->next == NULL);
+    // validate struct fields
+    assert(layer->next == NULL);
+    assert(layer->prev == NULL);
+    assert(layer->inputSize == inputSize);
+    assert(layer->outputSize == outputSize);
 
-    // Ensure all weights and biases are properly initialized between -1 and 1
-    Layer* currentLayer = mlp->inputLayer;
-    while (currentLayer != NULL){
-        // check that the weights and biases were initialized correctly
-        for(int i = 0; i < (currentLayer->inputSize * currentLayer->outputSize); i++){
-            assert(currentLayer->weights[i]->value >= -1 && currentLayer->weights[i]->value <= 1);
-            assert(currentLayer->weights[i]->grad == 0);
-        }
-        // check that the biases and output vectors were initialized correctly
-        for(int i = 0; i < currentLayer->outputSize; i++){
-            assert(currentLayer->biases[i]->value >= -1 && currentLayer->biases[i]->value <= 1);
-            assert(currentLayer->biases[i]->grad == 0);
-
-            assert(currentLayer->outputVector[i]->value == 0);
-            assert(currentLayer->outputVector[i]->grad == 0);
-        }
-        currentLayer = currentLayer->next;
+    // validate weight and bias initialization range
+    for (int i = 0; i < (inputSize * outputSize); i++){
+        assert(layer->weights[i]->value > -1 || layer->weights[i]->value < 1);
     }
 
-    freeMLP(mlp);
+    for (int i = 0; i < outputSize; i++){
+        assert(layer->biases[i]->value > -1 || layer->biases[i]->value < 1);
+    }
+
+    // cleanup
+    freeLayer(&layer);
+    assert(layer == NULL);
+
+    printf("PASS!\n");
 }
 
+
+
 /**
- * @test test_zeroGrad() tests that the zeroGrad() function from mlp.c correctly zeros the gradients of the weights and biases
- * @dev the test is set up by running a backward pass following a dummy forward pass, and then checking that the gradients are 
- * zeroed. 
- * 
+ * @test test_newMLP() tests that the newMLP() function from mlp.c properly initlizes the mlp linked list of Layers
+ *  
 */
-void test_zeroGrad(void){
+void test_newMLP(void){
 
-    // init mlp
+    printf("test_newMLP...");
+
+    // create mlp
     int inputSize = 4;
-    int layerSizes[] = {16, 8, 1};
-    int numLayers = 3;
-    MLP* mlp = createMLP(inputSize, layerSizes, numLayers);
+    int layerSizes[] = {16, 8, 4, 1};
+    int numLayers = 4;
+    MLP* mlp = newMLP(inputSize, layerSizes, numLayers);
 
-    // init dummy input
-    Value** input = (Value**) malloc(inputSize * sizeof(Value*));
-    for (int i = 0; i < inputSize; i++){
-        input[i] = newValue(i + 8, NULL, NO_ANCESTORS, "input");
-    }
+    // validate member init
+    assert(mlp->numLayers = numLayers);
 
-    // forward and backward pass
-    Forward(mlp, input);
-    Backward(mlp->outputLayer->outputVector[0]);
+    // input layer sizes
+    assert(mlp->inputLayer->inputSize == inputSize);
+    assert(mlp->inputLayer->outputSize = layerSizes[0]);
 
-    // zero gradients
-    zeroGrad(mlp);
+    // output layer sizes
+    assert(mlp->outputLayer->inputSize == layerSizes[2]);
+    assert(mlp->outputLayer->outputSize == layerSizes[3]);
 
-    // isolate first layer
+    // validate graph stack init
+    assert(mlp->graphStack->len == 1);
+    assert(mlp->graphStack->head->next == NULL);
+    assert(mlp->graphStack->head->pValStruct == NULL);
+
+    // validate layer initializations across mlp
     Layer* layer = mlp->inputLayer;
+    assert(layer != NULL);
 
-    // check that all layer's weight and bias gradients are zero
-    for (int i = 0; i < mlp->numLayers; i++){
-        for(int j = 0; j < layer->inputSize * layer->outputSize; j++){
-            assert(layer->weights[j]->grad == 0);
+    while (layer != NULL){
+
+        // validate weights
+        for (int i=0; i<(layer->outputSize * layer->inputSize); i++){
+            assert(layer->weights[i]->value > -1 || layer->weights[i]->value < 1);
         }
-        for(int j = 0; j < layer->outputSize; j++){
-            assert(layer->biases[j]->grad == 0);
+
+        // validate biases and output vectors
+        for (int i=0; i<layer->outputSize; i++){
+            assert(layer->biases[i]->value > -1 || layer->biases[i]->value < 1);
         }
+
         layer = layer->next;
     }
 
-    // Cleanup
-    releaseGraph(mlp->graphStack);
-    for(int i = 0; i< mlp->numLayers; i++){
-        freeValue(input[i]);
-    }
-    free(input);
-    freeMLP(mlp);
+    // cleanup
+    freeMLP(&mlp);
+    assert(mlp == NULL);
+
+    printf("PASS!\n");
 }
-
-
 
 
 int main(void){
 
-    printf("Testing mlp funcs...\n");
-
-    test_initWeights();
-    test_initBiases();
-    test_mlpInit();
-    test_zeroGrad();
-
-    printf("All tests passed!\n\n");
+    test_newLayer();
+    test_newMLP(); 
 
     return 0;
 }

@@ -1,135 +1,156 @@
-#include "libraries.h"
-#include "macros.h"
-#include "structs.h"
+#include "autoGrad.h"
+#include "hashTable.h"
+#include "lib.h"
+
+// autoGrad.c
+
+//---------------------------------------------------------------------------------------------------------------------- Value Constructor
 
 /**
- * @notice autoGrad.c is where the functionality for reverse mode automatic differentiation is implemented.
- * @notice This implemenation is based on Andrew Karpathy's micrograd. https://github.com/karpathy/micrograd
- * @dev The central struct involved in autoGrad.c is the Value struct, which represents a single value in a directed 
- * acyclic computational graph of data in the nn forward pass. The graph is constructed as operations are performed.
- * These operations are simple enough that their derivatives are easily calculated (adds, multiplies, etc).
- * By chaining together these simple derivatives backwards through the graph, the grad of cost wrt each node can be calculated.
- * @dev Value structs also contain a pointer to a function that is used to calculate the derivative of the operation
- * that produced the value
- * @dev calling the function pointed to will populate the gradient across the entire graph. 
- * @dev Each value struct will also contain an array of pointer the ancestor values that created it. This is how the
- * graph is traversed in reverse to calculate the gradients.
- * 
+ * @note newValue() allocates memory for a Value struct and initializes its fields given passed arguments
+ * @param value double to set the value ofthe Value struct to. 
+ * @param ancestors optional array of ptrs to ancestor Value structs that created this Value
+ * @param ancestorsArrLen The integer number of ancestors in the array
+ * @param opString A string identifying the operation that created this node
+ * @return A ptr to the newly created Value struct.
 */
+Value* newValue(double value, Value* ancestors[], int ancestorArrLen, char opString[]){
 
-/**
- * @notice newValue allocates memory for a new Value struct and initializes it with the given value,
- * ancestors, and operation string. It returns a pointer to the new Value struct. 
- * @param _value The scalar/double value of the node
- * @param _ancestors, An array of pointers to the ancestor nodes that created this node
- * @param _ancestorArrLen The length of the ancestor array
- * @param _opStr A string signifying the operation that created this node
- * @return A pointer to the newly created Value struct
-*/
-Value* newValue(double _value, Value* _ancestors[], int _ancestorArrLen, char _opStr[]){
-
-    // allocate memory for the value struct
+    // allocate mem 
     Value* v = (Value*)malloc(sizeof(Value));
     assert(v != NULL);
 
-    // set Value values
-    v->value = _value;
-    v->grad = 0.0;
-    v->ancestorArrLen = _ancestorArrLen;
- 
-    // if no ancestors are given, set the ancestors pointer to NULL
-    if (_ancestorArrLen == NO_ANCESTORS && _ancestors == NULL) {
+    // init value fields
+    v->value = value;
+    v->grad = 0;
+    v->ancestorArrLen = ancestorArrLen;
+
+    // New Node (not created from an operation)
+    if (ancestorArrLen == NO_ANCESTORS && ancestors == NULL){
         v->ancestors = NULL;
-    } else {
-        // Allocate memory for the ancestors array of Value pointers into the value struct.
-        v->ancestors = (Value**)malloc(_ancestorArrLen * sizeof(Value*)); // Assign directly to v->ancestors.
+    }
+    // New Node (derived from existing nodes via an operation)
+    else if (ancestorArrLen > 0 && ancestors != NULL){  
+
+        // allocate mem for ptrs to ancestors
+        v->ancestors = (Value**)malloc(ancestorArrLen * sizeof(Value*));
         assert(v->ancestors != NULL);
 
-        // Copy ancestor nodes into the value struct.
-        for (int i = 0; i < _ancestorArrLen; i++) {
-            v->ancestors[i] = _ancestors[i];
+        // link to ancestor nodes 
+        for (int i = 0; i < ancestorArrLen; i++){
+
+            assert(ancestors[i] != NULL);
+            v->ancestors[i] = ancestors[i];
         }
+    }else{
+        printf("Unexpected Behavior in newValue related to graph ancestors");
+        exit(0);
     }
 
-    // set Backward function pointer to NULL
+    // Backward ptr set to NULL
     v->Backward = NULL;
 
-    // allocate memory for the operation string and copy into value struct
-    v->opStr = (char*)malloc(strlen(_opStr) + 1); 
-    assert(v->opStr != NULL);
-    strcpy(v->opStr, _opStr); 
+    // allocate mem for operation str, then copy 
+    v->opString = (char*)malloc(strlen(opString) + 1); // +1 for \0
+    assert(v->opString != NULL);
+    strcpy(v->opString, opString);
 
     return v;
 }
 
+//---------------------------------------------------------------------------------------------------------------------- Value Destructor
 
 /**
- * @notice freeValue() frees the memory allocated for a Value struct and it's ancestors array and operation string
+ * @note freeValue is used to free the memory within a value struct
+ * @dev all ptrs are set to NULL after releasing
+ * @param v ptr to a ptr to a Value to free
 */
-void freeValue(Value* v){
+void freeValue(Value** v){
+   
+    assert((*v) != NULL);
 
-    if (v->ancestors != NULL){
-        free(v->ancestors);
+    // free dynamically allocated members first
+    if ((*v)->ancestors != NULL){
+
+        free((*v)->ancestors); 
+        (*v)->ancestors = NULL;
     }
-    if (v->opStr != NULL){
-        free(v->opStr);
+    if ((*v)->opString != NULL){
+
+        free((*v)->opString);
+        (*v)->opString = NULL;
     }
-    if (v != NULL){
-        free(v);
-    }
+       
+    // free Value struct itself and set to NULL
+    free((*v));
+    (*v) = NULL;
 }
 
+
+//---------------------------------------------------------------------------------------------------------------------- Add Operation
+
 /**
- * @notice addBackard() is used within Add() to store the derivative operations of addition in the Value struct
- * @dev calling addBackward() updates the gradients of the ancestor nodes of the input Value structs
- * @dev the partial derivative for this op z = x + y is dz/dx = 1 and dz/dy = 1
-*/
-void addBackward(Value* v) {
+ * @note addBackward() computes the derivitive operation for two variable addition wrt to Value structs w/ two ancestors 
+ * that are the result of calling the Add() function.
+ * @dev z = x + y --> dz/dx = 1 and dz/dx = 1
+ * @param v ptr to a Value struct to compute the grad of
+ */
+void addBackward(Value* v){
 
-    // Ensure v has at least 2 ancestors since it's the result of addition
-    assert(v != NULL && v->ancestors != NULL);
-    assert(v->ancestors[0] != NULL && v->ancestors[1] != NULL);
-
-    // Propagate the gradient to both ancestors. Since dz/dx = 1 and dz/dy = 1 for addition, we 
-    // simply add v's gradient to each ancestor's gradient because 1 * v->grad == v->grad
-    for (int i = 0; i < 2; i++) {      // 2 ancestors for addition
-        if (v->ancestors[i] != NULL) { 
-            v->ancestors[i]->grad += v->grad; 
+    assert(v != NULL);
+    assert(v->ancestors != NULL);
+    assert(v->ancestorArrLen == 2);
+    
+    // Propagate the gradient to both ancestors. Since the grad is 0 in both cases, applying 
+    // the chain rule backwards just means adding the gradient if v to its ancestors
+    for(int i = 0; i<2; i++){
+        if (v->ancestors[i] != NULL){
+            v->ancestors[i]->grad += v->grad;
         }
     }
 }
 
 /**
- * @notice Add() is used to add two Value structs together. It returns a new Value struct that 
- * represents the sum of the two input Value structs.
- * @dev The function also sets the Backward function pointer of the new Value struct to
- *  the address of the addBackward function.
- * @param a A pointer to a Value struct
- * @param b A pointer to a Value struct
- * @param stack A pointer to a GraphStack struct
- * @param graphStack A pointer to a GraphStack struct
+ * @note Add() is used to add two Value structs together. It returns a new Value struct whose ancestors are the inputs 
+ * @dev the Backward function ptr of the resulting Value is also set to addBackward()
+ * @dev any Value() structs that are created from Add() are considered to be part of the computational graph and are 
+ * therefore pushed to a graphStack for later deallocation.
+ * @param a A pointer to a Value Struct
+ * @param b A pointer to a Value Struct
+ * @param graphStack A pointer to a GraphStack struct 
 */
-Value* Add(Value* a, Value* b, GraphStack* graphStack) {
-    assert(a != NULL && b != NULL);
+Value* Add(Value* a, Value* b, GraphStack* graphStack){
 
-    // Create a new Value for the sum
+    assert(a != NULL && b != NULL);
+    assert(graphStack != NULL);
+
+    // Create new Value for the sum
     Value* sumValue = newValue(a->value + b->value, (Value*[]){a, b}, 2, "add");
 
-    // push the new value onto the graph stack
+    // push value to the stack. 
     pushGraphStack(graphStack, sumValue);
 
-    // Set the backward function pointer to addBackward
+    // Set the backward function ptr for addition
     sumValue->Backward = addBackward;
 
     return sumValue;
 }
 
+//---------------------------------------------------------------------------------------------------------------------- Mul Operation
+
+
 /**
- * @notice mulBackward() is used within Mul() to store the derivative operations of multiplication in the Value struct
- * @dev calling mulBackward() updates the gradients of the ancestor nodes of the input Value structs
- * @dev the chain rule for z = x * y is dz/dx = y and dz/dy = x
-*/
+ * @note mulBackward() computes the derivitive operation for two variable multiplication wrt to Value structs w/ two ancestors 
+ * that are the result of calling the Mul() function.
+ * @dev z = x * y is dz/dx = y and dz/dy = x
+ * @param v ptr to a Value struct to compute the grad of
+ */
 void mulBackward(Value* v) {
+
+    assert(v != NULL);
+    assert(v->ancestors != NULL);
+    assert(v->ancestorArrLen == 2);
+   
     assert(v != NULL && v->ancestors != NULL);
     assert(v->ancestors[0] != NULL && v->ancestors[1] != NULL);
 
@@ -141,15 +162,17 @@ void mulBackward(Value* v) {
 }
 
 /**
- * @notice Mul() is used to multiply two Value structs together. It returns a new Value struct that 
- * represents the product of the two input Value structs.
- * @dev The function also sets the Backward function pointer of the new Value struct to the address of the mulBackward function.
- * @param a A pointer to a Value struct
- * @param b A pointer to a Value struct
- * @param graphStack A pointer to a GraphStack struct
+ * @note Mul() is used to multiply two Value structs together. It returns a new Value struct whose ancestors are the inputs 
+ * @dev the Backward function ptr of the resulting Value is also set to mulBackward()
+ * @dev any Value() structs that are created from Mul() are considered to be part of the computational graph and are 
+ * therefore pushed to a graphStack for later deallocation.
+ * @param a A pointer to a Value Struct
+ * @param b A pointer to a Value Struct
+ * @param graphStack A pointer to a GraphStack struct 
 */
 Value* Mul(Value* a, Value* b, GraphStack* graphStack) {
     assert(a != NULL && b != NULL);
+    assert(graphStack != NULL);
 
     // Create a new Value for the product
     Value* productValue = newValue(a->value * b->value, (Value*[]){a, b}, 2, "mul");
@@ -163,34 +186,39 @@ Value* Mul(Value* a, Value* b, GraphStack* graphStack) {
     return productValue;
 }
 
-/**
- * @notice reluBackward() is used within ReLU() to store the derivative operations of the ReLU activation function in the Value struct
- * @dev calling reluBackward() updates the gradients of the ancestor nodes of the input Value structs
- * @dev the chain rule for ReLU is dz/dx = 1 if x > 0 else 0
-*/
-void reluBackward(Value* v) {
+//---------------------------------------------------------------------------------------------------------------------- ReLU Operation
 
-    assert(v != NULL && v->ancestors != NULL && v->ancestors[0] != NULL );
-    
-    // Apply the chain rule for ReLU: dz/dx = 1 if x > 0 else 0
-    Value* x = v->ancestors[0];
-    if (x->value > 0) {
-        x->grad += v->grad; // dz/dx = 1 if x > 0
+/**
+ * @note addBackward() computes the derivitive operation for ReLU wrt to Value structs w/ two ancestors 
+ * that are the result of calling the ReLU() function.
+ * @dev z = x if x > 0 else 0 --> dz/dx = 1 if x > 0 else 0
+ * @param v ptr to a Value struct to compute the grad of
+ */
+void reluBackward(Value* v){
+
+    assert(v != NULL);
+    assert(v->ancestors != NULL);
+    assert(v->ancestorArrLen == 1);
+    assert(v->ancestors[0] != NULL);
+
+    if (v->ancestors[0]->value > 0){
+            v->ancestors[0]->grad += v->grad; // dz/dx = 1 case
     }
-    // No action needed if x <= 0 since dz/dx = 0 and does not contribute to the gradient
+    // @note dz/dx = 0 case is not handled here because the grad is already 0
 }
 
 /**
- * @notice ReLU() is used to apply the ReLU activation function to a Value struct. It returns a new Value struct that represents 
- * the result of the ReLU activation function applied to the input Value struct.
- * @dev The function also sets the Backward function pointer of the new Value struct to the address of the reluBackward function.
- * @dev The ReLU activation function is defined as f(x) = max(0, x)
- * @dev The derivative of ReLU is 1 if x > 0 else 0
- * @param a A pointer to a Value struct
- * @param graphStack A pointer to a GraphStack struct
+ * @note ReLU() applies ReLU to a Value struct. It returns a new Value struct whose ancestors are the inputs 
+ * @dev the Backward function ptr of the resulting Value is also set to reluBackward()
+ * @dev any Value() structs that are created from ReLU() are considered to be part of the computational graph and are 
+ * therefore pushed to a graphStack for later deallocation.
+ * @param a A pointer to a Value Struct
+ * @param graphStack A pointer to a GraphStack struct 
 */
 Value* ReLU(Value* a, GraphStack* graphStack) {
+
     assert(a != NULL);
+    assert(graphStack != NULL);
 
     // Create a new Value for the ReLU activation
     double reluResult = a->value > 0 ? a->value : 0; // f(x) = max(0, x)
@@ -205,127 +233,94 @@ Value* ReLU(Value* a, GraphStack* graphStack) {
     return reluValue;
 }
 
+//---------------------------------------------------------------------------------------------------------------------- Backpropragation
 
 /**
- * @notice dfs() is a helper function used to perform a depth-first search on the graph of Value structs.
- * @dev dfs() is called within the reverseTopologicalSort() function to recursively visit all nodes in the graph and push 
- * them onto a stack in reverse order.
- * @dev The function uses a hash table to store visited nodes and avoid infinite loops in the graph traversal.
- * @ a depth first search ensures that no node is input to the stack before all of its ancestors have been input.
+ * @note depthFirstSearch() is a helper function that performs a recursive depth first search on a computational graph 
+ * built up from applying Value operations (Add(), Mul(), ReLU()).
+ * @dev This algorithm works by recursively traversing the computational graph until the deepest point is reached. At 
+ * that point, before the recursive calls return, they push the Value ptr at that point in the graph to a GraphStack 
+ * @dev a HashTable is used to ensure that values are only pushed to the graphStack once, even if encountered twice 
+ * @param value is a value ptr somewhere in the computational graph
+ * @param visitedHashTable is a HashTable struct ptr created prior to this call
+ * @param sortedStack is a GraphStack struct ptr that stores the linear ordering 
 */
-void dfs(Value* v, HashTable* visitedTable, Value*** stack, int* index) {  
-
-    assert(v != NULL);
-    assert(visitedTable != NULL);
-    assert(stack != NULL);
-
-    // If the node has already been visited, return
-    if (isVisited(visitedTable, v)) {
-        return;
-    } 
-
-    // otherwise mark the node as visited in the hash table
-    insertVisited(visitedTable, v);
-
-    // Recursive call to visit all ancestors of the current node
-    for (int i = 0; v->ancestors != NULL && v->ancestors[i] != NULL; i++) {
-
-        if (v->ancestors[i] != NULL){
-
-            dfs(v->ancestors[i], visitedTable, stack, index);    
-        }
-    }
-
-    // Push the current node onto the stack
-    (*stack)[(*index)++] = v;
-}
-
-
-/**
- * @notice reverseArray() is a helper function used to reverse the order of an array of Value structs.
-*/
-void reverseArray(Value** arr, int start, int end) {
-    while (start < end) {
-        Value* temp = arr[start];
-        arr[start] = arr[end];
-        arr[end] = temp;
-        start++;
-        end--;
-    }
-}
-
-/**
- * @notice reverseTopologicalSort() is a helper function used to perform a topological sort on the graph of Value structs.
- * @dev reverseTopologicalSort() is called within the Backward() function to sort a Value's computational graph in topological order
- * @dev The function uses a depth-first search to visit all nodes in the graph and push them onto a stack in reverse order.
- * This ensures that the nodes are sorted in topological order and that no node is visited before its ancestors.
- * @param start is the starting Value node of the graph
- * @param sorted is a pointer to an array of Value pointers that will store the topological sort order of the graph ancestors.
- * @param count is a pointer to an integer that will store the number of nodes sorted.
-*/
-void reverseTopologicalSort(Value* start, Value*** sortedStack, int* count) {
-
-    assert(*sortedStack == NULL);
-
-    // use a hash table to store visited nodes
-    HashTable* visitedHashTable = createHashTable(MAX_GRAPH_SIZE); 
+void depthFirstSearch(Value* value, HashTable* visitedHashTable, GraphStack* sortedStack){
+    assert(value != NULL);
     assert(visitedHashTable != NULL);
+    assert(sortedStack != NULL);
 
-    // Allocate memory for a stack to store the topological sort order of graph ancestors.
-    *sortedStack = (Value**)malloc(MAX_GRAPH_SIZE * sizeof(Value*)); 
-    assert(*sortedStack != NULL);
+    // exit call if value has alread been visited
+    if (isInHashTable(visitedHashTable, value)){
+        return;
+    }
 
-    // Perform depth-first search to visit all nodes and push them onto the stack.
-    int index = 0;
-    dfs(start, visitedHashTable, sortedStack, &index);
+    // otherwise store as visited in the hash table
+    insertHashTable(visitedHashTable, value);
 
-    // printf("Post depth first search\n");
+    // Recursive call to visit all ancestors of current node
+    for (int i = 0; i < value->ancestorArrLen; i++){
 
-    // Reverse the sorted array to get correct topological ordering.
-    reverseArray(*sortedStack, 0, index - 1);
-    *count = index; // Update count to reflect number of nodes sorted.
+        if (value->ancestors != NULL && value->ancestors[i] != NULL){
+            depthFirstSearch(value->ancestors[i], visitedHashTable, sortedStack);
+        }
+    }
 
-    freeHashTable(visitedHashTable);
+    // push current node onto the stack after recursion returns
+    pushGraphStack(sortedStack, value);  
+}
+
+/**
+ * @note reverseTopologicalSort() applies a reverse topological sort of the computational graph from a single Value struct
+ * ptr as the starting point.
+ * @dev a topological sort is a linear ordering of nodes in a directed acyclic graph such that every directed edge uv from 
+ * u to v comes before v in the ordering.
+ * @param start is the leading value of the computationall graph 
+*/
+void reverseTopologicalSort(Value* start, GraphStack** sortedStack){
+    assert(start != NULL);
+    assert(sortedStack != NULL);
+
+    // hash table for checking if nodes have already been visited
+    HashTable* visitedHashTable = newHashTable(HASHTABLE_SIZE);
+    assert(visitedHashTable != NULL);  
+
+    // kickstart recursive depth first search on graph
+    depthFirstSearch(start, visitedHashTable, (*sortedStack));
 }
 
 
 /**
- * @notice Backward() is the main function used to perform reverse mode automatic differentiation on a Value struct 
- * with respect to all of its ancestors.
- * @dev Backward() is called on the output node of the graph to calculate the gradients of all nodes in the graph.
- * @dev The function uses a topological sort to visit all nodes in the graph in reverse order and calculate their gradients.
- * @dev The function then calls the Backward function of each node to calculate the gradients of their ancestors.
- * @dev The function sets the gradient of the starting node to 1 to begin the backpropagation process.  
- * @dev The function then calls the Backward function of each node to calculate the gradients of their ancestors.
+ * @note Backward() applies backpropagration of the gradient wrt to all ancestors in the computational graph
+ * that produced the inputted value.
+ * @param value is the leading output of the computational graph to backpropogate
 */
-void Backward(Value* v) {
+void Backward(Value* value){
+    assert(value != NULL);
 
-    // Ensure the starting node is not NULL
-    assert(v != NULL);
+    // create a new GraphStack to store the reverse topologically sorted graph
+    GraphStack* sortStack = newGraphStack();
 
-    // declare a pointer for an array of Value pointers
-    Value** sortedStack = NULL;
-    int count = 0;
+    // perform reverse topological sort on graph
+    reverseTopologicalSort(value, &sortStack);
 
-    // Perform a topological sort on the graph of Value structs. This will in place sort
-    // fill sorted array with the topological sort order of the graph ancestors.
-    reverseTopologicalSort(v, &sortedStack, &count);
+    // grad must be 1 to kickstart backprop
+    value->grad = 1.0;
 
-    // Set gradient of the starting node to 1.
-    v->grad = 1.0;
+    // get head node
+    GraphNode* graphNode = sortStack->head;
 
-    // Process nodes in topologically sorted order.
-    for (int i = 0; i < count; i++) {
+    // compute gradient of graph
+    while (graphNode != NULL && graphNode->pValStruct != NULL){        
 
-        if (sortedStack[i]->Backward != NULL) { // Ensure backward function exists
-            sortedStack[i]->Backward(sortedStack[i]);
+        // compute partial derivative of next node
+        if (graphNode->pValStruct->Backward != NULL){
+            graphNode->pValStruct->Backward(graphNode->pValStruct);
         }
+
+        // get next
+        graphNode = graphNode->next;
     }
 
-    //Clean up
-    if (sortedStack != NULL) { 
-        free(sortedStack); 
-    }  
-}
-
-
+    graphPreservingStackRelease(&sortStack);
+}   
