@@ -196,6 +196,49 @@ void test_Forward(void){
 }   
 
 
+/**
+ * @test test_repeatedBackward() tests to make sure that backward can be called multiple times following 
+ * a call to releaseGraph(). This addressed issue #1
+*/
+void test_repeatedBackward(void){
+
+    printf("test_repeatedBackward()...");
+
+    // create a new mlp
+    int inputSize = 3;
+    int layerSizes[] = {16, 8, 4, 2};
+    int numLayers = 4;
+    MLP* mlp = newMLP(inputSize, layerSizes, numLayers);
+
+    // declare input and output arr
+    Value** input, **output, *sum;
+
+    for (int i = 0; i<6; i++){
+
+        // create new input vector for next forward passs
+        input = newOutputVector(inputSize);
+        input[0]->value = 1;
+        input[1]->value = 2;
+        input[2]->value = 3;    
+
+        output = Forward(mlp, input);
+
+        // convert output to a single value
+        sum = Add(output[0], output[1], mlp->graphStack);     
+
+        // backpropagate gradient
+        Backward(sum);  
+
+        // release Graph
+        releaseGraph(mlp->graphStack);
+    }
+
+    // cleanup
+    freeMLP(&mlp);
+
+    printf("PASS!\n");
+}
+
 int main(void){
 
     test_newOutputVector();
@@ -203,6 +246,7 @@ int main(void){
     test_AddBias();
     test_ApplyReLU();
     test_Forward();
+    test_repeatedBackward();
 
     return 0;
 }

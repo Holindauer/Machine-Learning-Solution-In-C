@@ -125,7 +125,6 @@ Value** Forward(MLP* mlp, Value** input){
     
         // move up one layer
         layer = layer->next;
-
     }
 
     return output;
