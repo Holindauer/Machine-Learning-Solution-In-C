@@ -28,7 +28,6 @@ void test_newLayer(void){
 
     for (int i = 0; i < outputSize; i++){
         assert(layer->biases[i]->value > -1 || layer->biases[i]->value < 1);
-        assert(layer->output[i]->value == 0);
     }
 
     // cleanup
@@ -84,7 +83,6 @@ void test_newMLP(void){
         // validate biases and output vectors
         for (int i=0; i<layer->outputSize; i++){
             assert(layer->biases[i]->value > -1 || layer->biases[i]->value < 1);
-            assert(layer->output[i]->value == 0);
         }
 
         layer = layer->next;

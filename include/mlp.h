@@ -1,3 +1,4 @@
+#pragma once
 #include "value.h"
 #include "graphStack.h"
 
@@ -15,9 +16,6 @@ typedef struct _layer {
     // weight and biase matrices/vectors
     Value** weights;
     Value** biases;
-
-    // layer output
-    Value** output;
 
     // links to next and prev layers
     struct _layer* next;

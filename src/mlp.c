@@ -12,6 +12,8 @@ double randDouble(void){
  * @note newLayer allocates memory for and intializes a new Layer struct. 
  * @dev weights and biases within the Value struct ptr arrays are initialized to random doubles between -1 and 1
  * @dev output vector array of Value struct ptrs initialized to Value structs of zeroes
+ * @param inputSize
+ * @param outputSize
 */
 Layer* newLayer(int inputSize, int outputSize){
 
@@ -29,8 +31,7 @@ Layer* newLayer(int inputSize, int outputSize){
     // allocate mem for weights, biases, hidden/output state
     layer->weights = (Value**)malloc(inputSize * outputSize * sizeof(Value*));
     layer->biases = (Value**)malloc(outputSize * sizeof(Value*));
-    layer->output = (Value**)malloc(outputSize * sizeof(Value*));
-    assert(layer->weights != NULL && layer->biases != NULL && layer->output != NULL);
+    assert(layer->weights != NULL && layer->biases != NULL);
 
     // init weights
     for (int i = 0; i < (inputSize * outputSize); i++){
@@ -46,52 +47,11 @@ Layer* newLayer(int inputSize, int outputSize){
         // init biases between -1 and 1
         layer->biases[i] = newValue(randDouble(), NULL, NO_ANCESTORS, "init biases");
         assert(layer->biases[i] != NULL);
-
-        // init output vector values to 0
-        layer->output[i] = newValue(0, NULL, NO_ANCESTORS, "init output");
-        assert(layer->output[i] != NULL);
     }
 
     return layer;
 }
 
-/**
- * @note freeLayer() frees a layer struct and all memory witin it. This includes all Value structs in the weights and biases
-*/
-void freeLayer(Layer** layer){
-
-    // free Value structs in weights
-    for (int i = 0; i < (*layer)->outputSize * (*layer)->inputSize; i++){
-
-        freeValue(&((*layer)->weights[i]));
-        assert((*layer)->weights[i] == NULL);
-    } 
-
-    // free Value structs in biases and output vector
-    for (int i = 0; i < (*layer)->outputSize; i++){
-
-        // free bias
-        freeValue(&((*layer)->biases[i]));
-        assert((*layer)->biases[i] == NULL);
-    
-        // free output 
-        freeValue(&((*layer)->output[i]));
-        assert((*layer)->output[i] == NULL);
-    }
-
-    // free weights, bias, output arrays of Value struct ptrs
-    free((*layer)->weights);
-    free((*layer)->biases);
-    free((*layer)->output);
-
-    (*layer)->weights = NULL;
-    (*layer)->biases = NULL;
-    (*layer)->output = NULL;
-
-    // free layer struct
-    free(*layer);
-    *layer = NULL;
-}
 
 /**
  * @note newMLP() is a constructor for an MLP struct containing a listed list of Layer structs 
@@ -143,7 +103,41 @@ MLP* newMLP(int inputSize, int layerSizes[], int numLayers){
 
 
 /**
+ * @note freeLayer() frees a layer struct and all memory witin it. This includes all Value structs in the weights and biases
+ * @param layer ptr to Layer struct ptr
+*/
+void freeLayer(Layer** layer){
+
+    // free Value structs in weights
+    for (int i = 0; i < (*layer)->outputSize * (*layer)->inputSize; i++){
+
+        freeValue(&((*layer)->weights[i]));
+        assert((*layer)->weights[i] == NULL);
+    } 
+
+    // free Value structs in biases and output vector
+    for (int i = 0; i < (*layer)->outputSize; i++){
+
+        // free bias
+        freeValue(&((*layer)->biases[i]));
+        assert((*layer)->biases[i] == NULL);    
+    }
+
+    // free weights, bias, output arrays of Value struct ptrs
+    free((*layer)->weights);
+    free((*layer)->biases);
+
+    (*layer)->weights = NULL;
+    (*layer)->biases = NULL;
+
+    // free layer struct
+    free(*layer);
+    *layer = NULL;
+}
+
+/**
  * @note free mlp frees all memory inside an mlp struct
+ * @param mlp ptr to MLP struct ptr
 */
 void freeMLP(MLP** mlp){
 

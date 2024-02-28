@@ -17,6 +17,7 @@
 #include "hashTable.h"
 #include "backward.h"
 #include "mlp.h"
+#include "forward.h"
 
 // macros
 #define NO_ANCESTORS 0
