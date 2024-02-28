@@ -110,15 +110,23 @@ Value** Forward(MLP* mlp, Value** input){
     // compute output of first layer 
     Value** output = MultiplyWeights(layer, input, mlp->graphStack);
     output = AddBias(layer, output, mlp->graphStack);
+    output = ApplyReLU(layer, output, mlp->graphStack);
+
+    // move to next layer before starting loop
+    layer = layer->next;
 
     // compute next hidden states
-    for (int i=1; i<mlp->numLayers; i++){
+    while(layer != NULL) {
 
+        // compute layer output
+        output = MultiplyWeights(layer, output, mlp->graphStack);
+        output = AddBias(layer, output, mlp->graphStack);
+        output = ApplyReLU(layer, output, mlp->graphStack);
+    
         // move up one layer
         layer = layer->next;
 
-        output = MultiplyWeights(layer, output, mlp->graphStack);
-        output = AddBias(layer, output, mlp->graphStack);
     }
 
+    return output;
 }
