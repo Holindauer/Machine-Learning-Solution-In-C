@@ -20,5 +20,8 @@ Value* Mul(Value* a, Value* b, GraphStack* graphStack);
 void reluBackward(Value* v);
 Value* ReLU(Value* a, GraphStack* graphStack);
 
+void expBackward(Value* v);
+Value* Exp(Value* a, GraphStack* graphStack);
+
 // zero gradients
 void ZeroGrad(MLP* mlp);

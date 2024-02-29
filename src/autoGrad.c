@@ -233,6 +233,52 @@ Value* ReLU(Value* a, GraphStack* graphStack) {
     return reluValue;
 }
 
+//---------------------------------------------------------------------------------------------------------------------- Exp Operation
+
+/**
+ * @note expBackward() computes the derivitive operation for e^x wrt to a Value structs w/ one ancestor 
+ * that is the result of calling the Exp() function.
+ * @dev z = exp(x) --- d/dx(z) = exp(x)
+ * @param v ptr to a Value struct to compute the grad of
+ */
+void expBackward(Value* v) {
+
+    assert(v != NULL);
+    assert(v->ancestors != NULL);
+    assert(v->ancestorArrLen == 1);
+    assert(v->ancestors[0] != NULL);
+
+    // The gradient of e^x with respect to x is e^x. Multiply the incoming gradient by the 
+    // value of this node (which is e^x) and add it to the gradient of the input node.
+    v->ancestors[0]->grad += v->value * v->grad;
+}
+
+
+/**
+ * @note Exp() applies e^x to a Value struct. It returns a new Value struct whose ancestors are the inputs 
+ * @dev any Value() structs that are created from ReLU() are considered to be part of the computational graph and are 
+ * therefore pushed to a graphStack for later deallocation.
+ * @param a A pointer to a Value Struct
+ * @param graphStack A pointer to a GraphStack struct 
+*/
+Value* Exp(Value* a, GraphStack* graphStack) {
+    assert(a != NULL);
+    assert(graphStack != NULL);
+
+    // Compute the exponential of the input value
+    double expResult = exp(a->value);
+    Value* expValue = newValue(expResult, (Value*[]){a}, 1, "exp");
+
+    // Push the new value onto the graph stack
+    pushGraphStack(graphStack, expValue);
+
+    // Set the backward function pointer to expBackward
+    expValue->Backward = expBackward;
+
+    return expValue;
+}
+
+
 //---------------------------------------------------------------------------------------------------------------------- Backpropragation
 
 /**

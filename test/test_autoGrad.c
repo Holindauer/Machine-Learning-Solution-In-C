@@ -340,12 +340,82 @@ void test_ReLUDiff(void){
 }
 
 /**
+ * @test test_Exp() tests that the Exp() operation is working correctly
+*/
+void test_Exp(void){
+
+    printf("test_Exp()...");
+
+    // init values to add
+    Value* a = newValue(-10, NULL, NO_ANCESTORS, "a");
+
+    // init GraphStack for addition
+    GraphStack* graphStack = newGraphStack();
+
+    // Apply Exp
+    Value* c = Exp(a, graphStack);
+
+    check_opResultFields(c, a, NULL, exp(-10), 0, expBackward, "exp", UNARY);
+
+    // assert resulting value correctly pushed to the graph stack
+    check_graphStackUpdate(graphStack, c, 2);
+
+    // release Graph
+    releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_expDiff tests that the Exp() function for the value struct is working correctly when
+ * it's backward function is called
+ * @note This test is not checking the backward method, which recursively traverses the graph, only
+ * that the function pointer within a value created from the ReLU() function is outputting the correct value.
+*/
+void test_ExpDiff(void){
+
+    printf("test_reluDiff...");
+
+    // Create a graph stack to use for the operations
+    GraphStack* graphStack = newGraphStack();
+
+    // create some ancestor nodes
+    Value* a = newValue(3, NULL, NO_ANCESTORS, "a");
+
+    // create a new value nodes
+    Value* c = Exp(a, graphStack);
+
+    // Within Backward() which is the environment in which ->Backward() is called, the grad of the 
+    // output node is set to 1 in order to kick off the backpropagation process
+    c->grad = 1;
+
+    // backpropagate the gradients
+    c->Backward(c);
+
+    // Expected gradient is e^a->value, since d/dx e^x = e^x
+    double expected_grad = exp(a->value);
+    assert(fabs(a->grad - expected_grad) < 1e-9); // Use a small epsilon for floating point comparison
+
+    // release graph mem
+    releaseGraph(graphStack);
+
+    // ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
+
+/**
  * @test test_depthFirstSearch() checks to make sure that running depth first search on a computational graph
  * results in a graph stack that is ordered such that each node in the stack comes before its ancestors.
 */
 void test_depthFirstSearch(void){
 
-    printf("test_depthFirstSearch()...");
+    double g = exp(19.1);
 
     // init dfs utilities
     GraphStack* sortStack = newGraphStack();
@@ -585,15 +655,19 @@ void test_ZeroGrad(void){
 }
 
 
+
+
 int main(void){
     
     test_newValue();
     test_Add();
     test_Mul();
-    test_ReLU();       
+    test_ReLU();   
+    test_Exp();    
     test_ReLUDiff();
     test_MulDiff();
     test_AddDiff();
+    test_ExpDiff();
     test_depthFirstSearch();
     test_reverseTopologicalSort();
     test_Backward(); 
