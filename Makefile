@@ -8,7 +8,7 @@ LIB_SOURCES=$(wildcard $(SRC_DIR)/*.c)
 # Create bin directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-all: test_autoGrad test_graphStack test_hashTable test_mlp test_forward
+all: test_autoGrad test_graphStack test_hashTable test_mlp test_forward test_gradientDescent
 
 # Test targets
 test_autoGrad: $(TEST_DIR)/test_autoGrad.c $(LIB_SOURCES)
@@ -24,4 +24,7 @@ test_mlp: $(TEST_DIR)/test_mlp.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
 
 test_forward: $(TEST_DIR)/test_forward.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)
+
+test_gradientDescent: $(TEST_DIR)/test_gradientDescent.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F)

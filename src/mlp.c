@@ -1,5 +1,6 @@
 #include "lib.h"
 
+// ---------------------------------------------------------------------------------------------------------------------- MLP Constructors
 
 /**
  * @note randDouble is a helper function that returns a double value between -1 and 1
@@ -101,6 +102,7 @@ MLP* newMLP(int inputSize, int layerSizes[], int numLayers){
     return mlp;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------- MLP Destructors
 
 /**
  * @note freeLayer() frees a layer struct and all memory witin it. This includes all Value structs in the weights and biases

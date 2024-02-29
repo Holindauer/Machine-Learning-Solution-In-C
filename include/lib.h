@@ -18,6 +18,7 @@
 #include "backward.h"
 #include "mlp.h"
 #include "forward.h"
+#include "gradientDescent.h"
 
 // macros
 #define NO_ANCESTORS 0

@@ -3,6 +3,8 @@
 
 // graphStack.c
 
+// ---------------------------------------------------------------------------------------------------------------------- GraphStack Constructor
+
 /**
  * @note newGraphStack() allocates memory for a GraphStack struct
  * @return ptr to the new graph stack
@@ -24,6 +26,9 @@ GraphStack* newGraphStack(void){
 
     return stack;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------- GraphStack Operations
+
 
 /**
  * @note pushGraphStack pushes a new Value onto an existing GraphStack
@@ -72,6 +77,9 @@ void popGraphStack(GraphStack* stack){
     stack->head = next;
     stack->len--;
 }
+
+// ---------------------------------------------------------------------------------------------------------------------- GraphStack Destructors
+
 
 /**
  * @note releaseGraph() pops (deallocates) all nodes within a graph stack

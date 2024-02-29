@@ -16,7 +16,7 @@ echo
 echo "Running All Tests..."
 
 # Define your test binaries here
-tests=("test_autoGrad" "test_graphStack" "test_hashTable" "test_mlp" "test_forward")
+tests=("test_autoGrad" "test_graphStack" "test_hashTable" "test_mlp" "test_forward" "test_gradientDescent")
 
 # Directory where binaries are located
 BIN_DIR="bin"
