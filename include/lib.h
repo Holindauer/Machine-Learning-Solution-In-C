@@ -25,3 +25,4 @@
 #define BINARY 1
 #define UNARY 0
 #define HASHTABLE_SIZE 150
+#define EPSILON 1e-10 

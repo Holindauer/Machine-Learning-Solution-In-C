@@ -408,6 +408,80 @@ void test_ExpDiff(void){
     printf("PASS!\n");
 }
 
+/**
+ * @test test_Div() tests that the Div() operation is working correctly
+*/
+void test_Div(void) {
+    printf("test_Div()...");
+
+    // Initialize values for division
+    Value* numerator = newValue(10.0, NULL, NO_ANCESTORS, "numerator");
+    Value* denominator = newValue(2.0, NULL, NO_ANCESTORS, "denominator");
+
+    // Initialize GraphStack for operation
+    GraphStack* graphStack = newGraphStack();
+
+    // Apply Div
+    Value* quotient = Div(numerator, denominator, graphStack);
+
+    // Check resulting value and operation fields are correct
+    check_opResultFields(quotient, numerator, denominator, 5.0, 0, divBackward, "div", BINARY);
+
+    // Assert resulting value correctly pushed to the graph stack
+    check_graphStackUpdate(graphStack, quotient, 2); // Expecting 2 values in stack: og node, quotient
+
+    // Release Graph
+    releaseGraph(graphStack);
+
+    // Ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
+/**
+ * @test test_DivDiff tests that the Div() function for the value struct is working correctly when
+ * it's backward function is called
+ * @note This test is not checking the backward method, which recursively traverses the graph, only
+ * that the function pointer within a value created from the Div() function is outputting the correct value.
+*/
+void test_DivDiff(void) {
+    printf("test_DivDiff...");
+
+    // Create a graph stack for operations
+    GraphStack* graphStack = newGraphStack();
+
+    // Create ancestor nodes for division
+    Value* numerator = newValue(10.0, NULL, NO_ANCESTORS, "numerator");
+    Value* denominator = newValue(2.0, NULL, NO_ANCESTORS, "denominator");
+
+    // Create a new quotient node
+    Value* quotient = Div(numerator, denominator, graphStack);
+
+    // Kickstart the backpropagation process
+    quotient->grad = 1;
+
+    // Backpropagate the gradients
+    quotient->Backward(quotient);
+
+    // Check gradients are correct
+    // For numerator: d(quotient)/d(numerator) = 1/denominator
+    double expected_grad_numerator = 1 / denominator->value;
+    assert(fabs(numerator->grad - expected_grad_numerator) < 1e-9);
+
+    // For denominator: d(quotient)/d(denominator) = -numerator/(denominator^2)
+    double expected_grad_denominator = -numerator->value / (denominator->value * denominator->value);
+    assert(fabs(denominator->grad - expected_grad_denominator) < 1e-9);
+
+    // Release graph memory
+    releaseGraph(graphStack);
+
+    // Ensure graph stack has been released
+    check_emptyGraphStack(graphStack);
+
+    printf("PASS!\n");
+}
+
 
 /**
  * @test test_depthFirstSearch() checks to make sure that running depth first search on a computational graph
@@ -664,10 +738,12 @@ int main(void){
     test_Mul();
     test_ReLU();   
     test_Exp();    
+    test_Div();
     test_ReLUDiff();
     test_MulDiff();
     test_AddDiff();
     test_ExpDiff();
+    test_DivDiff();
     test_depthFirstSearch();
     test_reverseTopologicalSort();
     test_Backward(); 
