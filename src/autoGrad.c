@@ -324,3 +324,36 @@ void Backward(Value* value){
 
     graphPreservingStackRelease(&sortStack);
 }   
+
+//---------------------------------------------------------------------------------------------------------------------- Zero Gradients
+
+
+/**
+ * @note ZeroGrad() zeros all gradients in an mlp and releases the computational graph
+ * @param mlp a pointer to an MLP struct to zero the gradient of 
+*/
+void ZeroGrad(MLP* mlp){
+
+    // retrieve first layer
+    Layer* layer = mlp->inputLayer;
+
+    // iterate layers
+    while (layer != NULL){
+
+        // zero weights
+        for (int i=0; i<(layer->inputSize * layer->outputSize); i++){
+            layer->weights[i]->grad = 0;
+        }     
+
+        // zero biases
+        for (int i=0; i<layer->outputSize; i++){
+            layer->biases[i]->grad = 0;
+        }
+
+        // move to next layer
+        layer = layer->next;
+    }
+
+    // release computional graph
+    releaseGraph(mlp->graphStack);
+}

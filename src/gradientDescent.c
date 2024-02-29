@@ -20,13 +20,13 @@ void Step(MLP* mlp, double lr){
         // update weights
         for (int i=0; i<(layer->inputSize * layer->outputSize); i++){
             
-            layer->weights[i]->value -= lr * layer->weights[i]->grad;
+            layer->weights[i]->grad -= lr * layer->weights[i]->grad;
         }
 
         // update biases
         for (int i=0; i<layer->outputSize; i++){
             
-            layer->biases[i]->value -= lr * layer->biases[i]->grad;
+            layer->biases[i]->grad -= lr * layer->biases[i]->grad;
         }
 
         layer = layer->next;

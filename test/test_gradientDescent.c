@@ -38,10 +38,10 @@ void test_Step(void){
     while (layer != NULL){
 
         for (int i=0; i< (layer->inputSize * layer->outputSize); i++){
-            assert(layer->weights[i]->value == 0);
+            assert(layer->weights[i]->grad == 0);
         }
         for (int i=0; i<layer->outputSize; i++){
-            assert(layer->weights[i]->value == 0);
+            assert(layer->weights[i]->grad == 0);
         }
 
         layer = layer->next;

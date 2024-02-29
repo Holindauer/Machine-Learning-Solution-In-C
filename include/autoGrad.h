@@ -1,6 +1,7 @@
 #pragma once
 #include "lib.h"
 #include "graphStack.h"
+#include "mlp.h"
 
 // autoGrad.h
 
@@ -19,3 +20,5 @@ Value* Mul(Value* a, Value* b, GraphStack* graphStack);
 void reluBackward(Value* v);
 Value* ReLU(Value* a, GraphStack* graphStack);
 
+// zero gradients
+void ZeroGrad(MLP* mlp);

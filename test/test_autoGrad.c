@@ -512,6 +512,78 @@ void test_Backward(void){
     printf("PASS!\n");
 }
 
+/**
+ * @test test_ZeroGrad() tests that the ZeroGrad() function both zeros the gradient and releases the computaitonal graph
+*/
+void test_ZeroGrad(void){
+
+
+    printf("test_ZeroGrad()...");
+
+    // create a new mlp
+    int inputSize = 3;
+    int layerSizes[] = {16, 8, 4, 3};
+    int numLayers = 4;
+    MLP* mlp = newMLP(inputSize, layerSizes, numLayers);
+
+
+    // set all weights and biases, and gradients to 1
+    Layer* layer = mlp->inputLayer;
+    while (layer != NULL){
+
+        for (int i=0; i< (layer->inputSize * layer->outputSize); i++){
+            layer->weights[i]->value = 1;
+            layer->weights[i]->grad = 1;
+        }
+        for (int i=0; i<layer->outputSize; i++){
+            layer->biases[i]->value = 1;
+            layer->biases[i]->grad = 1;
+        }
+
+        layer = layer->next;
+    }
+
+    // create an input to run a forward pass on
+    Value** input = newOutputVector(inputSize);
+    input[0]->value = 1;
+    input[1]->value = 2;
+    input[2]->value = 3;  
+
+    // run forward pass -- this will populate the computaitonal graph
+    Value** output = Forward(mlp, input);
+    assert(output != NULL);
+
+    // Zero the gradent
+    ZeroGrad(mlp);
+
+
+    // check that all weights are now zero
+    layer = mlp->inputLayer;
+    while (layer != NULL){
+
+        for (int i=0; i< (layer->inputSize * layer->outputSize); i++){
+            assert(layer->weights[i]->grad == 0);
+        }
+        for (int i=0; i<layer->outputSize; i++){
+            assert(layer->weights[i]->grad == 0);
+        }
+
+        layer = layer->next;
+    }
+
+    // check that graph stack is empty
+    assert(mlp->graphStack->len == 1);
+    assert(mlp->graphStack->head->next == NULL);
+    assert(mlp->graphStack->head->pValStruct == NULL);
+
+    // cleanup
+    freeMLP(&mlp);
+
+    printf("PASS!\n");
+
+
+}
+
 
 int main(void){
     
@@ -525,4 +597,5 @@ int main(void){
     test_depthFirstSearch();
     test_reverseTopologicalSort();
     test_Backward(); 
+    test_ZeroGrad();
 }
