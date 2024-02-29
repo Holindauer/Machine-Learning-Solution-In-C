@@ -3,18 +3,44 @@
 
 int main(void){
 
-    printf("\nLoading Data...\n");
-
+    // load data
     Dataset* dataset = loadData();
 
-    printf("\nLoaded Data:");
-    for (int i=0; i<NUM_EXAMPLES; i++){
-        printf("\nFeature %d: %lf %lf %lf %lf", i, dataset->features[i][0]->value, dataset->features[i][1]->value, dataset->features[i][2]->value, dataset->features[i][3]->value);
-        printf(" ---- Target: %lf %lf %lf", dataset->targets[i][0]->value, dataset->targets[i][1]->value, dataset->targets[i][2]->value);
+    // mlp specs
+    int inputSize = 3;
+    int layerSizes[] = {16, 8, 4, 1};
+    int numLayers = 4;
+
+    // create mlp
+    MLP* mlp = newMLP(inputSize, layerSizes, numLayers);
+
+    // training parameters
+    double lr = 0.001;
+    int epochs = 10;
+
+    // run training loop
+    for (int epoch=0; epoch<epochs; epoch++){
+
+        // forward pass on all examples
+        for(int example=0; example<NUM_EXAMPLES; example++){
+
+            // run forward pass on example
+            Value** output = Forward(mlp, dataset->features[example]);
+
+            // backpropagate gradient
+            Backward(output[0]);    
+
+            // zpply gradient descent
+            Step(mlp, lr);
+
+            // zero gradient and free computational graph
+            ZeroGrad(mlp);
+        }
     }
 
+    // cleanup memory
+    freeMLP(&mlp);
     freeDataset(&dataset);
-    assert(dataset == NULL);
-
+    
     return 0;
 }

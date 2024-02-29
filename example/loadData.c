@@ -50,8 +50,6 @@ Dataset* loadData(void){
 
     while(fgets(tempStr, 100, file) != NULL){
 
-        printf("\ntempStr: %s", tempStr);
-
         // remove idx column
         strtok(tempStr, ",");
 
