@@ -1,6 +1,8 @@
 #include "loadData.h"
 
-// this function loads in the iris dataset csv gile in the data dir
+/**
+ * @note loadData() the iris dataset into a feature and target array of arrays of pointers to Value struct pointers (Value***)
+*/
 Dataset* loadData(void){
 
     // allocate mem for dataset
@@ -8,8 +10,8 @@ Dataset* loadData(void){
     assert(dataset != NULL);
 
     // allocate mem for an array of arrays of Value struct ptrs for features and targets
-    dataset->features = malloc(sizeof(Value***) * NUM_EXAMPLES);
-    dataset->targets = malloc(sizeof(Value***) * NUM_EXAMPLES);
+    dataset->features = malloc(sizeof(Value**) * NUM_EXAMPLES);
+    dataset->targets = malloc(sizeof(Value**) * NUM_EXAMPLES);
     assert(dataset->features != NULL);
     assert(dataset->targets != NULL);
 
@@ -48,6 +50,8 @@ Dataset* loadData(void){
 
     while(fgets(tempStr, 100, file) != NULL){
 
+        printf("\ntempStr: %s", tempStr);
+
         // remove idx column
         strtok(tempStr, ",");
 
@@ -61,10 +65,7 @@ Dataset* loadData(void){
         char classStr[100] = "";
         strcpy(classStr, strtok(NULL, ","));
 
-        printf("\nclassStr: %s", classStr);
-
-        // @note it's probably not a good idea to create values first then add the 1 hot encoding to 
-        // that empty vector because it may impact the computational graph during backpropagation
+        // assign classes to target array as once hot encode vector
         if (strcmp(classStr, "Iris-setosa\n") == 0){
             dataset->targets[rowsLoaded][0]->value = 1;
 
@@ -75,7 +76,6 @@ Dataset* loadData(void){
             dataset->targets[rowsLoaded][2]->value = 1;
 
         }else{
-
             printf("Error: classStr not recognized\n");
             exit(1);
         }
@@ -89,3 +89,46 @@ Dataset* loadData(void){
     return dataset;
 }
 
+
+/**
+ * @note this function frees all memory inside of a Dataset struct
+ * @param dataset a pointer to a pointer to a Dataset struct
+*/
+void freeDataset(Dataset** dataset){
+
+    // iterate examples
+    for (int example=0; example<NUM_EXAMPLES; example++){
+
+        // free each value struct in the features array
+        for (int feature=0; feature<NUM_FEATURES; feature++){
+
+            freeValue(&((*dataset)->features[example][feature]));
+            (*dataset)->features[example][feature] = NULL;
+        }
+
+        // free each value struct in the target array
+        for (int class=0; class<NUM_CLASSES; class++){
+
+            freeValue(&((*dataset)->targets[example][class]));
+            (*dataset)->targets[example][class] = NULL;
+        }
+
+        // free each example array once internal value structs have been released
+        free((*dataset)->features[example]);
+        free((*dataset)->targets[example]);
+
+        (*dataset)->targets[example] = NULL;
+        (*dataset)->features[example] = NULL;
+    }
+
+    // free feature/target arrays now that example arrays have been released
+    free((*dataset)->features);
+    free((*dataset)->targets);
+
+    (*dataset)->features = NULL;
+    (*dataset)->targets = NULL;
+
+    // free dataset struct
+    free(*dataset);
+    *dataset = NULL;
+}

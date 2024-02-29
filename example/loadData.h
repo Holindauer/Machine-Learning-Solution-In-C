@@ -11,3 +11,4 @@ typedef struct {
 }Dataset;
 
 Dataset* loadData(void);
+void freeDataset(Dataset** dataset);
