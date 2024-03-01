@@ -1,7 +1,7 @@
-echo "Compiling example.c"
+echo "Compiling autoGradExample.c"
 
 # Compile the example
-make example
+make example_autoGrad
 
 # Check if make succeeded
 if [ $? -ne 0 ]; then
@@ -9,5 +9,5 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "Running example..."
-./bin/example
+echo "Running autograd example..."
+./bin/example_autoGrad

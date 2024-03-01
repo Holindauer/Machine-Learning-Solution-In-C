@@ -333,6 +333,43 @@ Value* Exp(Value* a, GraphStack* graphStack) {
     return expValue;
 }
 
+//---------------------------------------------------------------------------------------------------------------------- Softmax Operation
+
+// /**
+//  * @note Softmax() applies the softmax function to an array of Value structs. 
+//  * @dev since softmax is a more complex operation that can be composed of the more basic operation implementaions
+//  * above, there is not softmaxBackward() function. 
+//  * @param vector An array of Value structs
+//  * @param vectorLen The length of the input array
+//  * @param graphStack A pointer to a GraphStack struct 
+// */
+// void Softmax(Value** vector, int vectorLen, GraphStack* graphStack) {
+//     assert(vector != NULL);
+//     assert(graphStack != NULL);
+
+//     // compute the exponential of each value in the vector into a new array
+//     Value** numeratorArr = (Value**)malloc(vectorLen * sizeof(Value*));
+//     assert(numeratorArr != NULL);
+
+//     // compute the exponential of each value in the vector
+//     for (int i = 0; i < vectorLen; i++) {
+//         numeratorArr[i] = Exp(vector[i], graphStack);
+//     }
+
+//     Value* sum;
+
+//     // divide each value by the sum of all values
+//     for (int value=0; value<vectorLen; value++){
+
+//         // compute the sum of the exponential values (repeated for autodiff)
+//         for (int sumComponent; sumComponent<vectorLen; sumComponent++){ 
+//             sum = Add(sum, vector[sumComponent], graphStack);
+//         }
+
+//         // divide each value by the sum into the original vector
+//         vector[value] = Div(vector[value], sum, graphStack);
+//     }
+// }
 
 //---------------------------------------------------------------------------------------------------------------------- Backpropragation
 
