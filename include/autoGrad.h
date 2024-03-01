@@ -26,7 +26,5 @@ Value* Exp(Value* a, GraphStack* graphStack);
 void divBackward(Value* v);
 Value* Div(Value* a, Value* b, GraphStack* graphStack);
 
-// void Softmax(Value** vector, int vectorLen, GraphStack* graphStack);
-
 // zero gradients
 void ZeroGrad(MLP* mlp);

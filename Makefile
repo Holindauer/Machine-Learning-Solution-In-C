@@ -11,7 +11,7 @@ EXAMPLE_SOURCES=$(wildcard $(EXAMPLE_DIR)/*.c)
 # Create bin directory if it doesn't exist
 $(shell mkdir -p $(BIN_DIR))
 
-all: test_autoGrad test_graphStack test_hashTable test_mlp test_forward test_gradientDescent example_autoGrad example_nn
+all: test_autoGrad test_graphStack test_hashTable test_mlp test_forward test_gradientDescent test_loss example_autoGrad example_nn
 
 # Test Targets
 test_autoGrad: $(TEST_DIR)/test_autoGrad.c $(LIB_SOURCES)
@@ -30,6 +30,9 @@ test_forward: $(TEST_DIR)/test_forward.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F) $(LDFLAGS)
 
 test_gradientDescent: $(TEST_DIR)/test_gradientDescent.c $(LIB_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F) $(LDFLAGS)
+
+test_loss: $(TEST_DIR)/test_loss.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F) $(LDFLAGS)
 
 # Example Target

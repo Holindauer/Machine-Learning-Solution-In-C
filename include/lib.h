@@ -19,6 +19,7 @@
 #include "mlp.h"
 #include "forward.h"
 #include "gradientDescent.h"
+#include "loss.h"
 
 // macros
 #define NO_ANCESTORS 0

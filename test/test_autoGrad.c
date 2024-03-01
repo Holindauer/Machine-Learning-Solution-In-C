@@ -483,47 +483,6 @@ void test_DivDiff(void) {
 }
 
 /**
- * @test test_Softmax() tests that the softmax function works correctly when the backward function is called
-*/
-void test_Softmax(void){
-
-    printf("test_Softmax...");
-
-    // create a new mlp
-    int inputSize = 3;
-    int outpuSize = 4;
-    int layerSizes[] = {16, 8, 4, outpuSize};
-    int numLayers = 4;
-    MLP* mlp = newMLP(inputSize, layerSizes, numLayers);
-
-    // init input vector
-    Value** input = newOutputVector(inputSize);
-    input[0]->value = 1;
-    input[1]->value = 2;
-    input[2]->value = 3;  
-
-    // run forward pass
-    Value** output = Forward(mlp, input);
-    assert(output != NULL);
-
-    // apply softmax to output vector
-    Softmax(output, outpuSize, mlp->graphStack);
-
-    // Value* sum = Add(
-    //     Add(output[0], output[0], mlp->graphStack),
-    //     Add(output[2], output[3], mlp->graphStack),
-    //     mlp->graphStack
-    // );
-
-
-    Backward(output[0]);
-
-
-    printf("PASS!");
-}
-
-
-/**
  * @test test_depthFirstSearch() checks to make sure that running depth first search on a computational graph
  * results in a graph stack that is ordered such that each node in the stack comes before its ancestors.
 */
@@ -784,7 +743,6 @@ int main(void){
     test_AddDiff();
     test_ExpDiff();
     test_DivDiff();
-    test_Softmax();
     test_depthFirstSearch();
     test_reverseTopologicalSort();
     test_Backward(); 
