@@ -47,8 +47,9 @@ Value* newValue(double value, Value* ancestors[], int ancestorArrLen, char opStr
         exit(0);
     }
 
-    // Backward ptr set to NULL
+    // Backward ptrs set to NULL
     v->Backward = NULL;
+    v->BackwardLoss = NULL;
 
     // allocate mem for operation str, then copy 
     v->opString = (char*)malloc(strlen(opString) + 1); // +1 for \0
@@ -415,6 +416,7 @@ void Backward(Value* value){
 
         // compute partial derivative of next node
         if (graphNode->pValStruct->Backward != NULL){
+            
             graphNode->pValStruct->Backward(graphNode->pValStruct);
         }
 
