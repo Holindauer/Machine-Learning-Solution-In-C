@@ -187,61 +187,6 @@ Value* Mul(Value* a, Value* b, GraphStack* graphStack) {
     return productValue;
 }
 
-//---------------------------------------------------------------------------------------------------------------------- Division Operation
-
-/**
- * @note divBackward() computes the derivitive operation for division wrt to Value structs w/ two ancestors
- * that are the result of calling the Div() function.
- * @dev z = x / y is dz/dx = 1/y and dz/dy = -x/(y^2)
- * @param v ptr to a Value struct to compute the grad of
-*/
-void divBackward(Value* v) {
-    assert(v != NULL);
-    assert(v->ancestors != NULL);
-    assert(v->ancestorArrLen == 2);
-    Value* a = v->ancestors[0];
-    Value* b = v->ancestors[1];
-
-    // Apply the chain rule for division
-    // Gradient with respect to the numerator (a)
-    if (a != NULL) {
-        a->grad += (1 / b->value) * v->grad;
-    }
-
-    // Gradient with respect to the denominator (b)
-    if (b != NULL) {
-        b->grad += (-a->value / (b->value * b->value)) * v->grad;
-    }
-}
-
-/**
- * @note Div() is used to divide two Value structs together. It returns a new Value struct whose ancestors are the inputs
- * @dev the Backward function ptr of the resulting Value is also set to divBackward()
- * @dev any Value() structs that are created from Div() are considered to be part of the computational graph and are
- * therefore pushed to a graphStack for later deallocation.
- * @param a A pointer to a Value Struct
- * @param b A pointer to a Value Struct
- * @param graphStack A pointer to a GraphStack struct
-*/
-Value* Div(Value* a, Value* b, GraphStack* graphStack) {
-    assert(a != NULL && b != NULL);
-    assert(graphStack != NULL);
-    assert(b->value != 0); // Ensure denominator is not zero
-
-    // Compute the division of the input values
-    double divResult = a->value / b->value;
-    Value* divValue = newValue(divResult, (Value*[]){a, b}, 2, "div");
-
-    // Push the new value onto the graph stack
-    pushGraphStack(graphStack, divValue);
-
-    // Set the backward function pointer to divBackward
-    divValue->Backward = divBackward;
-
-    return divValue;
-}
-
-
 //---------------------------------------------------------------------------------------------------------------------- ReLU Operation
 
 /**
@@ -287,51 +232,6 @@ Value* ReLU(Value* a, GraphStack* graphStack) {
     reluValue->Backward = reluBackward;
 
     return reluValue;
-}
-
-//---------------------------------------------------------------------------------------------------------------------- Exp Operation
-
-/**
- * @note expBackward() computes the derivitive operation for e^x wrt to a Value structs w/ one ancestor 
- * that is the result of calling the Exp() function.
- * @dev z = exp(x) --- d/dx(z) = exp(x)
- * @param v ptr to a Value struct to compute the grad of
- */
-void expBackward(Value* v) {
-
-    assert(v != NULL);
-    assert(v->ancestors != NULL);
-    assert(v->ancestorArrLen == 1);
-    assert(v->ancestors[0] != NULL);
-
-    // The gradient of e^x with respect to x is e^x. Multiply the incoming gradient by the 
-    // value of this node (which is e^x) and add it to the gradient of the input node.
-    v->ancestors[0]->grad += v->value * v->grad;
-}
-
-
-/**
- * @note Exp() applies e^x to a Value struct. It returns a new Value struct whose ancestors are the inputs 
- * @dev any Value() structs that are created from ReLU() are considered to be part of the computational graph and are 
- * therefore pushed to a graphStack for later deallocation.
- * @param a A pointer to a Value Struct
- * @param graphStack A pointer to a GraphStack struct 
-*/
-Value* Exp(Value* a, GraphStack* graphStack) {
-    assert(a != NULL);
-    assert(graphStack != NULL);
-
-    // Compute the exponential of the input value
-    double expResult = exp(a->value);
-    Value* expValue = newValue(expResult, (Value*[]){a}, 1, "exp");
-
-    // Push the new value onto the graph stack
-    pushGraphStack(graphStack, expValue);
-
-    // Set the backward function pointer to expBackward
-    expValue->Backward = expBackward;
-
-    return expValue;
 }
 
 //---------------------------------------------------------------------------------------------------------------------- Backpropragation
