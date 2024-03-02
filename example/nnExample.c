@@ -28,7 +28,7 @@ int main(void){
             Value** output = Forward(mlp, dataset->features[example]);
 
             // backpropagate gradient
-            Backward(output[0]);    
+            Backward(output[0], NULL, NULL);    
 
             // zpply gradient descent
             Step(mlp, lr);

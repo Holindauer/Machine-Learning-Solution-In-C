@@ -501,7 +501,7 @@ void test_Backward(void){
     assert(y->value == -20);
 
     // apply backpropagation
-    Backward(y);
+    Backward(y, NULL, NULL);
 
     assert(y->ancestors != NULL);
 

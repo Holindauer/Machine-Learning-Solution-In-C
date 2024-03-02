@@ -186,7 +186,7 @@ void test_Forward(void){
     Value* sum = Add(output[0], output[1], mlp->graphStack);
 
     // backpropagate gradient
-    Backward(sum);
+    Backward(sum, NULL, NULL);
 
     // cleanup
     releaseGraph(mlp->graphStack);
@@ -227,7 +227,7 @@ void test_repeatedBackward(void){
         sum = Add(output[0], output[1], mlp->graphStack);     
 
         // backpropagate gradient
-        Backward(sum);  
+        Backward(sum, NULL, NULL);  
 
         // release Graph
         releaseGraph(mlp->graphStack);

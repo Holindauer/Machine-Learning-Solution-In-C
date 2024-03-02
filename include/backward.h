@@ -8,4 +8,4 @@
 // Backpropagation functions
 void depthFirstSearch(Value* value, HashTable* visitedHashTable, GraphStack* sortedStack);
 void reverseTopologicalSort(Value* start, GraphStack** sortedStack);
-void Backward(Value* value);
+void Backward(Value* value, double* softmaxOutput, Value** targetsArr);

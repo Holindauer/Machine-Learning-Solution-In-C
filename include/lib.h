@@ -27,3 +27,4 @@
 #define UNARY 0
 #define HASHTABLE_SIZE 150
 #define EPSILON 1e-10 
+#define NON_TRAINING_CALL 0

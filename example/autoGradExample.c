@@ -25,7 +25,7 @@ int main(void){
     Value* f = ReLU(d, graphStack);
 
     // previous ancestors can be reused in the graph
-    Value* g = Exp(d, graphStack);
+    Value* g = ReLU(d, graphStack);
     Value* h = Mul(a, g, graphStack);
 
     /**
@@ -33,7 +33,7 @@ int main(void){
      * backpropagation and populates the grad member of each value struct in the graph (including
      * ancestors not included in the graph stack but that have contributed to computation). 
     */
-    Backward(h);
+    Backward(h, NULL, NULL);
 
     // cleanup computational graph
     releaseGraph(graphStack);

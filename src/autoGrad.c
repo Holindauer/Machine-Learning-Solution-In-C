@@ -294,9 +294,13 @@ void reverseTopologicalSort(Value* start, GraphStack** sortedStack){
 /**
  * @note Backward() applies backpropagration of the gradient wrt to all ancestors in the computational graph
  * that produced the inputted value.
+ * @dev if Backward() is being called in a context that is not mlp training, softmaxOutput, targetsArrm 
+ * and lenTargets can be input as NULL.
  * @param value is the leading output of the computational graph to backpropogate
+ * @param softmaxOutput an array of doubles containing the outputs of softmax before application of loss 
+ * @param targetsArr array of Value struct ptrs containing one hot encoded target class labels
 */
-void Backward(Value* value){
+void Backward(Value* value, double* softmaxOutput, Value** targetsArr){
     assert(value != NULL);
 
     // create a new GraphStack to store the reverse topologically sorted graph
@@ -317,7 +321,15 @@ void Backward(Value* value){
         // compute partial derivative of next node
         if (graphNode->pValStruct->Backward != NULL){
             
-            graphNode->pValStruct->Backward(graphNode->pValStruct);
+            // if loss output, use loss derivative function
+            if (strcmp(graphNode->pValStruct->opString, "loss") == 0){
+
+                graphNode->pValStruct->BackwardLoss(graphNode->pValStruct, softmaxOutput, targetsArr, graphNode->pValStruct->ancestorArrLen);
+            }
+            else{ // use standard derivative function 
+
+                graphNode->pValStruct->Backward(graphNode->pValStruct);
+            }
         }
 
         // get next
