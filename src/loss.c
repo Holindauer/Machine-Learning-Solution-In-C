@@ -65,24 +65,6 @@ void categoricalCrossEntropyBackward(Value* v, double* softmaxOutput, Value** ta
     }
 }
 
-
-/**
- * The current issue is that the backward function for categorical cross entropy requires more information 
- * that just the immediate ancestors and their scalar vallues. It requires as well the predicted probabilities
- * after applying sotmax and the labes for each class in the target vector. The reason this is an issue is 
- * because the pBackwardFunc function pointer that was set up for the eventual backpropagation of the gradient
- * only accepts a single input and thus cannoth supply that information into the function when called. 
- * 
- * One potential solution to this would be to include another function pointer within the Value struct if which
- * the correct function pointer to use could be determined within the Backward() function. 
- * 
- * This would require:
- *  - modifying Backward() to include that logic (adjusting the function header)
- *  - Adjusting the way that Softmax() and categoricalCrossEntropy() are called in conjunction to each other,
- *    which will probably mean Softmax() is called in whatever main function the training loop is called within
-*/
-
-
 /**
  * @note categoricalCrossEntropy() applies the softmax activation functions to an input vector (Value* array) and then 
  * applies the categorical cross entropy loss function to bring the vector input to a scalar output that can be passed
@@ -94,7 +76,8 @@ void categoricalCrossEntropyBackward(Value* v, double* softmaxOutput, Value** ta
  * taking advantage of the simplification of each partial derivative of the gradient of softmax as the inner function of 
  * a composition with categorical cross entropy. These partial derivatives end up being the predicted probability of
  * each class subtracked from the whether that target is correct.
- * @param outputArr is the output vector array of an MLP struct that is the same length as the number of classes
+ * @param outputArr is the output vector array of an MLP struct that is the same length as the number of classes, 
+ * it is passed in to provide an ancestors array to the newValue() call
  * @param targetsArr is the array of targets (ie, the one hot encoded label for the current example).
  * @param lenArr is the length of both valueArr and targetsArr
  * @param graphStack is the graph stack of the mlp of which the valueArr output came from
@@ -112,7 +95,7 @@ Value* categoricalCrossEntropy(
     for (int class=0; class<lenArr; class++){
 
         // accumulate negative log(probability) * class label
-        lossSum -= log(outputArr[class]->value) * targetsArr[class]->value;
+        lossSum -= log(softmaxOutput[class]) * targetsArr[class]->value;
     }   
 
     // place loss into Value struct. Note that the valueArr being passed into newValue() 
