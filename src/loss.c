@@ -33,6 +33,16 @@ double* Softmax(Value** valueArr, int lenArr){
 }
 
 /**
+ * freeSoftmax() frees the array of doubles created by the Softmax() function
+ * @param softmaxArr ptr to array of doubles
+*/
+void freeSoftmax(double** softmaxArr){
+    assert(softmaxArr != NULL);
+    free(*softmaxArr);  
+    *softmaxArr = NULL;
+}
+
+/**
  * @note categoricalCrossEntropyBackward() computes the gradient of the single value output from categoricalCrossEntropy()
  * wrt to its immediate ancestors. 
  * @note that this is the gradient of the composite function of categoricalCrossEntropy( Softmax() )

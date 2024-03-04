@@ -296,6 +296,7 @@ void reverseTopologicalSort(Value* start, GraphStack** sortedStack){
  * that produced the inputted value.
  * @dev if Backward() is being called in a context that is not mlp training, softmaxOutput, targetsArrm 
  * and lenTargets can be input as NULL.
+ * @dev softmaxOutput array is freed at the end of Backward() 
  * @param value is the leading output of the computational graph to backpropogate
  * @param softmaxOutput an array of doubles containing the outputs of softmax before application of loss 
  * @param targetsArr array of Value struct ptrs containing one hot encoded target class labels
@@ -336,7 +337,9 @@ void Backward(Value* value, double* softmaxOutput, Value** targetsArr){
         graphNode = graphNode->next;
     }
 
+    // free memory
     graphPreservingStackRelease(&sortStack);
+    freeSoftmax(&softmaxOutput);
 }   
 
 //---------------------------------------------------------------------------------------------------------------------- Zero Gradients
