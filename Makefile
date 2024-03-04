@@ -35,9 +35,9 @@ test_gradientDescent: $(TEST_DIR)/test_gradientDescent.c $(LIB_SOURCES)
 test_loss: $(TEST_DIR)/test_loss.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$(@F) $(LDFLAGS)
 
-# Example Target
+# Example Targets
 example_autoGrad: $(EXAMPLE_DIR)/autoGradExample.c $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/example_autoGrad $(LDFLAGS)
  
-example_nn: $(EXAMPLE_DIR)/nnExample.c $(EXAMPLE_DIR)/loadData.c $(EXAMPLE_DIR)/loadData.h $(LIB_SOURCES)
+example_nn: $(EXAMPLE_DIR)/nnExample.c $(EXAMPLE_DIR)/loadData.c $(EXAMPLE_DIR)/loadData.h $(EXAMPLE_DIR)/accuracy.c $(EXAMPLE_DIR)/accuracy.h $(LIB_SOURCES)
 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/example_nn $(LDFLAGS)

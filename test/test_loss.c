@@ -62,14 +62,20 @@ void test_categoricalCrossEntropy(void){
     // get softmax results
     double* softmaxArr = Softmax(outputArr, vectorSize);
 
+    for (int i =0; i<vectorSize; i++){
+        printf("\n%lf", softmaxArr[i]);
+    }
+
     // init graphStack for loss computation
     GraphStack* graphStack = newGraphStack();
 
     //  compute loss
-    Value* v = categoricalCrossEntropy(outputArr, targetsArr, softmaxArr, vectorSize, graphStack);
+    Value* loss = categoricalCrossEntropy(outputArr, targetsArr, softmaxArr, vectorSize, graphStack);
+
+    printf("\nloss: %lf ", loss->value);
     
     // Backpropagate-S gradient
-    Backward(v, softmaxArr, targetsArr);
+    Backward(loss, softmaxArr, targetsArr);
 
     //cleanup
     releaseGraph(graphStack);

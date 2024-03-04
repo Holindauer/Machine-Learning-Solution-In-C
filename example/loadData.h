@@ -1,3 +1,4 @@
+#pragma once
 #include "lib.h"
 
 #define NUM_EXAMPLES 150

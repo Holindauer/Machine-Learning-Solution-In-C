@@ -1,5 +1,6 @@
 #include "lib.h"
 #include "loadData.h"
+#include "accuracy.h"
 
 int main(void){
 
@@ -8,7 +9,7 @@ int main(void){
 
     // mlp specs
     int inputSize = 4, outputSize = 3;
-    int layerSizes[] = {32, 16, 8, outputSize};
+    int layerSizes[] = {16, 8, 4, outputSize};
     int numLayers = 4;
 
     // create mlp
@@ -16,13 +17,13 @@ int main(void){
 
     // training parameters
     double lr = 0.001;
-    int epochs = 10;
-
-    // loss accumulator 
-    double epochLoss = 0; 
+    int epochs = 5;
 
     // run training loop
     for (int epoch=0; epoch<epochs; epoch++){
+
+        // loss accumulator 
+        double epochLoss = 0, epochAccuracy = 0;
 
         // forward pass on all examples
         for(int example=0; example<NUM_EXAMPLES; example++){
@@ -41,9 +42,11 @@ int main(void){
                 outputSize, 
                 mlp->graphStack
                 );
+            
 
-            // accumulate loss
+            // accumulate loss and accuracy
             epochLoss += loss->value;
+            epochAccuracy += correctPrediction(softmax, dataset->targets[example]);
 
             // backpropagate gradient
             Backward(loss, softmax, dataset->targets[example]);    
@@ -55,10 +58,10 @@ int main(void){
             ZeroGrad(mlp);
         }
 
-        // average epoch loss
-        epochLoss /= NUM_EXAMPLES;
+        // average loss, acc accumulation across epoch
+        epochLoss /= NUM_EXAMPLES, epochAccuracy /= NUM_EXAMPLES;
 
-        printf("\nEpoch %d --- Loss: %lf", epoch, epochLoss);
+        printf("\nEpoch %d --- Loss: %lf --- Accuracy %lf", epoch, epochLoss, epochAccuracy);
     }
 
     // cleanup memory
