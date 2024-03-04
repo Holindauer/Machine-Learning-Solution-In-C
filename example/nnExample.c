@@ -7,8 +7,8 @@ int main(void){
     Dataset* dataset = loadData();
 
     // mlp specs
-    int inputSize = 3;
-    int layerSizes[] = {16, 8, 4, 1};
+    int inputSize = 4, outputSize = 3;
+    int layerSizes[] = {32, 16, 8, outputSize};
     int numLayers = 4;
 
     // create mlp
@@ -17,6 +17,9 @@ int main(void){
     // training parameters
     double lr = 0.001;
     int epochs = 10;
+
+    // loss accumulator 
+    double epochLoss = 0; 
 
     // run training loop
     for (int epoch=0; epoch<epochs; epoch++){
@@ -27,8 +30,23 @@ int main(void){
             // run forward pass on example
             Value** output = Forward(mlp, dataset->features[example]);
 
+            // get softmax results array
+            double* softmax = Softmax(output, outputSize);
+
+            // compute loss
+            Value* loss = categoricalCrossEntropy(
+                output, 
+                dataset->targets[example], 
+                softmax, 
+                outputSize, 
+                mlp->graphStack
+                );
+
+            // accumulate loss
+            epochLoss += loss->value;
+
             // backpropagate gradient
-            Backward(output[0], NULL, NULL);    
+            Backward(loss, softmax, dataset->targets[example]);    
 
             // zpply gradient descent
             Step(mlp, lr);
@@ -36,6 +54,11 @@ int main(void){
             // zero gradient and free computational graph
             ZeroGrad(mlp);
         }
+
+        // average epoch loss
+        epochLoss /= NUM_EXAMPLES;
+
+        printf("\nEpoch %d --- Loss: %lf", epoch, epochLoss);
     }
 
     // cleanup memory

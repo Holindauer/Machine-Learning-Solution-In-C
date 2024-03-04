@@ -68,7 +68,7 @@ void test_categoricalCrossEntropy(void){
     //  compute loss
     Value* v = categoricalCrossEntropy(outputArr, targetsArr, softmaxArr, vectorSize, graphStack);
     
-    // Backpropagate gradient
+    // Backpropagate-S gradient
     Backward(v, softmaxArr, targetsArr);
 
     //cleanup
